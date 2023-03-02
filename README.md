@@ -4,7 +4,7 @@
 ## PIs: 
 
 - Joseph Peters, Graduate Student, UCSB
-- Mackenzie White, Graduate Student, FIU
+- Mack White, Graduate Student, FIU
 - Bradley Strickland, Postdoctoral Research Associate, VIMS
 - Jennifer Rehage, Associate Professor, FIU
 
