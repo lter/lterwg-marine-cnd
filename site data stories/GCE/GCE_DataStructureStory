@@ -1,0 +1,96 @@
+#author: Mack White
+#date: 09-11-2023
+#goal(s): GCE ta structure and goals w Amanda Spivak @ UGA
+#https://amandaspivak.wordpress.com/
+
+# load libraries ----------------------------------------------------------
+
+library(tidyverse)
+library(ggplot2)
+library(writexl)
+
+# read in excretion data --------------------------------------------------
+
+# read in env data --------------------------------------------------------
+
+# read in consumer data ---------------------------------------------------
+
+#Mollusc Abundace -> 2000 through 2020, sampled annually in October it looks liek
+mollusc_abund_GCE <- read_csv("GCE/data/mollusc_abund_GCE.CSV")
+summary(mollusc_abund_GCE)#mollusc density ranging from 0-1092 ind/m2
+unique(mollusc_abund_GCE$Site_Name) #10 sites
+#link to https://gce-lter.marsci.uga.edu/public/app/dataset_details.asp?accession=INV-GCES-1610
+glimpse(mollusc_abund_GCE)
+
+mollusc_abund <- mollusc_abund_GCE |> 
+      mutate(date = as.Date(Date, "%m/%d/%y"))
+glimpse(mollusc_abund)
+
+### YEAR-SITE AVERAGE
+mollusc_abund_site <- mollusc_abund |> 
+      group_by(date, Year, Site_Name) |> 
+      summarise(mean_dens = mean(Mollusc_Density))
+
+mollusc_abund_plot <- ggplot(mollusc_abund_site, aes(x=date, y=mean_dens, group = 1)) +
+      facet_wrap(~Site_Name) +
+      geom_line(color = "black", linewidth = 1.5) +
+      geom_point(size = 2.5) +
+      geom_smooth() +
+      labs(title = "GCE-LTER: Fall Monitoring Mollusc Densities", x = "Date", 
+           y = "Mean Mollusc Densities (ind/m^2)") +
+      theme(panel.grid.major = element_blank(), 
+            panel.grid.minor = element_blank(),
+            panel.background = element_blank(), 
+            axis.line = element_line(colour = "black"),
+            plot.title = element_text(hjust = 0.5, size=14, face="bold", color = "black"),
+            axis.text = element_text(size=12,face="bold", color = "black"),
+            axis.title = element_text(size=12,face="bold", color = "black"))
+mollusc_abund_plot
+
+# ggsave(
+#       'GCE/plots/mollusc_abund_siteyear.png',
+#       plot = last_plot(),
+#       scale = 1.75,
+#       width = 6,
+#       height = 4,
+#       units = "in",
+#       dpi = 300,
+# )
+
+###SIMPLE ANNUAL AVERAGES
+mollusc_abund_yr <- mollusc_abund |> 
+      group_by(Year) |> 
+      summarise(mean_dens = mean(Mollusc_Density)) |> 
+      mutate(month = 10, day = 1)
+
+mollusc_abund_yr$s_date=as.Date(paste(mollusc_abund_yr$Year,mollusc_abund_yr$month, 
+                                      mollusc_abund_yr$day,sep="-"))
+glimpse(mollusc_abund_yr)
+
+mollusc_abund_plot_yr <- ggplot(mollusc_abund_yr, aes(x=s_date, y=mean_dens)) +
+      # facet_wrap(~Site_Name) +
+      geom_line(color = "black", linewidth = 1.5) +
+      geom_point(size = 2.5) +
+      geom_smooth() +
+      labs(title = "GCE-LTER: Fall Monitoring Mollusc Density", x = "Date", 
+           y = "GCE Mean Mollusc Density (ind/m^2)") +
+      theme(panel.grid.major = element_blank(), 
+            panel.grid.minor = element_blank(),
+            panel.background = element_blank(), 
+            axis.line = element_line(colour = "black"),
+            plot.title = element_text(hjust = 0.5, size=14, face="bold", color = "black"),
+            axis.text = element_text(size=12,face="bold", color = "black"),
+            axis.title = element_text(size=12,face="bold", color = "black"))
+mollusc_abund_plot_yr
+
+### any idea why there is a gap in the data
+
+# ggsave(
+#       'GCE/plots/mollusc_abund_year.png',
+#       plot = last_plot(),
+#       scale = 1.75,
+#       width = 6,
+#       height = 4,
+#       units = "in",
+#       dpi = 300,
+# )
