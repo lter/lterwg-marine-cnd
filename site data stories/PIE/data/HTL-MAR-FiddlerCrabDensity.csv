@@ -1,0 +1,1061 @@
+Year,Date,Creek ,Branch,Side,Nutrient,Plot_Location,Habitat,Burrow_density,Geukensia_density,Nassarius_density,Littorina_density,Melampus_density
+2014,2014-06-30,West,L,NA,Reference,20,Spartina,0,NA,NA,NA,NA
+2014,2014-06-30,West,L,NA,Reference,27,Spartina,0,NA,NA,NA,NA
+2014,2014-06-30,West,L,NA,Reference,38,Spartina,0,NA,NA,NA,NA
+2014,2014-06-30,West,L,NA,Reference,43,Spartina,0,NA,NA,NA,NA
+2014,2014-06-30,West,L,NA,Reference,61,Spartina,0,NA,NA,NA,NA
+2014,2014-06-30,West,L,NA,Reference,83,Spartina,0,NA,NA,NA,NA
+2014,2014-06-30,West,L,NA,Reference,85,Spartina,0,NA,NA,NA,NA
+2014,2014-06-30,West,L,NA,Reference,100,Spartina,0,NA,NA,NA,NA
+2014,2014-06-30,West,L,NA,Reference,101,Spartina,0,NA,NA,NA,NA
+2014,2014-06-30,West,L,NA,Reference,193,Spartina,0,NA,NA,NA,NA
+2014,2014-07-01,West,R,NA,Reference,7,Spartina,0,NA,NA,NA,NA
+2014,2014-07-01,West,R,NA,Reference,36,Spartina,0,NA,NA,NA,NA
+2014,2014-07-01,West,R,NA,Reference,48,Spartina,0,NA,NA,NA,NA
+2014,2014-07-01,West,R,NA,Reference,66,Spartina,0,NA,NA,NA,NA
+2014,2014-07-01,West,R,NA,Reference,76,Spartina,0,NA,NA,NA,NA
+2014,2014-07-01,West,R,NA,Reference,85,Spartina,0,NA,NA,NA,NA
+2014,2014-07-01,West,R,NA,Reference,123,Spartina,0,NA,NA,NA,NA
+2014,2014-07-01,West,R,NA,Reference,134,Spartina,0,NA,NA,NA,NA
+2014,2014-07-01,West,R,NA,Reference,150,Spartina,0,NA,NA,NA,NA
+2014,2014-07-01,West,R,NA,Reference,173,Spartina,32,NA,NA,NA,NA
+2014,2014-07-01,Nelson,L,NA,Reference,59,Spartina,0,NA,NA,NA,NA
+2014,2014-07-01,Nelson,L,NA,Reference,65,Spartina,0,NA,NA,NA,NA
+2014,2014-07-01,Nelson,L,NA,Reference,77,Spartina,0,NA,NA,NA,NA
+2014,2014-07-01,Nelson,L,NA,Reference,128,Spartina,0,NA,NA,NA,NA
+2014,2014-07-01,Nelson,L,NA,Reference,133,Spartina,0,NA,NA,NA,NA
+2014,2014-07-01,Nelson,L,NA,Reference,134,Spartina,0,NA,NA,NA,NA
+2014,2014-07-01,Nelson,L,NA,Reference,157,Spartina,0,NA,NA,NA,NA
+2014,2014-07-01,Nelson,L,NA,Reference,176,Spartina,16,NA,NA,NA,NA
+2014,2014-07-01,Nelson,L,NA,Reference,177,Spartina,0,NA,NA,NA,NA
+2014,2014-07-01,Nelson,L,NA,Reference,192,Spartina,0,NA,NA,NA,NA
+2014,2014-07-01,Clubhead,R,NA,Fertilized,20,Spartina,0,NA,NA,NA,NA
+2014,2014-07-01,Clubhead,R,NA,Fertilized,36,Spartina,0,NA,NA,NA,NA
+2014,2014-07-01,Clubhead,R,NA,Fertilized,43,Spartina,0,NA,NA,NA,NA
+2014,2014-07-01,Clubhead,R,NA,Fertilized,71,Spartina,0,NA,NA,NA,NA
+2014,2014-07-01,Clubhead,R,NA,Fertilized,102,Spartina,0,NA,NA,NA,NA
+2014,2014-07-01,Clubhead,R,NA,Fertilized,130,Spartina,0,NA,NA,NA,NA
+2014,2014-07-01,Clubhead,R,NA,Fertilized,133,Spartina,0,NA,NA,NA,NA
+2014,2014-07-01,Clubhead,R,NA,Fertilized,134,Spartina,0,NA,NA,NA,NA
+2014,2014-07-01,Clubhead,R,NA,Fertilized,156,Spartina,0,NA,NA,NA,NA
+2014,2014-07-01,Clubhead,R,NA,Fertilized,165,Spartina,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,L,NA,Fertilized,16,Spartina,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,L,NA,Fertilized,29,Spartina,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,L,NA,Fertilized,37,Spartina,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,L,NA,Fertilized,52,Spartina,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,L,NA,Fertilized,56,Spartina,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,L,NA,Fertilized,66,Spartina,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,L,NA,Fertilized,69,Spartina,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,L,NA,Fertilized,98,Spartina,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,L,NA,Fertilized,133,Spartina,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,L,NA,Fertilized,195,Spartina,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,R,NA,Fertilized,21,Spartina,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,R,NA,Fertilized,45,Spartina,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,R,NA,Fertilized,59,Spartina,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,R,NA,Fertilized,94,Spartina,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,R,NA,Fertilized,104,Spartina,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,R,NA,Fertilized,114,Spartina,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,R,NA,Fertilized,126,Spartina,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,R,NA,Fertilized,179,Spartina,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,R,NA,Fertilized,198,Spartina,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,R,NA,Fertilized,199,Spartina,0,NA,NA,NA,NA
+2014,2014-06-30,West,L,NA,Reference,20,Creek wall,0,NA,NA,NA,NA
+2014,2014-06-30,West,L,NA,Reference,27,Creek wall,0,NA,NA,NA,NA
+2014,2014-06-30,West,L,NA,Reference,38,Creek wall,0,NA,NA,NA,NA
+2014,2014-06-30,West,L,NA,Reference,43,Creek wall,0,NA,NA,NA,NA
+2014,2014-06-30,West,L,NA,Reference,61,Creek wall,0,NA,NA,NA,NA
+2014,2014-06-30,West,L,NA,Reference,83,Creek wall,0,NA,NA,NA,NA
+2014,2014-06-30,West,L,NA,Reference,85,Creek wall,0,NA,NA,NA,NA
+2014,2014-06-30,West,L,NA,Reference,100,Creek wall,0,NA,NA,NA,NA
+2014,2014-06-30,West,L,NA,Reference,101,Creek wall,0,NA,NA,NA,NA
+2014,2014-06-30,West,L,NA,Reference,193,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-01,West,R,NA,Reference,7,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-01,West,R,NA,Reference,36,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-01,West,R,NA,Reference,48,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-01,West,R,NA,Reference,66,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-01,West,R,NA,Reference,76,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-01,West,R,NA,Reference,85,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-01,West,R,NA,Reference,123,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-01,West,R,NA,Reference,134,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-01,West,R,NA,Reference,150,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-01,West,R,NA,Reference,173,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-01,Nelson,L,NA,Reference,59,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-01,Nelson,L,NA,Reference,65,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-01,Nelson,L,NA,Reference,77,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-01,Nelson,L,NA,Reference,128,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-01,Nelson,L,NA,Reference,133,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-01,Nelson,L,NA,Reference,134,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-01,Nelson,L,NA,Reference,157,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-01,Nelson,L,NA,Reference,176,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-01,Nelson,L,NA,Reference,177,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-01,Nelson,L,NA,Reference,192,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-01,Clubhead,R,NA,Fertilized,20,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-01,Clubhead,R,NA,Fertilized,36,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-01,Clubhead,R,NA,Fertilized,43,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-01,Clubhead,R,NA,Fertilized,71,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-01,Clubhead,R,NA,Fertilized,102,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-01,Clubhead,R,NA,Fertilized,130,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-01,Clubhead,R,NA,Fertilized,133,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-01,Clubhead,R,NA,Fertilized,134,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-01,Clubhead,R,NA,Fertilized,156,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-01,Clubhead,R,NA,Fertilized,165,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,L,NA,Fertilized,16,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,L,NA,Fertilized,29,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,L,NA,Fertilized,37,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,L,NA,Fertilized,52,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,L,NA,Fertilized,56,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,L,NA,Fertilized,66,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,L,NA,Fertilized,69,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,L,NA,Fertilized,98,Creek wall,16,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,L,NA,Fertilized,133,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,L,NA,Fertilized,195,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,R,NA,Fertilized,21,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,R,NA,Fertilized,45,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,R,NA,Fertilized,59,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,R,NA,Fertilized,94,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,R,NA,Fertilized,104,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,R,NA,Fertilized,114,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,R,NA,Fertilized,126,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,R,NA,Fertilized,179,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,R,NA,Fertilized,198,Creek wall,0,NA,NA,NA,NA
+2014,2014-07-02,Sweeney,R,NA,Fertilized,199,Creek wall,0,NA,NA,NA,NA
+2015,2015-05-19,West,L,L,Reference,7,Spartina,0,0,0,0,0
+2015,2015-05-19,West,L,L,Reference,7,Creek wall,16,0,0,0,0
+2015,2015-05-19,West,L,L,Reference,13,Spartina,0,48,16,0,0
+2015,2015-05-19,West,L,L,Reference,13,Creek wall,0,16,0,0,0
+2015,2015-05-19,West,L,L,Reference,33,Spartina,0,64,16,0,0
+2015,2015-05-19,West,L,L,Reference,33,Creek wall,0,16,0,0,0
+2015,2015-05-19,West,L,L,Reference,51,Spartina,0,0,0,32,0
+2015,2015-05-19,West,L,L,Reference,51,Creek wall,0,16,16,0,0
+2015,2015-05-19,West,L,L,Reference,52,Spartina,0,0,0,0,0
+2015,2015-05-19,West,L,L,Reference,52,Creek wall,16,48,16,0,0
+2015,2015-05-19,West,L,L,Reference,57,Spartina,0,48,0,0,0
+2015,2015-05-19,West,L,L,Reference,57,Creek wall,0,0,0,0,0
+2015,2015-05-19,West,L,L,Reference,63,Spartina,0,16,0,0,0
+2015,2015-05-19,West,L,L,Reference,63,Creek wall,0,16,0,0,0
+2015,2015-05-19,West,L,L,Reference,128,Spartina,0,32,0,0,0
+2015,2015-05-19,West,L,L,Reference,128,Creek wall,0,96,0,0,0
+2015,2015-05-19,West,L,L,Reference,130,Spartina,0,0,0,0,0
+2015,2015-05-19,West,L,L,Reference,130,Creek wall,0,0,0,0,0
+2015,2015-05-19,West,L,L,Reference,134,Spartina,0,0,0,0,0
+2015,2015-05-19,West,L,L,Reference,134,Creek wall,0,0,0,0,0
+2015,2015-05-19,West,L,L,Reference,140,Spartina,16,0,0,0,0
+2015,2015-05-19,West,L,L,Reference,140,Creek wall,0,0,0,0,0
+2015,2015-05-19,West,L,L,Reference,151,Spartina,16,0,0,0,0
+2015,2015-05-19,West,L,L,Reference,151,Creek wall,0,0,0,0,0
+2015,2015-05-19,West,L,L,Reference,155,Spartina,0,16,0,0,0
+2015,2015-05-19,West,L,L,Reference,155,Creek wall,0,16,0,0,0
+2015,2015-05-19,West,L,L,Reference,157,Spartina,0,64,0,0,0
+2015,2015-05-19,West,L,L,Reference,157,Creek wall,0,64,0,0,0
+2015,2015-05-19,West,L,L,Reference,163,Spartina,0,16,0,0,0
+2015,2015-05-19,West,L,L,Reference,163,Creek wall,0,32,0,0,0
+2015,2015-05-19,West,L,L,Reference,170,Spartina,0,48,0,0,0
+2015,2015-05-19,West,L,L,Reference,170,Creek wall,32,0,0,0,0
+2015,2015-05-19,West,L,L,Reference,174,Spartina,0,0,0,0,0
+2015,2015-05-19,West,L,L,Reference,174,Creek wall,16,0,0,0,0
+2015,2015-05-19,West,L,L,Reference,179,Spartina,0,112,0,0,0
+2015,2015-05-19,West,L,L,Reference,179,Creek wall,0,112,0,0,0
+2015,2015-05-19,West,L,L,Reference,191,Spartina,0,16,0,0,0
+2015,2015-05-19,West,L,L,Reference,191,Creek wall,0,16,0,0,0
+2015,2015-05-19,West,L,L,Reference,193,Spartina,0,0,0,0,0
+2015,2015-05-19,West,L,L,Reference,193,Creek wall,0,80,0,0,0
+2015,2015-05-21,West,R,R,Reference,2,Spartina,0,0,0,0,0
+2015,2015-05-21,West,R,R,Reference,2,Creek wall,16,0,0,0,0
+2015,2015-05-21,West,R,R,Reference,3,Spartina,0,0,0,32,0
+2015,2015-05-21,West,R,R,Reference,3,Creek wall,0,112,0,0,0
+2015,2015-05-21,West,R,R,Reference,6,Spartina,0,0,16,32,0
+2015,2015-05-21,West,R,R,Reference,6,Creek wall,0,16,0,0,0
+2015,2015-05-21,West,R,R,Reference,12,Spartina,0,48,0,0,0
+2015,2015-05-21,West,R,R,Reference,12,Creek wall,0,32,0,0,0
+2015,2015-05-21,West,R,R,Reference,18,Spartina,0,0,0,0,0
+2015,2015-05-21,West,R,R,Reference,18,Creek wall,0,0,0,32,0
+2015,2015-05-21,West,R,R,Reference,26,Spartina,0,0,0,0,0
+2015,2015-05-21,West,R,R,Reference,26,Creek wall,0,0,0,0,0
+2015,2015-05-21,West,R,R,Reference,31,Spartina,0,16,0,0,0
+2015,2015-05-21,West,R,R,Reference,31,Creek wall,0,32,0,0,0
+2015,2015-05-21,West,R,R,Reference,58,Spartina,0,0,0,0,0
+2015,2015-05-21,West,R,R,Reference,58,Creek wall,0,0,0,0,0
+2015,2015-05-21,West,R,R,Reference,64,Spartina,0,0,0,32,16
+2015,2015-05-21,West,R,R,Reference,64,Creek wall,0,0,0,0,0
+2015,2015-05-21,West,R,R,Reference,76,Spartina,0,0,16,0,0
+2015,2015-05-21,West,R,R,Reference,76,Creek wall,0,16,32,0,0
+2015,2015-05-21,West,R,R,Reference,99,Spartina,0,0,0,0,0
+2015,2015-05-21,West,R,R,Reference,99,Creek wall,0,0,0,0,0
+2015,2015-05-21,West,R,R,Reference,104,Spartina,0,0,0,0,0
+2015,2015-05-21,West,R,R,Reference,104,Creek wall,16,0,0,0,0
+2015,2015-05-21,West,R,R,Reference,126,Spartina,0,0,0,0,0
+2015,2015-05-21,West,R,R,Reference,126,Creek wall,0,0,0,0,0
+2015,2015-05-21,West,R,R,Reference,136,Spartina,0,0,0,0,0
+2015,2015-05-21,West,R,R,Reference,136,Creek wall,0,0,0,0,0
+2015,2015-05-21,West,R,R,Reference,144,Spartina,0,16,0,0,0
+2015,2015-05-21,West,R,R,Reference,144,Creek wall,16,16,0,0,0
+2015,2015-05-21,West,R,R,Reference,160,Spartina,0,48,0,0,0
+2015,2015-05-21,West,R,R,Reference,160,Creek wall,0,0,0,0,0
+2015,2015-05-21,West,R,R,Reference,161,Spartina,16,80,0,0,0
+2015,2015-05-21,West,R,R,Reference,161,Creek wall,0,0,0,0,0
+2015,2015-05-21,West,R,R,Reference,172,Spartina,0,16,0,0,0
+2015,2015-05-21,West,R,R,Reference,172,Creek wall,0,32,0,0,0
+2015,2015-05-21,West,R,R,Reference,181,Spartina,0,0,0,0,0
+2015,2015-05-21,West,R,R,Reference,181,Creek wall,0,0,0,0,0
+2015,2015-05-21,West,R,R,Reference,190,Spartina,0,0,0,0,0
+2015,2015-05-21,West,R,R,Reference,190,Creek wall,0,0,0,0,0
+2015,2015-05-20,Sweeney,L,R,Fertilized,4,Spartina,0,48,0,0,32
+2015,2015-05-20,Sweeney,L,R,Fertilized,4,Creek wall,0,16,0,0,0
+2015,2015-05-20,Sweeney,L,R,Fertilized,11,Spartina,0,0,0,0,0
+2015,2015-05-20,Sweeney,L,R,Fertilized,11,Creek wall,0,0,16,0,0
+2015,2015-05-20,Sweeney,L,R,Fertilized,18,Spartina,16,0,0,0,16
+2015,2015-05-20,Sweeney,L,R,Fertilized,18,Creek wall,0,0,0,0,0
+2015,2015-05-20,Sweeney,L,R,Fertilized,23,Spartina,0,16,0,0,0
+2015,2015-05-20,Sweeney,L,R,Fertilized,23,Creek wall,0,0,0,0,0
+2015,2015-05-20,Sweeney,L,R,Fertilized,26,Spartina,0,0,0,0,0
+2015,2015-05-20,Sweeney,L,R,Fertilized,26,Creek wall,0,32,0,0,0
+2015,2015-05-20,Sweeney,L,R,Fertilized,29,Spartina,0,0,0,0,0
+2015,2015-05-20,Sweeney,L,R,Fertilized,29,Creek wall,0,16,0,0,0
+2015,2015-05-20,Sweeney,L,R,Fertilized,42,Spartina,0,0,0,0,0
+2015,2015-05-20,Sweeney,L,R,Fertilized,42,Creek wall,0,32,16,0,0
+2015,2015-05-20,Sweeney,L,R,Fertilized,59,Spartina,0,0,0,0,0
+2015,2015-05-20,Sweeney,L,R,Fertilized,59,Creek wall,0,32,0,0,0
+2015,2015-05-20,Sweeney,L,R,Fertilized,73,Spartina,16,0,0,0,64
+2015,2015-05-20,Sweeney,L,R,Fertilized,73,Creek wall,0,64,0,0,0
+2015,2015-05-20,Sweeney,L,R,Fertilized,84,Spartina,0,16,0,0,0
+2015,2015-05-20,Sweeney,L,R,Fertilized,84,Creek wall,0,0,0,0,0
+2015,2015-05-20,Sweeney,L,R,Fertilized,91,Spartina,0,80,0,0,0
+2015,2015-05-20,Sweeney,L,R,Fertilized,91,Creek wall,0,0,0,0,0
+2015,2015-05-20,Sweeney,L,R,Fertilized,117,Spartina,0,0,0,0,0
+2015,2015-05-20,Sweeney,L,R,Fertilized,117,Creek wall,0,0,0,0,0
+2015,2015-05-20,Sweeney,L,R,Fertilized,121,Spartina,0,0,0,0,0
+2015,2015-05-20,Sweeney,L,R,Fertilized,121,Creek wall,0,0,0,0,48
+2015,2015-05-20,Sweeney,L,R,Fertilized,124,Spartina,0,0,0,0,32
+2015,2015-05-20,Sweeney,L,R,Fertilized,124,Creek wall,0,0,0,0,32
+2015,2015-05-20,Sweeney,L,R,Fertilized,137,Spartina,0,0,0,0,128
+2015,2015-05-20,Sweeney,L,R,Fertilized,137,Creek wall,0,0,0,0,0
+2015,2015-05-20,Sweeney,L,R,Fertilized,150,Spartina,0,96,0,0,0
+2015,2015-05-20,Sweeney,L,R,Fertilized,150,Creek wall,0,32,0,0,0
+2015,2015-05-20,Sweeney,L,R,Fertilized,157,Spartina,0,0,0,0,32
+2015,2015-05-20,Sweeney,L,R,Fertilized,157,Creek wall,0,16,0,0,0
+2015,2015-05-20,Sweeney,L,R,Fertilized,165,Spartina,0,0,0,0,0
+2015,2015-05-20,Sweeney,L,R,Fertilized,165,Creek wall,0,0,0,0,0
+2015,2015-05-20,Sweeney,L,R,Fertilized,171,Spartina,0,0,0,0,0
+2015,2015-05-20,Sweeney,L,R,Fertilized,171,Creek wall,0,16,0,0,0
+2015,2015-05-20,Sweeney,L,R,Fertilized,193,Spartina,0,0,0,0,0
+2015,2015-05-20,Sweeney,L,R,Fertilized,193,Creek wall,0,0,0,0,0
+2015,2015-05-20,Sweeney,R,L,Fertilized,4,Spartina,0,0,0,0,112
+2015,2015-05-20,Sweeney,R,L,Fertilized,4,Creek wall,0,0,16,0,48
+2015,2015-05-20,Sweeney,R,L,Fertilized,7,Spartina,0,0,0,0,0
+2015,2015-05-20,Sweeney,R,L,Fertilized,7,Creek wall,0,0,0,0,0
+2015,2015-05-20,Sweeney,R,L,Fertilized,16,Spartina,0,0,0,0,0
+2015,2015-05-20,Sweeney,R,L,Fertilized,16,Creek wall,0,32,0,0,0
+2015,2015-05-20,Sweeney,R,L,Fertilized,23,Spartina,0,0,0,0,416
+2015,2015-05-20,Sweeney,R,L,Fertilized,23,Creek wall,0,0,16,0,0
+2015,2015-05-20,Sweeney,R,L,Fertilized,48,Spartina,0,0,0,0,0
+2015,2015-05-20,Sweeney,R,L,Fertilized,48,Creek wall,0,0,0,0,0
+2015,2015-05-20,Sweeney,R,L,Fertilized,89,Spartina,0,0,0,0,0
+2015,2015-05-20,Sweeney,R,L,Fertilized,89,Creek wall,0,0,0,0,0
+2015,2015-05-20,Sweeney,R,L,Fertilized,97,Spartina,0,0,0,0,0
+2015,2015-05-20,Sweeney,R,L,Fertilized,97,Creek wall,0,0,0,0,0
+2015,2015-05-20,Sweeney,R,L,Fertilized,98,Spartina,0,0,0,0,0
+2015,2015-05-20,Sweeney,R,L,Fertilized,98,Creek wall,0,0,0,0,0
+2015,2015-05-20,Sweeney,R,L,Fertilized,117,Spartina,0,16,0,0,0
+2015,2015-05-20,Sweeney,R,L,Fertilized,117,Creek wall,0,16,0,0,0
+2015,2015-05-20,Sweeney,R,L,Fertilized,121,Spartina,0,0,0,0,0
+2015,2015-05-20,Sweeney,R,L,Fertilized,121,Creek wall,0,16,0,0,0
+2015,2015-05-20,Sweeney,R,L,Fertilized,126,Spartina,0,0,0,0,0
+2015,2015-05-20,Sweeney,R,L,Fertilized,126,Creek wall,0,16,0,0,0
+2015,2015-05-20,Sweeney,R,L,Fertilized,130,Spartina,0,16,0,0,0
+2015,2015-05-20,Sweeney,R,L,Fertilized,130,Creek wall,0,16,0,0,0
+2015,2015-05-20,Sweeney,R,L,Fertilized,145,Spartina,0,32,0,0,0
+2015,2015-05-20,Sweeney,R,L,Fertilized,145,Creek wall,0,0,0,0,0
+2015,2015-05-20,Sweeney,R,L,Fertilized,148,Spartina,0,0,0,0,0
+2015,2015-05-20,Sweeney,R,L,Fertilized,148,Creek wall,0,0,0,0,0
+2015,2015-05-20,Sweeney,R,L,Fertilized,185,Spartina,0,0,0,0,128
+2015,2015-05-20,Sweeney,R,L,Fertilized,185,Creek wall,0,0,0,0,0
+2015,2015-05-20,Sweeney,R,L,Fertilized,186,Spartina,0,0,0,0,32
+2015,2015-05-20,Sweeney,R,L,Fertilized,186,Creek wall,0,0,0,0,0
+2015,2015-05-20,Sweeney,R,L,Fertilized,188,Spartina,0,0,0,0,0
+2015,2015-05-20,Sweeney,R,L,Fertilized,188,Creek wall,0,0,0,0,32
+2015,2015-05-20,Sweeney,R,L,Fertilized,189,Spartina,0,0,0,0,16
+2015,2015-05-20,Sweeney,R,L,Fertilized,189,Creek wall,0,0,0,0,0
+2015,2015-05-20,Sweeney,R,L,Fertilized,190,Spartina,0,0,0,16,0
+2015,2015-05-20,Sweeney,R,L,Fertilized,190,Creek wall,32,0,0,0,0
+2015,2015-05-20,Sweeney,R,L,Fertilized,199,Spartina,0,0,0,0,112
+2015,2015-05-20,Sweeney,R,L,Fertilized,199,Creek wall,0,0,0,16,0
+2015,2015-05-21,Nelson,L,R,Reference,5,Spartina,0,16,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,5,Creek wall,0,16,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,14,Spartina,0,0,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,14,Creek wall,0,16,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,18,Spartina,0,32,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,18,Creek wall,0,64,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,24,Spartina,0,16,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,24,Creek wall,0,32,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,35,Spartina,0,0,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,35,Creek wall,0,0,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,50,Spartina,0,0,16,0,0
+2015,2015-05-21,Nelson,L,R,Reference,50,Creek wall,32,48,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,76,Spartina,0,0,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,76,Creek wall,0,0,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,89,Spartina,0,0,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,89,Creek wall,0,16,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,102,Spartina,0,0,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,102,Creek wall,0,0,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,103,Spartina,0,0,0,0,16
+2015,2015-05-21,Nelson,L,R,Reference,103,Creek wall,32,0,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,108,Spartina,0,16,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,108,Creek wall,0,16,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,120,Spartina,0,0,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,120,Creek wall,0,0,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,121,Spartina,0,0,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,121,Creek wall,0,0,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,126,Spartina,0,0,0,0,16
+2015,2015-05-21,Nelson,L,R,Reference,126,Creek wall,0,0,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,141,Spartina,0,16,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,141,Creek wall,0,48,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,148,Spartina,0,0,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,148,Creek wall,0,0,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,158,Spartina,16,16,0,112,0
+2015,2015-05-21,Nelson,L,R,Reference,158,Creek wall,0,16,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,162,Spartina,32,0,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,162,Creek wall,16,0,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,172,Spartina,0,0,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,172,Creek wall,16,64,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,181,Spartina,32,0,0,0,0
+2015,2015-05-21,Nelson,L,R,Reference,181,Creek wall,0,0,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,6,Spartina,0,0,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,6,Creek wall,0,16,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,10,Spartina,0,0,0,16,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,10,Creek wall,0,32,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,13,Spartina,0,0,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,13,Creek wall,0,16,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,27,Spartina,0,0,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,27,Creek wall,0,0,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,49,Spartina,0,0,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,49,Creek wall,0,0,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,51,Spartina,0,0,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,51,Creek wall,0,0,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,78,Spartina,0,0,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,78,Creek wall,0,0,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,110,Spartina,0,0,0,16,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,110,Creek wall,0,0,16,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,128,Spartina,0,0,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,128,Creek wall,0,0,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,132,Spartina,0,0,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,132,Creek wall,0,0,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,138,Spartina,0,0,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,138,Creek wall,0,0,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,147,Spartina,0,0,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,147,Creek wall,0,0,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,149,Spartina,0,0,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,149,Creek wall,0,0,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,185,Spartina,0,16,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,185,Creek wall,0,0,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,189,Spartina,0,0,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,189,Creek wall,0,0,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,190,Spartina,0,0,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,190,Creek wall,0,0,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,195,Spartina,0,0,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,195,Creek wall,0,32,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,198,Spartina,0,0,0,0,96
+2015,2015-05-22,Clubhead,R,L,Fertilized,198,Creek wall,0,0,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,199,Spartina,0,0,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,199,Creek wall,0,0,0,0,0
+2015,2015-05-22,Clubhead,R,L,Fertilized,200,Spartina,0,0,0,0,32
+2015,2015-05-22,Clubhead,R,L,Fertilized,200,Creek wall,0,0,0,0,0
+2016,2016-05-20,Sweeney,L,R,Fertilized,7,Spartina,0,18.75,0,18.75,0
+2016,2016-05-20,Sweeney,L,R,Fertilized,10,Spartina,0,0,0,6.25,0
+2016,2016-05-20,Sweeney,L,R,Fertilized,13,Spartina,0,0,0,56.25,0
+2016,2016-05-20,Sweeney,L,R,Fertilized,23,Spartina,0,6.25,0,0,0
+2016,2016-05-20,Sweeney,L,R,Fertilized,31,Spartina,0,0,0,12.5,62.5
+2016,2016-05-20,Sweeney,L,R,Fertilized,41,Spartina,0,25,0,0,531.25
+2016,2016-05-20,Sweeney,L,R,Fertilized,100,Spartina,0,12.5,0,0,862.5
+2016,2016-05-20,Sweeney,L,R,Fertilized,104,Spartina,0,6.25,0,0,325
+2016,2016-05-20,Sweeney,L,R,Fertilized,107,Spartina,0,12.5,0,6.25,100
+2016,2016-05-20,Sweeney,L,R,Fertilized,114,Spartina,0,25,0,6.25,18.75
+2016,2016-05-20,Sweeney,L,R,Fertilized,127,Spartina,0,6.25,0,0,6.25
+2016,2016-05-20,Sweeney,L,R,Fertilized,128,Spartina,0,6.25,0,12.5,0
+2016,2016-05-20,Sweeney,L,R,Fertilized,134,Spartina,0,0,0,6.25,0
+2016,2016-05-20,Sweeney,L,R,Fertilized,135,Spartina,18.75,62.5,25,6.25,6.25
+2016,2016-05-20,Sweeney,L,R,Fertilized,159,Spartina,0,6.25,0,6.25,31.25
+2016,2016-05-20,Sweeney,L,R,Fertilized,160,Spartina,0,6.25,0,31.25,6.25
+2016,2016-05-20,Sweeney,L,R,Fertilized,173,Spartina,0,0,0,18.75,262.5
+2016,2016-05-20,Sweeney,L,R,Fertilized,178,Spartina,0,12.5,0,6.25,6.25
+2016,2016-05-20,Sweeney,L,R,Fertilized,180,Spartina,0,0,0,6.25,81.25
+2016,2016-05-20,Sweeney,L,R,Fertilized,199,Spartina,0,18.75,0,6.25,500
+2016,2016-05-17,Nelson,L,R,Reference,15,Spartina,0,0,0,0,0
+2016,2016-05-17,Nelson,L,R,Reference,22,Spartina,0,6.25,0,12.5,506.25
+2016,2016-05-17,Nelson,L,R,Reference,27,Spartina,0,0,0,18.75,231.25
+2016,2016-05-17,Nelson,L,R,Reference,33,Spartina,0,12.5,0,0,187.5
+2016,2016-05-17,Nelson,L,R,Reference,34,Spartina,0,0,0,0,150
+2016,2016-05-17,Nelson,L,R,Reference,35,Spartina,0,0,0,12.5,0
+2016,2016-05-17,Nelson,L,R,Reference,48,Spartina,0,18.75,0,0,6.25
+2016,2016-05-17,Nelson,L,R,Reference,54,Spartina,0,18.75,0,0,93.75
+2016,2016-05-17,Nelson,L,R,Reference,59,Spartina,0,0,0,6.25,56.25
+2016,2016-05-17,Nelson,L,R,Reference,60,Spartina,0,12.5,0,0,18.75
+2016,2016-05-17,Nelson,L,R,Reference,74,Spartina,0,18.75,0,0,0
+2016,2016-05-17,Nelson,L,R,Reference,82,Spartina,0,0,0,0,6.25
+2016,2016-05-17,Nelson,L,R,Reference,84,Spartina,0,0,12.5,0,81.25
+2016,2016-05-17,Nelson,L,R,Reference,87,Spartina,0,6.25,0,0,0
+2016,2016-05-17,Nelson,L,R,Reference,96,Spartina,0,0,0,0,343.75
+2016,2016-05-17,Nelson,L,R,Reference,121,Spartina,0,12.5,0,0,1925
+2016,2016-05-17,Nelson,L,R,Reference,122,Spartina,0,0,0,0,193.75
+2016,2016-05-17,Nelson,L,R,Reference,160,Spartina,6.25,12.5,0,0,25
+2016,2016-05-17,Nelson,L,R,Reference,173,Spartina,0,6.25,0,0,18.75
+2016,2016-05-17,Nelson,L,R,Reference,180,Spartina,6.25,0,0,0,37.5
+2016,2016-05-18,Clubhead,R,R,Fertilized,192,Spartina,0,0,0,0,306.25
+2016,2016-05-18,Clubhead,R,R,Fertilized,191,Spartina,12.5,0,0,0,106.25
+2016,2016-05-18,Clubhead,R,R,Fertilized,183,Spartina,0,0,0,0,12.5
+2016,2016-05-18,Clubhead,R,R,Fertilized,148,Spartina,0,6.25,0,0,656.25
+2016,2016-05-18,Clubhead,R,R,Fertilized,145,Spartina,0,6.25,0,6.25,156.25
+2016,2016-05-18,Clubhead,R,R,Fertilized,133,Spartina,0,0,0,0,62.5
+2016,2016-05-18,Clubhead,R,R,Fertilized,132,Spartina,0,0,0,12.5,650
+2016,2016-05-18,Clubhead,R,R,Fertilized,114,Spartina,0,18.75,0,6.25,0
+2016,2016-05-18,Clubhead,R,R,Fertilized,104,Spartina,0,0,0,12.5,75
+2016,2016-05-18,Clubhead,R,R,Fertilized,95,Spartina,0,0,0,0,125
+2016,2016-05-18,Clubhead,R,R,Fertilized,74,Spartina,0,0,0,25,0
+2016,2016-05-18,Clubhead,R,R,Fertilized,67,Spartina,0,6.25,0,56.25,0
+2016,2016-05-18,Clubhead,R,R,Fertilized,65,Spartina,12.5,6.25,0,0,31.25
+2016,2016-05-18,Clubhead,R,R,Fertilized,63,Spartina,0,18.75,0,18.75,50
+2016,2016-05-18,Clubhead,R,R,Fertilized,59,Spartina,0,6.25,0,43.75,0
+2016,2016-05-18,Clubhead,R,R,Fertilized,56,Spartina,0,12.5,0,75,0
+2016,2016-05-18,Clubhead,R,R,Fertilized,51,Spartina,0,6.25,0,18.75,0
+2016,2016-05-18,Clubhead,R,R,Fertilized,25,Spartina,0,0,0,6.25,31.25
+2016,2016-05-18,Clubhead,R,R,Fertilized,14,Spartina,12.5,0,0,0,0
+2016,2016-05-18,Clubhead,R,R,Fertilized,13,Spartina,0,0,0,18.75,137.5
+2016,2016-05-17,West,R,L,Reference,3,Spartina,0,0,0,393.75,0
+2016,2016-05-17,West,R,L,Reference,8,Spartina,0,0,0,50,6.25
+2016,2016-05-17,West,R,L,Reference,21,Spartina,0,6.25,0,68.75,0
+2016,2016-05-17,West,R,L,Reference,23,Spartina,0,0,0,18.75,93.75
+2016,2016-05-17,West,R,L,Reference,48,Spartina,0,25,0,18.75,6.25
+2016,2016-05-17,West,R,L,Reference,71,Spartina,0,0,0,37.5,0
+2016,2016-05-17,West,R,L,Reference,72,Spartina,0,0,0,0,0
+2016,2016-05-17,West,R,L,Reference,83,Spartina,12.5,18.75,0,0,6.25
+2016,2016-05-17,West,R,L,Reference,89,Spartina,0,6.25,0,12.5,12.5
+2016,2016-05-17,West,R,L,Reference,91,Spartina,0,25,0,12.5,6.25
+2016,2016-05-17,West,R,L,Reference,94,Spartina,0,31.25,0,6.25,0
+2016,2016-05-18,West,R,L,Reference,108,Spartina,0,18.75,0,0,18.75
+2016,2016-05-18,West,R,L,Reference,115,Spartina,0,18.75,0,56.25,6.25
+2016,2016-05-18,West,R,L,Reference,117,Spartina,0,6.25,0,18.75,6.25
+2016,2016-05-18,West,R,L,Reference,143,Spartina,0,12.5,0,25,18.75
+2016,2016-05-18,West,R,L,Reference,146,Spartina,0,6.25,0,18.75,106.25
+2016,2016-05-18,West,R,L,Reference,147,Spartina,0,6.25,0,6.25,156.25
+2016,2016-05-18,West,R,L,Reference,162,Spartina,0,12.5,6.25,0,0
+2016,2016-05-18,West,R,L,Reference,171,Spartina,0,18.75,0,0,25
+2016,2016-05-18,West,R,L,Reference,184,Spartina,0,56.25,0,6.25,0
+2016,2016-05-18,West,L,R,Reference,11,Spartina,0,25,0,87.5,0
+2016,2016-05-18,West,L,R,Reference,46,Spartina,0,6.25,0,56.25,68.75
+2016,2016-05-18,West,L,R,Reference,49,Spartina,0,31.25,0,50,0
+2016,2016-05-18,West,L,R,Reference,50,Spartina,0,12.5,0,187.5,6.25
+2016,2016-05-18,West,L,R,Reference,65,Spartina,0,56.25,0,68.75,0
+2016,2016-05-18,West,L,R,Reference,80,Spartina,0,25,0,18.75,6.25
+2016,2016-05-18,West,L,R,Reference,83,Spartina,0,81.25,0,43.75,0
+2016,2016-05-18,West,L,R,Reference,95,Spartina,0,81.25,0,37.5,0
+2016,2016-05-18,West,L,R,Reference,100,Spartina,0,6.25,0,0,0
+2016,2016-05-19,West,L,R,Reference,132,Spartina,0,18.75,0,6.25,37.5
+2016,2016-05-19,West,L,R,Reference,139,Spartina,0,12.5,0,6.25,87.5
+2016,2016-05-19,West,L,R,Reference,143,Spartina,0,6.25,0,0,0
+2016,2016-05-19,West,L,R,Reference,147,Spartina,0,87.5,0,6.25,6.25
+2016,2016-05-19,West,L,R,Reference,156,Spartina,0,62.5,0,0,106.25
+2016,2016-05-19,West,L,R,Reference,158,Spartina,0,31.25,0,0,43.75
+2016,2016-05-19,West,L,R,Reference,163,Spartina,0,18.75,0,0,0
+2016,2016-05-19,West,L,R,Reference,164,Spartina,0,12.5,0,0,0
+2016,2016-05-19,West,L,R,Reference,171,Spartina,6.25,0,0,0,6.25
+2016,2016-05-19,West,L,R,Reference,188,Spartina,0,81.25,0,0,6.25
+2016,2016-05-19,West,L,R,Reference,189,Spartina,0,6.25,0,0,12.5
+2016,2016-05-20,Sweeney,R,R,Fertilized,190,Spartina,0,6.25,0,0,543.75
+2016,2016-05-20,Sweeney,R,R,Fertilized,175,Spartina,6.25,0,0,0,0
+2016,2016-05-20,Sweeney,R,R,Fertilized,163,Spartina,12.5,12.5,0,0,75
+2016,2016-05-20,Sweeney,R,R,Fertilized,157,Spartina,0,0,0,0,550
+2016,2016-05-20,Sweeney,R,R,Fertilized,153,Spartina,0,6.25,0,6.25,106.25
+2016,2016-05-20,Sweeney,R,R,Fertilized,143,Spartina,0,0,0,0,225
+2016,2016-05-20,Sweeney,R,R,Fertilized,136,Spartina,0,6.25,0,0,43.75
+2016,2016-05-20,Sweeney,R,R,Fertilized,135,Spartina,0,6.25,0,0,43.75
+2016,2016-05-20,Sweeney,R,R,Fertilized,127,Spartina,0,0,0,0,18.75
+2016,2016-05-20,Sweeney,R,R,Fertilized,110,Spartina,0,6.25,0,0,0
+2016,2016-05-20,Sweeney,R,R,Fertilized,104,Spartina,0,0,0,0,0
+2016,2016-05-20,Sweeney,R,R,Fertilized,98,Spartina,0,0,0,0,43.75
+2016,2016-05-20,Sweeney,R,R,Fertilized,82,Spartina,0,0,0,0,0
+2016,2016-05-20,Sweeney,R,R,Fertilized,79,Spartina,6.25,0,0,0,37.5
+2016,2016-05-20,Sweeney,R,R,Fertilized,61,Spartina,0,0,0,0,6.25
+2016,2016-05-20,Sweeney,R,R,Fertilized,60,Spartina,0,37.5,0,0,0
+2016,2016-05-20,Sweeney,R,R,Fertilized,74,Spartina,0,6.25,0,0,31.25
+2016,2016-05-20,Sweeney,R,R,Fertilized,45,Spartina,0,6.25,0,12.5,468.75
+2016,2016-05-20,Sweeney,R,R,Fertilized,25,Spartina,0,6.25,0,0,6.25
+2016,2016-05-20,Sweeney,R,R,Fertilized,8,Spartina,0,0,0,6.25,50
+2017,2017-05-09,Nelson,L,R,Reference,11,Spartina,0,0,0,0,0
+2017,2017-05-09,Nelson,L,R,Reference,15,Spartina,0,0,0,0,0
+2017,2017-05-09,Nelson,L,R,Reference,21,Spartina,0,16,0,0,0
+2017,2017-05-09,Nelson,L,R,Reference,23,Spartina,0,64,0,0,0
+2017,2017-05-09,Nelson,L,R,Reference,35,Spartina,0,16,0,0,0
+2017,2017-05-09,Nelson,L,R,Reference,47,Spartina,0,0,0,0,0
+2017,2017-05-09,Nelson,L,R,Reference,58,Spartina,0,0,0,0,0
+2017,2017-05-09,Nelson,L,R,Reference,72,Spartina,0,16,0,0,0
+2017,2017-05-09,Nelson,L,R,Reference,78,Spartina,0,32,0,0,0
+2017,2017-05-09,Nelson,L,R,Reference,82,Spartina,48,0,0,0,0
+2017,2017-05-09,Nelson,L,R,Reference,102,Spartina,16,0,0,0,0
+2017,2017-05-09,Nelson,L,R,Reference,106,Spartina,0,16,0,0,0
+2017,2017-05-09,Nelson,L,R,Reference,118,Spartina,16,0,0,0,0
+2017,2017-05-09,Nelson,L,R,Reference,125,Spartina,16,0,0,0,0
+2017,2017-05-09,Nelson,L,R,Reference,133,Spartina,0,16,0,0,0
+2017,2017-05-09,Nelson,L,R,Reference,141,Spartina,0,0,0,0,0
+2017,2017-05-09,Nelson,L,R,Reference,153,Spartina,16,0,0,0,0
+2017,2017-05-09,Nelson,L,R,Reference,164,Spartina,0,16,0,0,0
+2017,2017-05-09,Nelson,L,R,Reference,173,Spartina,16,0,0,0,0
+2017,2017-05-09,Nelson,L,R,Reference,178,Spartina,0,32,0,0,0
+2017,2017-05-09,Sweeney,L,R,Fertilized,12,Spartina,0,0,0,0,0
+2017,2017-05-09,Sweeney,L,R,Fertilized,23,Spartina,0,0,0,0,0
+2017,2017-05-09,Sweeney,L,R,Fertilized,27,Spartina,0,0,0,0,0
+2017,2017-05-09,Sweeney,L,R,Fertilized,29,Spartina,0,16,0,0,0
+2017,2017-05-09,Sweeney,L,R,Fertilized,41,Spartina,0,0,0,0,0
+2017,2017-05-09,Sweeney,L,R,Fertilized,57,Spartina,0,0,0,0,0
+2017,2017-05-09,Sweeney,L,R,Fertilized,66,Spartina,0,0,0,0,0
+2017,2017-05-09,Sweeney,L,R,Fertilized,70,Spartina,0,32,0,0,0
+2017,2017-05-09,Sweeney,L,R,Fertilized,82,Spartina,0,0,0,0,0
+2017,2017-05-09,Sweeney,L,R,Fertilized,96,Spartina,0,0,0,0,0
+2017,2017-05-09,Sweeney,L,R,Fertilized,104,Spartina,0,0,0,0,0
+2017,2017-05-09,Sweeney,L,R,Fertilized,106,Spartina,0,0,0,0,0
+2017,2017-05-09,Sweeney,L,R,Fertilized,123,Spartina,0,80,0,0,0
+2017,2017-05-09,Sweeney,L,R,Fertilized,141,Spartina,0,16,0,0,0
+2017,2017-05-09,Sweeney,L,R,Fertilized,154,Spartina,0,0,0,0,0
+2017,2017-05-09,Sweeney,L,R,Fertilized,164,Spartina,0,0,0,16,0
+2017,2017-05-09,Sweeney,L,R,Fertilized,176,Spartina,0,16,0,0,0
+2017,2017-05-09,Sweeney,L,R,Fertilized,182,Spartina,0,0,0,0,0
+2017,2017-05-09,Sweeney,L,R,Fertilized,191,Spartina,0,0,0,0,0
+2017,2017-05-09,Sweeney,L,R,Fertilized,193,Spartina,0,0,0,0,0
+2017,2017-05-09,Sweeney,R,L,Fertilized,16,Spartina,64,0,0,0,0
+2017,2017-05-09,Sweeney,R,L,Fertilized,32,Spartina,0,16,0,0,0
+2017,2017-05-09,Sweeney,R,L,Fertilized,39,Spartina,0,16,0,0,0
+2017,2017-05-09,Sweeney,R,L,Fertilized,40,Spartina,0,32,0,0,0
+2017,2017-05-09,Sweeney,R,L,Fertilized,42,Spartina,0,16,0,0,0
+2017,2017-05-09,Sweeney,R,L,Fertilized,45,Spartina,0,0,0,0,0
+2017,2017-05-09,Sweeney,R,L,Fertilized,60,Spartina,16,0,0,0,0
+2017,2017-05-09,Sweeney,R,L,Fertilized,63,Spartina,32,0,0,0,0
+2017,2017-05-09,Sweeney,R,L,Fertilized,69,Spartina,0,0,0,0,0
+2017,2017-05-09,Sweeney,R,L,Fertilized,87,Spartina,0,0,0,0,0
+2017,2017-05-09,Sweeney,R,L,Fertilized,121,Spartina,0,0,0,0,0
+2017,2017-05-09,Sweeney,R,L,Fertilized,124,Spartina,0,48,0,0,0
+2017,2017-05-09,Sweeney,R,L,Fertilized,140,Spartina,0,32,0,0,0
+2017,2017-05-09,Sweeney,R,L,Fertilized,147,Spartina,16,0,0,0,0
+2017,2017-05-09,Sweeney,R,L,Fertilized,150,Spartina,0,16,0,0,0
+2017,2017-05-09,Sweeney,R,L,Fertilized,159,Spartina,0,0,0,0,0
+2017,2017-05-09,Sweeney,R,L,Fertilized,164,Spartina,16,16,0,0,0
+2017,2017-05-09,Sweeney,R,L,Fertilized,171,Spartina,0,0,0,0,0
+2017,2017-05-09,Sweeney,R,L,Fertilized,189,Spartina,0,0,0,0,0
+2017,2017-05-09,Sweeney,R,L,Fertilized,197,Spartina,16,0,0,0,0
+2017,2017-05-08,West,L,R,Reference,16,Spartina,0,16,0,0,0
+2017,2017-05-08,West,L,R,Reference,27,Spartina,0,0,0,0,0
+2017,2017-05-08,West,L,R,Reference,32,Spartina,0,0,0,0,0
+2017,2017-05-08,West,L,R,Reference,47,Spartina,0,16,0,0,0
+2017,2017-05-08,West,L,R,Reference,52,Spartina,0,16,0,0,0
+2017,2017-05-08,West,L,R,Reference,71,Spartina,0,0,0,0,0
+2017,2017-05-08,West,L,R,Reference,79,Spartina,0,0,0,0,0
+2017,2017-05-08,West,L,R,Reference,82,Spartina,0,0,0,0,0
+2017,2017-05-08,West,L,R,Reference,85,Spartina,0,80,0,0,0
+2017,2017-05-08,West,L,R,Reference,95,Spartina,16,80,0,0,0
+2017,2017-05-08,West,L,R,Reference,114,Spartina,0,0,0,0,0
+2017,2017-05-08,West,L,R,Reference,132,Spartina,0,16,0,0,0
+2017,2017-05-08,West,L,R,Reference,139,Spartina,16,0,0,0,0
+2017,2017-05-08,West,L,R,Reference,143,Spartina,0,0,0,0,0
+2017,2017-05-08,West,L,R,Reference,146,Spartina,0,64,0,0,0
+2017,2017-05-08,West,L,R,Reference,152,Spartina,16,48,0,0,0
+2017,2017-05-08,West,L,R,Reference,163,Spartina,0,16,0,0,0
+2017,2017-05-08,West,L,R,Reference,172,Spartina,16,0,0,0,0
+2017,2017-05-08,West,L,R,Reference,180,Spartina,0,0,0,0,0
+2017,2017-05-08,West,L,R,Reference,183,Spartina,0,80,0,0,0
+2017,2017-05-08,West,R,L,Reference,4,Spartina,0,16,0,0,0
+2017,2017-05-08,West,R,L,Reference,5,Spartina,0,0,0,0,0
+2017,2017-05-08,West,R,L,Reference,20,Spartina,16,0,0,0,0
+2017,2017-05-08,West,R,L,Reference,27,Spartina,0,48,0,0,0
+2017,2017-05-08,West,R,L,Reference,53,Spartina,16,16,0,0,0
+2017,2017-05-08,West,R,L,Reference,54,Spartina,32,0,0,0,0
+2017,2017-05-08,West,R,L,Reference,67,Spartina,0,16,0,0,0
+2017,2017-05-08,West,R,L,Reference,75,Spartina,0,0,0,0,0
+2017,2017-05-08,West,R,L,Reference,93,Spartina,32,16,0,0,0
+2017,2017-05-08,West,R,L,Reference,99,Spartina,0,16,0,0,0
+2017,2017-05-08,West,R,L,Reference,112,Spartina,0,0,0,0,0
+2017,2017-05-08,West,R,L,Reference,128,Spartina,32,0,0,0,0
+2017,2017-05-08,West,R,L,Reference,159,Spartina,0,80,0,0,0
+2017,2017-05-08,West,R,L,Reference,160,Spartina,0,48,0,0,0
+2017,2017-05-08,West,R,L,Reference,161,Spartina,32,16,0,0,0
+2017,2017-05-08,West,R,L,Reference,166,Spartina,32,16,0,0,0
+2017,2017-05-08,West,R,L,Reference,179,Spartina,0,32,0,0,0
+2017,2017-05-08,West,R,L,Reference,185,Spartina,0,80,0,0,0
+2017,2017-05-08,West,R,L,Reference,194,Spartina,0,64,0,0,0
+2017,2017-05-08,West,R,L,Reference,199,Spartina,16,0,0,0,0
+2018,2018-05-22,Clubhead,R,L,Fertilized,5,Spartina,0,0,16,0,0
+2018,2018-05-22,Clubhead,R,L,Fertilized,17,Spartina,0,0,0,0,0
+2018,2018-05-22,Clubhead,R,L,Fertilized,30,Spartina,0,0,0,16,0
+2018,2018-05-22,Clubhead,R,L,Fertilized,34,Spartina,0,0,0,0,0
+2018,2018-05-22,Clubhead,R,L,Fertilized,39,Spartina,0,0,0,0,0
+2018,2018-05-22,Clubhead,R,L,Fertilized,55,Spartina,0,0,0,0,0
+2018,2018-05-22,Clubhead,R,L,Fertilized,70,Spartina,0,0,0,0,0
+2018,2018-05-22,Clubhead,R,L,Fertilized,87,Spartina,0,0,0,0,0
+2018,2018-05-22,Clubhead,R,L,Fertilized,90,Spartina,0,0,0,0,0
+2018,2018-05-22,Clubhead,R,L,Fertilized,93,Spartina,0,0,16,0,0
+2018,2018-05-22,Clubhead,R,L,Fertilized,99,Spartina,0,0,0,0,0
+2018,2018-05-22,Clubhead,R,L,Fertilized,103,Spartina,0,0,0,0,0
+2018,2018-05-22,Clubhead,R,L,Fertilized,124,Spartina,0,0,0,0,0
+2018,2018-05-22,Clubhead,R,L,Fertilized,133,Spartina,16,0,0,0,0
+2018,2018-05-22,Clubhead,R,L,Fertilized,144,Spartina,32,0,0,0,0
+2018,2018-05-22,Clubhead,R,L,Fertilized,152,Spartina,16,0,0,0,0
+2018,2018-05-22,Clubhead,R,L,Fertilized,157,Spartina,16,0,0,0,0
+2018,2018-05-22,Clubhead,R,L,Fertilized,159,Spartina,0,0,0,0,0
+2018,2018-05-22,Clubhead,R,L,Fertilized,177,Spartina,0,0,0,0,0
+2018,2018-05-22,Clubhead,R,L,Fertilized,187,Spartina,0,0,0,0,0
+2018,2018-05-22,Nelson,L,R,Reference,5,Spartina,0,0,0,0,0
+2018,2018-05-22,Nelson,L,R,Reference,10,Spartina,0,16,0,0,0
+2018,2018-05-22,Nelson,L,R,Reference,11,Spartina,0,0,0,0,0
+2018,2018-05-22,Nelson,L,R,Reference,23,Spartina,0,32,0,0,16
+2018,2018-05-22,Nelson,L,R,Reference,28,Spartina,0,0,0,0,0
+2018,2018-05-22,Nelson,L,R,Reference,30,Spartina,0,0,0,0,0
+2018,2018-05-22,Nelson,L,R,Reference,62,Spartina,0,32,0,0,0
+2018,2018-05-22,Nelson,L,R,Reference,64,Spartina,0,16,0,0,0
+2018,2018-05-22,Nelson,L,R,Reference,74,Spartina,0,0,0,0,0
+2018,2018-05-22,Nelson,L,R,Reference,83,Spartina,16,0,0,0,0
+2018,2018-05-22,Nelson,L,R,Reference,121,Spartina,0,0,0,0,0
+2018,2018-05-22,Nelson,L,R,Reference,130,Spartina,0,0,0,0,0
+2018,2018-05-22,Nelson,L,R,Reference,133,Spartina,0,16,0,0,0
+2018,2018-05-22,Nelson,L,R,Reference,145,Spartina,0,0,0,0,0
+2018,2018-05-22,Nelson,L,R,Reference,154,Spartina,16,32,0,0,0
+2018,2018-05-22,Nelson,L,R,Reference,159,Spartina,0,0,0,0,0
+2018,2018-05-22,Nelson,L,R,Reference,168,Spartina,0,0,0,0,0
+2018,2018-05-22,Nelson,L,R,Reference,180,Spartina,0,0,0,0,0
+2018,2018-05-22,Nelson,L,R,Reference,187,Spartina,0,0,0,0,0
+2018,2018-05-22,Nelson,L,R,Reference,194,Spartina,0,0,0,0,0
+2018,2018-05-22,West,L,L,Reference,2,Spartina,0,0,0,0,0
+2018,2018-05-22,West,L,L,Reference,10,Spartina,0,0,0,0,0
+2018,2018-05-22,West,L,L,Reference,11,Spartina,0,32,0,0,0
+2018,2018-05-22,West,L,L,Reference,22,Spartina,0,16,0,0,0
+2018,2018-05-22,West,L,L,Reference,29,Spartina,0,16,0,0,0
+2018,2018-05-22,West,L,L,Reference,40,Spartina,0,0,0,0,0
+2018,2018-05-22,West,L,L,Reference,67,Spartina,0,0,0,0,0
+2018,2018-05-22,West,L,L,Reference,84,Spartina,0,0,0,0,0
+2018,2018-05-22,West,L,L,Reference,93,Spartina,0,32,0,0,0
+2018,2018-05-22,West,L,L,Reference,107,Spartina,0,16,0,0,0
+2018,2018-05-22,West,L,L,Reference,116,Spartina,0,0,0,0,0
+2018,2018-05-22,West,L,L,Reference,130,Spartina,0,16,0,0,0
+2018,2018-05-22,West,L,L,Reference,133,Spartina,0,0,0,0,0
+2018,2018-05-22,West,L,L,Reference,143,Spartina,0,96,0,0,0
+2018,2018-05-22,West,L,L,Reference,155,Spartina,0,0,0,0,0
+2018,2018-05-22,West,L,L,Reference,158,Spartina,0,0,0,0,0
+2018,2018-05-22,West,L,L,Reference,165,Spartina,0,16,0,0,0
+2018,2018-05-22,West,L,L,Reference,186,Spartina,0,16,0,0,0
+2018,2018-05-22,West,L,L,Reference,192,Spartina,0,16,0,0,0
+2018,2018-05-22,West,L,L,Reference,197,Spartina,0,16,0,0,0
+2018,2018-05-22,West,R,L,Reference,21,Spartina,0,0,0,0,16
+2018,2018-05-22,West,R,L,Reference,33,Spartina,0,0,0,0,0
+2018,2018-05-22,West,R,L,Reference,36,Spartina,0,0,0,0,0
+2018,2018-05-22,West,R,L,Reference,45,Spartina,0,0,0,0,0
+2018,2018-05-22,West,R,L,Reference,47,Spartina,0,16,0,0,0
+2018,2018-05-22,West,R,L,Reference,80,Spartina,0,0,0,0,0
+2018,2018-05-22,West,R,L,Reference,85,Spartina,0,64,0,0,0
+2018,2018-05-22,West,R,L,Reference,88,Spartina,0,0,0,0,0
+2018,2018-05-22,West,R,L,Reference,99,Spartina,0,16,0,0,0
+2018,2018-05-22,West,R,L,Reference,101,Spartina,0,32,0,0,0
+2018,2018-05-22,West,R,L,Reference,129,Spartina,0,32,0,0,0
+2018,2018-05-22,West,R,L,Reference,133,Spartina,0,0,0,0,0
+2018,2018-05-22,West,R,L,Reference,135,Spartina,0,32,0,0,0
+2018,2018-05-22,West,R,L,Reference,140,Spartina,0,0,0,0,0
+2018,2018-05-22,West,R,L,Reference,155,Spartina,0,64,0,0,0
+2018,2018-05-22,West,R,L,Reference,172,Spartina,0,0,0,0,0
+2018,2018-05-22,West,R,L,Reference,180,Spartina,0,48,0,0,0
+2018,2018-05-22,West,R,L,Reference,177,Spartina,0,32,0,0,0
+2018,2018-05-22,West,R,L,Reference,178,Spartina,0,96,0,0,0
+2018,2018-05-22,West,R,L,Reference,190,Spartina,16,16,0,0,0
+2018,2018-05-23,Sweeney,L,R,Fertilized,26,Spartina,0,0,0,0,0
+2018,2018-05-23,Sweeney,L,R,Fertilized,28,Spartina,0,0,0,0,0
+2018,2018-05-23,Sweeney,L,R,Fertilized,42,Spartina,0,0,0,0,0
+2018,2018-05-23,Sweeney,L,R,Fertilized,56,Spartina,48,0,0,0,0
+2018,2018-05-23,Sweeney,L,R,Fertilized,60,Spartina,48,0,0,0,0
+2018,2018-05-23,Sweeney,L,R,Fertilized,82,Spartina,0,0,0,0,0
+2018,2018-05-23,Sweeney,L,R,Fertilized,92,Spartina,0,0,0,0,0
+2018,2018-05-23,Sweeney,L,R,Fertilized,96,Spartina,0,0,0,0,0
+2018,2018-05-23,Sweeney,L,R,Fertilized,102,Spartina,0,0,0,0,0
+2018,2018-05-23,Sweeney,L,R,Fertilized,133,Spartina,32,0,0,0,0
+2018,2018-05-23,Sweeney,L,R,Fertilized,140,Spartina,0,48,0,0,0
+2018,2018-05-23,Sweeney,L,R,Fertilized,154,Spartina,0,0,0,0,0
+2018,2018-05-23,Sweeney,L,R,Fertilized,157,Spartina,0,0,0,0,0
+2018,2018-05-23,Sweeney,L,R,Fertilized,159,Spartina,0,0,0,0,0
+2018,2018-05-23,Sweeney,L,R,Fertilized,161,Spartina,0,0,0,0,0
+2018,2018-05-23,Sweeney,L,R,Fertilized,163,Spartina,32,0,0,0,0
+2018,2018-05-23,Sweeney,L,R,Fertilized,187,Spartina,0,0,0,0,0
+2018,2018-05-23,Sweeney,L,R,Fertilized,189,Spartina,0,48,0,0,0
+2018,2018-05-23,Sweeney,L,R,Fertilized,190,Spartina,0,0,0,0,0
+2018,2018-05-23,Sweeney,L,R,Fertilized,192,Spartina,0,0,0,0,0
+2018,2018-05-23,Sweeney,R,L,Fertilized,4,Spartina,16,0,0,0,0
+2018,2018-05-23,Sweeney,R,L,Fertilized,17,Spartina,32,0,0,0,0
+2018,2018-05-23,Sweeney,R,L,Fertilized,25,Spartina,0,0,0,0,0
+2018,2018-05-23,Sweeney,R,L,Fertilized,26,Spartina,0,0,0,0,0
+2018,2018-05-23,Sweeney,R,L,Fertilized,36,Spartina,32,0,0,0,0
+2018,2018-05-23,Sweeney,R,L,Fertilized,61,Spartina,0,0,0,0,0
+2018,2018-05-23,Sweeney,R,L,Fertilized,62,Spartina,0,0,0,0,0
+2018,2018-05-23,Sweeney,R,L,Fertilized,77,Spartina,0,0,0,0,0
+2018,2018-05-23,Sweeney,R,L,Fertilized,86,Spartina,0,0,0,0,0
+2018,2018-05-23,Sweeney,R,L,Fertilized,90,Spartina,0,0,0,0,0
+2018,2018-05-23,Sweeney,R,L,Fertilized,91,Spartina,0,0,0,0,0
+2018,2018-05-23,Sweeney,R,L,Fertilized,110,Spartina,0,0,0,0,0
+2018,2018-05-23,Sweeney,R,L,Fertilized,122,Spartina,0,16,0,0,0
+2018,2018-05-23,Sweeney,R,L,Fertilized,129,Spartina,0,0,0,0,0
+2018,2018-05-23,Sweeney,R,L,Fertilized,133,Spartina,0,32,0,0,0
+2018,2018-05-23,Sweeney,R,L,Fertilized,138,Spartina,0,16,0,0,0
+2018,2018-05-23,Sweeney,R,L,Fertilized,152,Spartina,0,0,0,0,0
+2018,2018-05-23,Sweeney,R,L,Fertilized,174,Spartina,0,0,0,0,0
+2018,2018-05-23,Sweeney,R,L,Fertilized,182,Spartina,0,0,0,0,0
+2018,2018-05-23,Sweeney,R,L,Fertilized,190,Spartina,0,0,0,0,0
+2019,2019-05-21,West,L,L,Reference,10,Spartina,0,0,0,0,0
+2019,2019-05-21,West,L,L,Reference,22,Spartina,0,16,0,0,0
+2019,2019-05-21,West,L,L,Reference,34,Spartina,0,0,0,0,0
+2019,2019-05-21,West,L,L,Reference,39,Spartina,0,0,0,16,0
+2019,2019-05-21,West,L,L,Reference,40,Spartina,0,16,0,0,0
+2019,2019-05-21,West,L,L,Reference,45,Spartina,0,48,0,0,0
+2019,2019-05-21,West,L,L,Reference,48,Spartina,0,16,0,0,0
+2019,2019-05-21,West,L,L,Reference,53,Spartina,0,0,0,0,0
+2019,2019-05-21,West,L,L,Reference,58,Spartina,0,16,0,0,0
+2019,2019-05-21,West,L,L,Reference,69,Spartina,0,0,0,0,0
+2019,2019-05-21,West,L,L,Reference,91,Spartina,0,0,32,0,16
+2019,2019-05-21,West,L,L,Reference,93,Spartina,0,0,0,0,0
+2019,2019-05-21,West,L,L,Reference,113,Spartina,0,48,0,0,0
+2019,2019-05-21,West,L,L,Reference,118,Spartina,16,32,0,0,0
+2019,2019-05-21,West,L,L,Reference,126,Spartina,0,32,0,0,0
+2019,2019-05-21,West,L,L,Reference,129,Spartina,0,32,16,0,0
+2019,2019-05-21,West,L,L,Reference,138,Spartina,0,0,0,0,0
+2019,2019-05-21,West,L,L,Reference,155,Spartina,0,32,0,0,0
+2019,2019-05-21,West,L,L,Reference,179,Spartina,0,0,0,0,16
+2019,2019-05-21,West,L,L,Reference,184,Spartina,48,16,0,0,0
+2019,2019-05-21,West,R,L,Reference,18,Spartina,0,0,16,16,0
+2019,2019-05-21,West,R,L,Reference,20,Spartina,0,16,0,0,0
+2019,2019-05-21,West,R,L,Reference,47,Spartina,0,0,0,0,0
+2019,2019-05-21,West,R,L,Reference,59,Spartina,0,0,0,16,0
+2019,2019-05-21,West,R,L,Reference,67,Spartina,0,16,0,0,0
+2019,2019-05-21,West,R,L,Reference,68,Spartina,0,48,0,0,0
+2019,2019-05-21,West,R,L,Reference,70,Spartina,0,0,0,0,0
+2019,2019-05-21,West,R,L,Reference,71,Spartina,0,16,0,0,0
+2019,2019-05-21,West,R,L,Reference,74,Spartina,0,16,0,16,0
+2019,2019-05-21,West,R,L,Reference,78,Spartina,0,0,0,0,0
+2019,2019-05-21,West,R,L,Reference,92,Spartina,0,0,0,0,0
+2019,2019-05-21,West,R,L,Reference,98,Spartina,0,48,0,0,0
+2019,2019-05-21,West,R,L,Reference,130,Spartina,0,16,0,0,0
+2019,2019-05-21,West,R,L,Reference,136,Spartina,32,0,0,0,0
+2019,2019-05-21,West,R,L,Reference,153,Spartina,16,0,0,0,0
+2019,2019-05-21,West,R,L,Reference,165,Spartina,0,32,0,0,0
+2019,2019-05-21,West,R,L,Reference,173,Spartina,0,48,0,0,0
+2019,2019-05-21,West,R,L,Reference,179,Spartina,0,32,0,0,0
+2019,2019-05-21,West,R,L,Reference,182,Spartina,0,0,0,0,0
+2019,2019-05-21,West,R,L,Reference,186,Spartina,48,0,0,0,0
+2019,2019-05-21,Clubhead,R,R,Fertilized,9,Spartina,0,0,0,0,0
+2019,2019-05-21,Clubhead,R,R,Fertilized,11,Spartina,0,16,16,0,0
+2019,2019-05-21,Clubhead,R,R,Fertilized,16,Spartina,0,0,0,0,0
+2019,2019-05-21,Clubhead,R,R,Fertilized,18,Spartina,0,0,16,0,0
+2019,2019-05-21,Clubhead,R,R,Fertilized,33,Spartina,0,0,0,0,0
+2019,2019-05-21,Clubhead,R,R,Fertilized,48,Spartina,0,16,0,0,0
+2019,2019-05-21,Clubhead,R,R,Fertilized,52,Spartina,0,0,0,0,0
+2019,2019-05-21,Clubhead,R,R,Fertilized,62,Spartina,0,0,16,0,16
+2019,2019-05-21,Clubhead,R,R,Fertilized,82,Spartina,80,0,0,0,0
+2019,2019-05-21,Clubhead,R,R,Fertilized,117,Spartina,0,0,0,0,0
+2019,2019-05-21,Clubhead,R,R,Fertilized,138,Spartina,0,0,0,0,0
+2019,2019-05-21,Clubhead,R,R,Fertilized,142,Spartina,0,0,0,0,0
+2019,2019-05-21,Clubhead,R,R,Fertilized,159,Spartina,0,0,0,0,0
+2019,2019-05-21,Clubhead,R,R,Fertilized,161,Spartina,0,0,0,0,0
+2019,2019-05-21,Clubhead,R,R,Fertilized,176,Spartina,0,0,0,0,0
+2019,2019-05-21,Clubhead,R,R,Fertilized,185,Spartina,0,16,0,0,0
+2019,2019-05-21,Clubhead,R,R,Fertilized,186,Spartina,32,0,0,0,0
+2019,2019-05-21,Clubhead,R,R,Fertilized,196,Spartina,16,0,0,0,0
+2019,2019-05-21,Clubhead,R,R,Fertilized,197,Spartina,16,0,0,0,0
+2019,2019-05-21,Clubhead,R,R,Fertilized,199,Spartina,64,0,0,0,0
+2019,2019-05-21,Nelson,L,R,Reference,7,Spartina,0,0,0,0,0
+2019,2019-05-21,Nelson,L,R,Reference,9,Spartina,0,16,48,16,0
+2019,2019-05-21,Nelson,L,R,Reference,19,Spartina,0,0,112,0,0
+2019,2019-05-21,Nelson,L,R,Reference,38,Spartina,0,16,0,0,0
+2019,2019-05-21,Nelson,L,R,Reference,39,Spartina,0,0,0,0,0
+2019,2019-05-21,Nelson,L,R,Reference,41,Spartina,0,0,0,0,0
+2019,2019-05-21,Nelson,L,R,Reference,56,Spartina,0,0,0,16,0
+2019,2019-05-21,Nelson,L,R,Reference,62,Spartina,16,0,0,0,0
+2019,2019-05-21,Nelson,L,R,Reference,81,Spartina,0,0,0,0,0
+2019,2019-05-21,Nelson,L,R,Reference,114,Spartina,0,16,0,0,0
+2019,2019-05-21,Nelson,L,R,Reference,125,Spartina,16,0,0,0,0
+2019,2019-05-21,Nelson,L,R,Reference,129,Spartina,0,0,0,0,0
+2019,2019-05-21,Nelson,L,R,Reference,134,Spartina,0,0,0,0,0
+2019,2019-05-21,Nelson,L,R,Reference,139,Spartina,0,0,48,0,0
+2019,2019-05-21,Nelson,L,R,Reference,145,Spartina,0,0,0,16,0
+2019,2019-05-21,Nelson,L,R,Reference,156,Spartina,32,16,0,0,0
+2019,2019-05-21,Nelson,L,R,Reference,180,Spartina,0,0,144,0,0
+2019,2019-05-21,Nelson,L,R,Reference,185,Spartina,16,32,32,0,0
+2019,2019-05-21,Nelson,L,R,Reference,197,Spartina,0,0,16,0,0
+2019,2019-05-21,Nelson,L,R,Reference,199,Spartina,0,0,32,0,0
+2019,2019-05-22,Sweeney,L,L,Fertilized,1,Spartina,0,0,0,0,0
+2019,2019-05-22,Sweeney,L,L,Fertilized,9,Spartina,16,0,0,0,0
+2019,2019-05-22,Sweeney,L,L,Fertilized,12,Spartina,0,0,0,0,0
+2019,2019-05-22,Sweeney,L,L,Fertilized,18,Spartina,0,0,0,0,0
+2019,2019-05-22,Sweeney,L,L,Fertilized,19,Spartina,0,0,0,16,0
+2019,2019-05-22,Sweeney,L,L,Fertilized,26,Spartina,0,16,0,0,0
+2019,2019-05-22,Sweeney,L,L,Fertilized,43,Spartina,0,64,0,0,0
+2019,2019-05-22,Sweeney,L,L,Fertilized,73,Spartina,0,0,0,0,0
+2019,2019-05-22,Sweeney,L,L,Fertilized,114,Spartina,0,0,0,0,0
+2019,2019-05-22,Sweeney,L,L,Fertilized,126,Spartina,16,0,0,0,0
+2019,2019-05-22,Sweeney,L,L,Fertilized,130,Spartina,0,0,0,0,0
+2019,2019-05-22,Sweeney,L,L,Fertilized,133,Spartina,0,0,0,0,0
+2019,2019-05-22,Sweeney,L,L,Fertilized,135,Spartina,0,0,0,0,0
+2019,2019-05-22,Sweeney,L,L,Fertilized,144,Spartina,16,0,0,0,0
+2019,2019-05-22,Sweeney,L,L,Fertilized,148,Spartina,0,0,0,0,0
+2019,2019-05-22,Sweeney,L,L,Fertilized,154,Spartina,0,0,0,0,0
+2019,2019-05-22,Sweeney,L,L,Fertilized,162,Spartina,0,0,0,0,0
+2019,2019-05-22,Sweeney,L,L,Fertilized,180,Spartina,0,16,0,0,0
+2019,2019-05-22,Sweeney,L,L,Fertilized,186,Spartina,0,16,0,0,0
+2019,2019-05-22,Sweeney,L,L,Fertilized,200,Spartina,0,0,0,0,16
+2019,2019-05-22,Sweeney,R,L,Fertilized,1,Spartina,16,16,16,0,0
+2019,2019-05-22,Sweeney,R,L,Fertilized,3,Spartina,0,0,0,0,0
+2019,2019-05-22,Sweeney,R,L,Fertilized,11,Spartina,32,0,0,0,0
+2019,2019-05-22,Sweeney,R,L,Fertilized,16,Spartina,48,0,0,0,0
+2019,2019-05-22,Sweeney,R,L,Fertilized,18,Spartina,0,0,0,0,0
+2019,2019-05-22,Sweeney,R,L,Fertilized,24,Spartina,0,0,0,0,0
+2019,2019-05-22,Sweeney,R,L,Fertilized,27,Spartina,0,0,0,0,0
+2019,2019-05-22,Sweeney,R,L,Fertilized,36,Spartina,16,0,0,0,0
+2019,2019-05-22,Sweeney,R,L,Fertilized,50,Spartina,0,0,0,0,0
+2019,2019-05-22,Sweeney,R,L,Fertilized,63,Spartina,0,0,0,0,0
+2019,2019-05-22,Sweeney,R,L,Fertilized,83,Spartina,0,0,0,0,0
+2019,2019-05-22,Sweeney,R,L,Fertilized,93,Spartina,0,48,0,0,0
+2019,2019-05-22,Sweeney,R,L,Fertilized,98,Spartina,0,0,0,0,0
+2019,2019-05-22,Sweeney,R,L,Fertilized,152,Spartina,16,16,0,0,0
+2019,2019-05-22,Sweeney,R,L,Fertilized,160,Spartina,0,0,0,0,0
+2019,2019-05-22,Sweeney,R,L,Fertilized,163,Spartina,0,16,0,0,0
+2019,2019-05-22,Sweeney,R,L,Fertilized,173,Spartina,0,64,0,0,0
+2019,2019-05-22,Sweeney,R,L,Fertilized,180,Spartina,16,0,0,0,0
+2019,2019-05-22,Sweeney,R,L,Fertilized,189,Spartina,0,0,0,0,0
+2019,2019-05-22,Sweeney,R,L,Fertilized,200,Spartina,0,0,0,0,0
+2020,2020-09-07,Nelson,L,R,Reference,60,Spartina,0,0,0,0,0
+2020,2020-09-07,Nelson,L,R,Reference,65,Spartina,0,0,0,0,0
+2020,2020-09-07,Nelson,L,R,Reference,66,Spartina,0,0,0,0,0
+2020,2020-09-07,Nelson,L,R,Reference,80,Spartina,0,16,0,0,0
+2020,2020-09-07,Nelson,L,R,Reference,88,Spartina,0,0,0,0,0
+2020,2020-09-07,Nelson,L,R,Reference,100,Spartina,0,16,0,0,0
+2020,2020-09-07,Nelson,L,R,Reference,102,Spartina,0,0,0,0,0
+2020,2020-09-07,Nelson,L,R,Reference,104,Spartina,0,0,0,0,0
+2020,2020-09-07,Nelson,L,R,Reference,109,Spartina,16,0,0,0,0
+2020,2020-09-07,Nelson,L,R,Reference,119,Spartina,0,0,0,0,0
+2020,2020-09-07,Nelson,L,R,Reference,136,Spartina,16,0,0,0,0
+2020,2020-09-07,Nelson,L,R,Reference,142,Spartina,0,48,0,0,0
+2020,2020-09-07,Nelson,L,R,Reference,144,Spartina,0,0,0,0,0
+2020,2020-09-07,Nelson,L,R,Reference,148,Spartina,0,0,0,0,0
+2020,2020-09-07,Nelson,L,R,Reference,153,Spartina,0,16,0,0,0
+2020,2020-09-07,Nelson,L,R,Reference,159,Spartina,16,0,80,0,0
+2020,2020-09-07,Nelson,L,R,Reference,181,Spartina,0,16,0,0,0
+2020,2020-09-07,Nelson,L,R,Reference,190,Spartina,0,0,0,0,0
+2020,2020-09-07,Nelson,L,R,Reference,193,Spartina,16,0,0,0,0
+2020,2020-09-07,Nelson,L,R,Reference,200,Spartina,0,0,0,0,0
+2020,2020-09-06,Sweeney,L,R,Fertilized,10,Spartina,0,16,0,0,0
+2020,2020-09-06,Sweeney,L,R,Fertilized,22,Spartina,0,0,0,0,32
+2020,2020-09-06,Sweeney,L,R,Fertilized,29,Spartina,0,0,0,0,0
+2020,2020-09-06,Sweeney,L,R,Fertilized,31,Spartina,0,0,0,0,0
+2020,2020-09-06,Sweeney,L,R,Fertilized,33,Spartina,0,0,0,0,0
+2020,2020-09-06,Sweeney,L,R,Fertilized,46,Spartina,0,0,0,0,0
+2020,2020-09-06,Sweeney,L,R,Fertilized,53,Spartina,0,32,0,0,0
+2020,2020-09-06,Sweeney,L,R,Fertilized,56,Spartina,32,0,0,0,0
+2020,2020-09-06,Sweeney,L,R,Fertilized,59,Spartina,32,0,0,0,0
+2020,2020-09-06,Sweeney,L,R,Fertilized,68,Spartina,0,0,0,0,0
+2020,2020-09-06,Sweeney,L,R,Fertilized,77,Spartina,0,64,0,16,0
+2020,2020-09-06,Sweeney,L,R,Fertilized,82,Spartina,32,0,0,0,0
+2020,2020-09-06,Sweeney,L,R,Fertilized,92,Spartina,0,0,0,0,0
+2020,2020-09-06,Sweeney,L,R,Fertilized,120,Spartina,NA,NA,NA,NA,NA
+2020,2020-09-06,Sweeney,L,R,Fertilized,132,Spartina,NA,NA,NA,NA,NA
+2020,2020-09-06,Sweeney,L,R,Fertilized,160,Spartina,0,0,0,0,0
+2020,2020-09-06,Sweeney,L,R,Fertilized,169,Spartina,0,0,0,0,0
+2020,2020-09-06,Sweeney,L,R,Fertilized,173,Spartina,32,0,0,16,0
+2020,2020-09-06,Sweeney,L,R,Fertilized,177,Spartina,0,16,0,0,0
+2020,2020-09-06,Sweeney,L,R,Fertilized,198,Spartina,0,0,0,0,64
+2020,2020-09-06,Sweeney,R,L,Fertilized,16,Spartina,16,0,0,0,0
+2020,2020-09-06,Sweeney,R,L,Fertilized,20,Spartina,0,0,0,0,0
+2020,2020-09-06,Sweeney,R,L,Fertilized,25,Spartina,16,0,0,0,0
+2020,2020-09-06,Sweeney,R,L,Fertilized,30,Spartina,0,32,0,0,0
+2020,2020-09-06,Sweeney,R,L,Fertilized,33,Spartina,0,0,0,0,0
+2020,2020-09-06,Sweeney,R,L,Fertilized,41,Spartina,0,32,0,0,16
+2020,2020-09-06,Sweeney,R,L,Fertilized,46,Spartina,0,0,16,0,0
+2020,2020-09-06,Sweeney,R,L,Fertilized,51,Spartina,NA,NA,NA,NA,NA
+2020,2020-09-06,Sweeney,R,L,Fertilized,55,Spartina,0,0,0,0,0
+2020,2020-09-06,Sweeney,R,L,Fertilized,56,Spartina,0,0,16,0,0
+2020,2020-09-06,Sweeney,R,L,Fertilized,66,Spartina,0,0,0,0,0
+2020,2020-09-06,Sweeney,R,L,Fertilized,68,Spartina,0,0,0,0,0
+2020,2020-09-06,Sweeney,R,L,Fertilized,80,Spartina,0,0,0,0,0
+2020,2020-09-06,Sweeney,R,L,Fertilized,113,Spartina,0,0,0,0,0
+2020,2020-09-06,Sweeney,R,L,Fertilized,120,Spartina,0,0,0,0,0
+2020,2020-09-06,Sweeney,R,L,Fertilized,127,Spartina,32,0,0,0,0
+2020,2020-09-06,Sweeney,R,L,Fertilized,150,Spartina,0,16,0,0,0
+2020,2020-09-06,Sweeney,R,L,Fertilized,171,Spartina,0,0,0,0,0
+2020,2020-09-06,Sweeney,R,L,Fertilized,182,Spartina,16,0,0,16,0
+2020,2020-09-06,Sweeney,R,L,Fertilized,196,Spartina,0,16,0,0,0
+2020,2020-09-07,Clubhead,L,R,Fertilized,6,Spartina,0,0,16,0,0
+2020,2020-09-07,Clubhead,L,R,Fertilized,25,Spartina,0,0,0,0,0
+2020,2020-09-07,Clubhead,L,R,Fertilized,26,Spartina,16,0,0,0,0
+2020,2020-09-07,Clubhead,L,R,Fertilized,45,Spartina,0,0,0,0,0
+2020,2020-09-07,Clubhead,L,R,Fertilized,47,Spartina,0,0,16,0,0
+2020,2020-09-07,Clubhead,L,R,Fertilized,51,Spartina,0,0,0,0,0
+2020,2020-09-07,Clubhead,L,R,Fertilized,66,Spartina,0,0,0,0,0
+2020,2020-09-07,Clubhead,L,R,Fertilized,77,Spartina,0,0,0,0,0
+2020,2020-09-07,Clubhead,L,R,Fertilized,98,Spartina,0,0,48,0,0
+2020,2020-09-07,Clubhead,L,R,Fertilized,102,Spartina,0,0,0,0,0
+2020,2020-09-07,Clubhead,L,R,Fertilized,116,Spartina,16,0,0,0,0
+2020,2020-09-07,Clubhead,L,R,Fertilized,120,Spartina,NA,NA,NA,NA,NA
+2020,2020-09-07,Clubhead,L,R,Fertilized,124,Spartina,0,0,0,0,0
+2020,2020-09-07,Clubhead,L,R,Fertilized,127,Spartina,16,16,0,0,0
+2020,2020-09-07,Clubhead,L,R,Fertilized,130,Spartina,16,0,0,0,0
+2020,2020-09-07,Clubhead,L,R,Fertilized,143,Spartina,0,0,0,0,0
+2020,2020-09-07,Clubhead,L,R,Fertilized,160,Spartina,0,0,0,0,0
+2020,2020-09-07,Clubhead,L,R,Fertilized,171,Spartina,0,0,0,0,0
+2020,2020-09-07,Clubhead,L,R,Fertilized,183,Spartina,0,0,0,0,0
+2020,2020-09-07,Clubhead,L,R,Fertilized,190,Spartina,48,16,0,0,0
+2020,2020-09-06,West,R,L,Reference,5,Spartina,0,0,96,0,0
+2020,2020-09-06,West,R,L,Reference,17,Spartina,0,96,16,0,0
+2020,2020-09-06,West,R,L,Reference,30,Spartina,0,80,16,0,0
+2020,2020-09-06,West,R,L,Reference,36,Spartina,0,0,0,0,0
+2020,2020-09-06,West,R,L,Reference,37,Spartina,0,16,0,0,0
+2020,2020-09-06,West,R,L,Reference,46,Spartina,16,0,32,0,0
+2020,2020-09-06,West,R,L,Reference,49,Spartina,16,0,0,0,0
+2020,2020-09-06,West,R,L,Reference,66,Spartina,0,0,0,0,0
+2020,2020-09-06,West,R,L,Reference,69,Spartina,0,0,0,0,0
+2020,2020-09-06,West,R,L,Reference,84,Spartina,0,0,0,0,0
+2020,2020-09-06,West,R,L,Reference,116,Spartina,32,0,0,0,0
+2020,2020-09-06,West,R,L,Reference,118,Spartina,0,0,0,0,0
+2020,2020-09-06,West,R,L,Reference,137,Spartina,32,0,0,0,0
+2020,2020-09-06,West,R,L,Reference,149,Spartina,0,0,0,0,0
+2020,2020-09-06,West,R,L,Reference,150,Spartina,0,32,0,0,0
+2020,2020-09-06,West,R,L,Reference,152,Spartina,0,16,0,0,0
+2020,2020-09-06,West,R,L,Reference,168,Spartina,0,0,16,0,0
+2020,2020-09-06,West,R,L,Reference,175,Spartina,16,0,0,0,0
+2020,2020-09-06,West,R,L,Reference,184,Spartina,0,16,0,0,0
+2020,2020-09-06,West,R,L,Reference,196,Spartina,16,16,0,32,0
+2020,2020-09-07,Clubhead,R,L,Fertilized,5,Spartina,48,0,0,0,0
+2020,2020-09-07,Clubhead,R,L,Fertilized,11,Spartina,0,0,0,0,0
+2020,2020-09-07,Clubhead,R,L,Fertilized,29,Spartina,16,0,0,0,0
+2020,2020-09-07,Clubhead,R,L,Fertilized,30,Spartina,0,0,0,0,0
+2020,2020-09-07,Clubhead,R,L,Fertilized,51,Spartina,0,0,0,0,0
+2020,2020-09-07,Clubhead,R,L,Fertilized,56,Spartina,48,0,0,0,0
+2020,2020-09-07,Clubhead,R,L,Fertilized,65,Spartina,0,16,16,0,0
+2020,2020-09-07,Clubhead,R,L,Fertilized,67,Spartina,16,0,0,0,0
+2020,2020-09-07,Clubhead,R,L,Fertilized,71,Spartina,0,16,0,0,0
+2020,2020-09-07,Clubhead,R,L,Fertilized,75,Spartina,0,0,0,0,0
+2020,2020-09-07,Clubhead,R,L,Fertilized,86,Spartina,64,0,0,0,0
+2020,2020-09-07,Clubhead,R,L,Fertilized,91,Spartina,0,0,0,0,0
+2020,2020-09-07,Clubhead,R,L,Fertilized,94,Spartina,0,0,0,0,0
+2020,2020-09-07,Clubhead,R,L,Fertilized,120,Spartina,16,0,0,0,0
+2020,2020-09-07,Clubhead,R,L,Fertilized,121,Spartina,32,0,0,0,0
+2020,2020-09-07,Clubhead,R,L,Fertilized,125,Spartina,0,0,0,0,0
+2020,2020-09-07,Clubhead,R,L,Fertilized,148,Spartina,0,0,0,0,0
+2020,2020-09-07,Clubhead,R,L,Fertilized,172,Spartina,96,0,0,0,0
+2020,2020-09-07,Clubhead,R,L,Fertilized,192,Spartina,0,16,0,0,0
+2020,2020-09-07,Clubhead,R,L,Fertilized,199,Spartina,48,0,0,0,0
+2021,2021-08-09,Clubhead,L,R,Fertilized,6,Spartina,0,0,0,0,0
+2021,2021-08-09,Clubhead,L,R,Fertilized,7,Spartina,0,0,0,0,0
+2021,2021-08-09,Clubhead,L,R,Fertilized,14,Spartina,0,0,0,0,0
+2021,2021-08-09,Clubhead,L,R,Fertilized,20,Spartina,2,0,0,0,0
+2021,2021-08-09,Clubhead,L,R,Fertilized,53,Spartina,0,0,0,0,0
+2021,2021-08-09,Clubhead,L,R,Fertilized,55,Spartina,0,1,0,0,0
+2021,2021-08-09,Clubhead,L,R,Fertilized,64,Spartina,0,1,0,0,0
+2021,2021-08-09,Clubhead,L,R,Fertilized,68,Spartina,1,0,0,0,0
+2021,2021-08-09,Clubhead,L,R,Fertilized,92,Spartina,0,0,0,0,0
+2021,2021-08-09,Clubhead,L,R,Fertilized,97,Spartina,1,0,0,0,0
+2021,2021-08-09,Clubhead,L,R,Fertilized,115,Spartina,5,0,0,0,0
+2021,2021-08-09,Clubhead,L,R,Fertilized,120,Spartina,0,0,2,0,0
+2021,2021-08-09,Clubhead,L,R,Fertilized,124,Spartina,0,0,0,0,0
+2021,2021-08-09,Clubhead,L,R,Fertilized,128,Spartina,0,0,0,0,0
+2021,2021-08-09,Clubhead,L,R,Fertilized,132,Spartina,2,0,0,0,0
+2021,2021-08-09,Clubhead,L,R,Fertilized,143,Spartina,0,0,0,0,0
+2021,2021-08-09,Clubhead,L,R,Fertilized,152,Spartina,3,1,0,0,0
+2021,2021-08-09,Clubhead,L,R,Fertilized,166,Spartina,0,0,0,0,0
+2021,2021-08-09,Clubhead,L,R,Fertilized,171,Spartina,2,0,0,0,0
+2021,2021-08-09,Clubhead,L,R,Fertilized,199,Spartina,2,0,0,0,0
+2021,2021-08-09,Clubhead,R,L,Fertilized,13,Spartina,0,0,0,0,0
+2021,2021-08-09,Clubhead,R,L,Fertilized,17,Spartina,0,0,0,0,0
+2021,2021-08-09,Clubhead,R,L,Fertilized,22,Spartina,0,0,0,0,0
+2021,2021-08-09,Clubhead,R,L,Fertilized,26,Spartina,0,0,0,0,0
+2021,2021-08-09,Clubhead,R,L,Fertilized,34,Spartina,0,1,0,0,0
+2021,2021-08-09,Clubhead,R,L,Fertilized,55,Spartina,2,0,2,0,0
+2021,2021-08-09,Clubhead,R,L,Fertilized,76,Spartina,0,0,0,0,0
+2021,2021-08-09,Clubhead,R,L,Fertilized,81,Spartina,0,1,0,0,0
+2021,2021-08-09,Clubhead,R,L,Fertilized,83,Spartina,0,0,0,0,0
+2021,2021-08-09,Clubhead,R,L,Fertilized,84,Spartina,0,0,0,0,0
+2021,2021-08-09,Clubhead,R,L,Fertilized,88,Spartina,1,0,0,0,0
+2021,2021-08-09,Clubhead,R,L,Fertilized,92,Spartina,0,1,0,0,0
+2021,2021-08-09,Clubhead,R,L,Fertilized,95,Spartina,1,2,0,0,0
+2021,2021-08-09,Clubhead,R,L,Fertilized,117,Spartina,0,0,0,0,0
+2021,2021-08-09,Clubhead,R,L,Fertilized,124,Spartina,0,0,0,0,0
+2021,2021-08-09,Clubhead,R,L,Fertilized,130,Spartina,0,1,0,0,0
+2021,2021-08-09,Clubhead,R,L,Fertilized,153,Spartina,0,0,0,0,0
+2021,2021-08-09,Clubhead,R,L,Fertilized,167,Spartina,0,0,0,0,0
+2021,2021-08-09,Clubhead,R,L,Fertilized,178,Spartina,4,0,0,0,0
+2021,2021-08-09,Clubhead,R,L,Fertilized,186,Spartina,0,0,0,0,0
+2021,2021-08-10,Nelson,L,R,Reference,5,Spartina,0,0,0,0,0
+2021,2021-08-10,Nelson,L,R,Reference,8,Spartina,0,0,0,0,0
+2021,2021-08-10,Nelson,L,R,Reference,10,Spartina,0,0,0,0,2
+2021,2021-08-10,Nelson,L,R,Reference,11,Spartina,0,0,0,0,0
+2021,2021-08-10,Nelson,L,R,Reference,32,Spartina,0,0,0,0,0
+2021,2021-08-10,Nelson,L,R,Reference,47,Spartina,1,0,0,0,0
+2021,2021-08-10,Nelson,L,R,Reference,84,Spartina,10,0,0,0,0
+2021,2021-08-10,Nelson,L,R,Reference,89,Spartina,3,0,0,0,0
+2021,2021-08-10,Nelson,L,R,Reference,175,Spartina,0,0,0,0,0
+2021,2021-08-10,Nelson,L,R,Reference,101,Spartina,0,0,0,0,0
+2021,2021-08-10,Nelson,L,R,Reference,97,Spartina,2,0,0,0,0
+2021,2021-08-10,Nelson,L,R,Reference,98,Spartina,0,0,0,0,0
+2021,2021-08-10,Nelson,L,R,Reference,109,Spartina,0,0,0,0,0
+2021,2021-08-10,Nelson,L,R,Reference,119,Spartina,0,0,0,0,0
+2021,2021-08-10,Nelson,L,R,Reference,134,Spartina,0,0,0,0,0
+2021,2021-08-10,Nelson,L,R,Reference,148,Spartina,5,0,0,0,1
+2021,2021-08-10,Nelson,L,R,Reference,161,Spartina,0,0,0,0,0
+2021,2021-08-10,Nelson,L,R,Reference,167,Spartina,3,0,0,0,0
+2021,2021-08-10,Nelson,L,R,Reference,197,Spartina,0,1,0,0,0
+2021,2021-08-10,Nelson,L,R,Reference,200,Spartina,0,0,0,0,0
+2021,2021-08-10,West,R,R,Reference,8,Spartina,0,4,4,0,0
+2021,2021-08-10,West,R,R,Reference,14,Spartina,0,1,8,0,0
+2021,2021-08-10,West,R,R,Reference,39,Spartina,0,3,0,0,0
+2021,2021-08-10,West,R,R,Reference,56,Spartina,1,0,0,0,0
+2021,2021-08-10,West,R,R,Reference,61,Spartina,0,3,0,0,0
+2021,2021-08-10,West,R,R,Reference,57,Spartina,2,0,0,0,0
+2021,2021-08-10,West,R,R,Reference,63,Spartina,0,5,0,0,0
+2021,2021-08-10,West,R,R,Reference,67,Spartina,0,0,0,0,0
+2021,2021-08-10,West,R,R,Reference,78,Spartina,0,1,0,0,0
+2021,2021-08-10,West,R,R,Reference,83,Spartina,0,2,0,0,0
+2021,2021-08-10,West,R,R,Reference,95,Spartina,0,1,0,0,0
+2021,2021-08-10,West,R,R,Reference,103,Spartina,0,1,0,0,0
+2021,2021-08-10,West,R,R,Reference,106,Spartina,2,1,1,0,0
+2021,2021-08-10,West,R,R,Reference,107,Spartina,1,0,0,0,0
+2021,2021-08-10,West,R,R,Reference,133,Spartina,0,0,0,0,0
+2021,2021-08-10,West,R,R,Reference,152,Spartina,1,0,0,0,0
+2021,2021-08-10,West,R,R,Reference,160,Spartina,2,1,0,0,0
+2021,2021-08-10,West,R,R,Reference,170,Spartina,0,3,0,0,0
+2021,2021-08-10,West,R,R,Reference,192,Spartina,3,0,0,0,0
+2021,2021-08-10,West,R,R,Reference,193,Spartina,0,0,0,0,0
+2021,2021-08-15,Sweeney,L,R,Fertilized,5,Spartina,0,0,0,0,0
+2021,2021-08-15,Sweeney,L,R,Fertilized,11,Spartina,0,0,0,0,5
+2021,2021-08-15,Sweeney,L,R,Fertilized,13,Spartina,0,0,0,0,0
+2021,2021-08-15,Sweeney,L,R,Fertilized,22,Spartina,0,5,0,0,0
+2021,2021-08-15,Sweeney,L,R,Fertilized,26,Spartina,0,1,0,0,0
+2021,2021-08-15,Sweeney,L,R,Fertilized,36,Spartina,0,0,0,0,0
+2021,2021-08-15,Sweeney,L,R,Fertilized,39,Spartina,0,1,0,0,0
+2021,2021-08-15,Sweeney,L,R,Fertilized,41,Spartina,0,0,0,0,0
+2021,2021-08-15,Sweeney,L,R,Fertilized,42,Spartina,0,0,0,0,5
+2021,2021-08-15,Sweeney,L,R,Fertilized,51,Spartina,0,0,0,0,1
+2021,2021-08-15,Sweeney,L,R,Fertilized,74,Spartina,2,2,0,0,0
+2021,2021-08-15,Sweeney,L,R,Fertilized,91,Spartina,0,2,0,0,0
+2021,2021-08-15,Sweeney,L,R,Fertilized,118,Spartina,0,6,0,0,19
+2021,2021-08-15,Sweeney,L,R,Fertilized,126,Spartina,0,2,0,0,0
+2021,2021-08-15,Sweeney,L,R,Fertilized,141,Spartina,0,1,0,0,0
+2021,2021-08-15,Sweeney,L,R,Fertilized,145,Spartina,0,0,0,0,0
+2021,2021-08-15,Sweeney,L,R,Fertilized,151,Spartina,0,2,0,0,2
+2021,2021-08-15,Sweeney,L,R,Fertilized,160,Spartina,0,1,0,0,0
+2021,2021-08-15,Sweeney,L,R,Fertilized,165,Spartina,2,1,0,0,0
+2021,2021-08-15,Sweeney,L,R,Fertilized,197,Spartina,9,0,0,0,0
+2021,2021-08-15,Sweeney,R,L,Fertilized,1,Spartina,0,1,0,0,0
+2021,2021-08-15,Sweeney,R,L,Fertilized,6,Spartina,0,3,0,0,0
+2021,2021-08-15,Sweeney,R,L,Fertilized,20,Spartina,0,0,5,0,0
+2021,2021-08-15,Sweeney,R,L,Fertilized,21,Spartina,0,0,0,0,0
+2021,2021-08-15,Sweeney,R,L,Fertilized,26,Spartina,0,0,7,0,0
+2021,2021-08-15,Sweeney,R,L,Fertilized,42,Spartina,0,1,0,0,0
+2021,2021-08-15,Sweeney,R,L,Fertilized,43,Spartina,0,1,0,0,0
+2021,2021-08-15,Sweeney,R,L,Fertilized,45,Spartina,0,1,0,0,0
+2021,2021-08-15,Sweeney,R,L,Fertilized,56,Spartina,0,0,0,0,0
+2021,2021-08-15,Sweeney,R,L,Fertilized,73,Spartina,0,4,0,0,0
+2021,2021-08-15,Sweeney,R,L,Fertilized,76,Spartina,0,0,0,0,0
+2021,2021-08-15,Sweeney,R,L,Fertilized,91,Spartina,0,0,0,0,0
+2021,2021-08-15,Sweeney,R,L,Fertilized,111,Spartina,0,0,0,0,0
+2021,2021-08-15,Sweeney,R,L,Fertilized,132,Spartina,0,0,0,0,0
+2021,2021-08-15,Sweeney,R,L,Fertilized,136,Spartina,0,0,0,0,0
+2021,2021-08-15,Sweeney,R,L,Fertilized,140,Spartina,0,0,0,0,0
+2021,2021-08-15,Sweeney,R,L,Fertilized,171,Spartina,0,1,0,0,0
+2021,2021-08-15,Sweeney,R,L,Fertilized,187,Spartina,1,0,0,0,0
+2021,2021-08-15,Sweeney,R,L,Fertilized,189,Spartina,0,0,0,0,0
+2021,2021-08-15,Sweeney,R,L,Fertilized,192,Spartina,0,1,0,0,0
