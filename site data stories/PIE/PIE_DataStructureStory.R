@@ -1,11 +1,11 @@
 #author: Mack White
 #date: 09-18-2023
-#goal(s): PIE data structure and goals w Jenn Caselle
+#goal(s): PIE data structure and goals w Jimmy Nelson
 #locate and aggregate data for synthesis efforts
 #review and summarize data
 #visualize data through simple figure generation - could be used during Oct 17 meeting
 #chat about site-level data story 
-#Jenn Lab Page -> https://www.nelsonecolab.net/
+#Jimmy Lab Page -> https://www.nelsonecolab.net/
 
 # load libraries ----------------------------------------------------------
 
@@ -72,7 +72,7 @@ dat <- read_csv("site data stories/PIE/data/LTE-TIDE-NektonFlumeIndividual_v6_2.
 # Drought effects all the other animals that they go and get off the high marsh - not a lot of inverts, too dry - need to retreat into forest... not as much food growing, etc. 
 # Size structure is hard to do bc of the way they grow... gonna be vary variable - nets catch fish 12mm or larger.... gonna get summer months in these data
 # If you don't split up appropriately, could be an issue... mummichog excretion rates in the literature
-# on thing to get out of this would be to see the magnitudes of nutrients across the different sites
+# one thing to get out of this would be to see the magnitudes of nutrients across the different sites
 # food web people never ever plug their data into way p productivity do...
 # all these transformations... how efficient are these foods webs relative to amount of nutrients 
 # no matter who sort of wins the lower productivity race... efficient way to get nutrients to high order consumer

@@ -26,7 +26,7 @@ library(tidyverse)
 # read in env data --------------------------------------------------------
 
 ###daily sea surface temps (1916-2019)
-sst <- read_csv("CCE/data/daily seas surface temp measurements_1916thru2019.csv")
+sst <- read.csv("site data stories/CCE/data/daily seas surface temp measurements_1916thru2019.csv")
 glimpse(sst) #date read in as date format
 summary(sst) #min temp = 10.1 C, w max = 26.4 
 # CCE there is a lot of side sampling programs associated, shore station data as well - COS continuous data, but coastal
@@ -44,7 +44,7 @@ summary(sst) #min temp = 10.1 C, w max = 26.4
 # carbon bm ests from imaging - more temporal rs and at some location - not sat imaging
 # dante sent link in chat to these data - zooscan database + the CCE team made figure
 # rather than looking at ts, looking at c fluxes ~> n fluxes (sent paper in chat - estimates within could be converted to nitrogen, but not over time just from 06 and 07 cruises)
-dw_bm_mz <- read_csv("CCE/data/dryweightbiomass_mesozooplankton_2006thrupresent.csv")
+dw_bm_mz <- read_csv("site data stories/CCE/data/dryweightbiomass_mesozooplankton_2006thrupresent.csv")
 glimpse(dw_bm_mz) #no date (or year, month, etc.), just cruise name
 unique(dw_bm_mz$cruise) #8 unique cruises - 8 years? Biannual - every other year
 summary(dw_bm_mz) #min mean biomass (mg/m3) = 0.01, max = 104.17
@@ -56,7 +56,7 @@ dw_bm_mz <- dw_bm_mz |>
       mutate(log_mean_bm_mgm2 = log(mean_bm_mgm2))
 
 ###spring annual average mesozooplankton as carbon (no dates)
-saa_mz_carbon <- read_csv("CCE/data/spring_annual_avg_totalmesozooplankton_as_carbon_1951thru2008.csv")
+saa_mz_carbon <- read_csv("site data stories/CCE/data/spring_annual_avg_totalmesozooplankton_as_carbon_1951thru2008.csv")
 glimpse(saa_mz_carbon) #spring annual averages as carbon w year as metric of time
 summary(saa_mz_carbon) #min log10 mg/m2 = 2.65, max = 3.36
 saa_mz_carbon <- saa_mz_carbon |> 
@@ -67,7 +67,7 @@ saa_mz_carbon <- na_interpolation(saa_mz_carbon)
 summary(saa_mz_carbon) #min mg/m2 = 441.2 max = 2307.8
 
 ###gut fluoresence mesozooplankton (no dates)
-gf_mz <- read_csv("CCE/data/gut_fluoresence_mesozooplankton_2006thrupresent.csv")
+gf_mz <- read_csv("site data stories/CCE/data/gut_fluoresence_mesozooplankton_2006thrupresent.csv")
 unique(gf_mz$cruise) #8 unique cruises - same as dw_bm_mz data above? 8 years?
 glimpse(gf_mz) #no date (or year, month, etc.), just cruise name
 summary(gf_mz) #biomass mean mg/m2 min = 0.807, max = 22569.8
@@ -79,8 +79,8 @@ gf_mz <- gf_mz |>
 # plotting env data -------------------------------------------------------
 glimpse(sst)
 sst <- sst |> 
-      rename('date' = 'Date (PST)',
-             'sst_c' = 'Sea Surface Temperature (C)') #|> 
+      rename('date' = 'Date..PST.',
+             'sst_c' = 'Sea.Surface.Temperature..C.') #|> 
       # group_by(Year, Month) |> 
       # summarise(ym_mean = mean(sst_c)) |> 
       # drop_na()
@@ -217,6 +217,3 @@ mz_saa_carbon_plot
 #CALCOFI imaging data may be best dataset for working group efforts
 #nutrient/energy availability ~ upwelling, el-nino, and sst - oscillating and interactive
 #heat blob is prominent disturbance event, but ^ effects when interacting with el nino
-
-# big takeaways -----------------------------------------------------------
-
