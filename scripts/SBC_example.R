@@ -146,4 +146,81 @@ tidy_v0 <- df_list %>%
 # Check that out
 dplyr::glimpse(tidy_v0)
 
+## -------------------------------------------- ##
+#               Wrangle Dates ----
+## -------------------------------------------- ##
+
+# Check out current dates
+sort(unique(tidy_v0$date))
+
+# Look at general date format per raw file
+tidy_v0 %>%
+  dplyr::group_by(raw_filename) %>%
+  dplyr::summarize(dates = paste(unique(date), collapse = "; ")) %>%
+  tidyr::pivot_wider(names_from = raw_filename, values_from = dates) %>%
+  dplyr::glimpse()
+
+# Identify format for each file name based on **human eye/judgement**
+tidy_v1a <- tidy_v0 %>%
+  dplyr::mutate(date_format = dplyr::case_when(
+    raw_filename == "Annual_All_Species_Biomass_at_transect_20230814.csv" ~ "YYYY-MM-DD",
+    raw_filename == "IV_EC_talitrid_population.csv" ~ "MM/DD/YYYY",
+    # raw_filename == "" ~ "",
+    T ~ "UNKNOWN"))
+
+# Check remaining date formats
+tidy_v1a %>%
+  dplyr::group_by(date_format) %>%
+  dplyr::summarize(files = paste(unique(raw_filename), collapse = "; "))
+
+# Break apart the date column depending on the date format
+tidy_v1b <- tidy_v1a %>%
+  tidyr::separate_wider_delim(date, delim = "-", names = c("year_fix1", "month_fix1", "day_fix1"), too_few = "align_start", cols_remove = F) %>%
+  tidyr::separate_wider_delim(date, delim = "/", names = c("month_fix2", "day_fix2", "year_fix2"), too_few = "align_start", cols_remove = F) 
+
+# Date wrangling
+tidy_v1c <- tidy_v1b %>%
+  # Use the day_fix1 column as the base for our day column
+  dplyr::rename(day = day_fix1) %>%
+  # Throw away the unneeded pieces from the YYYY-MM-DD date format
+  dplyr::select(-year_fix1, -month_fix1) %>%
+  # If the date format is MM/DD/YYYY then...
+  dplyr::mutate(
+    # Use the year_fix2 column for the year
+    year = dplyr::case_when(
+      date_format == "MM/DD/YYYY" ~ year_fix2,
+      T ~ year),
+    # Use the month_fix2 column for the month
+    month = dplyr::case_when(
+      date_format == "MM/DD/YYYY" ~ month_fix2,
+      T ~ month),
+    # Use the day_fix2 column for the day
+    day = dplyr::case_when(
+      date_format == "MM/DD/YYYY" ~ day_fix2,
+      T ~ day)
+    ) %>%
+  # Throw away the unneeded pieces from the MM/DD/YYYY date format
+  dplyr::select(-year_fix2, -month_fix2, -day_fix2) %>%
+  # Remove the leading 0 in the day column
+  dplyr::mutate(day = gsub(pattern = "^0",
+                           replacement = "",
+                           x = day)) %>%
+  # Make a real date column
+  dplyr::mutate(date_v0 = paste(year, month, day, sep = "-"),
+                .after = day) %>%
+  dplyr::mutate(date_actual = as.Date(x = date_v0, format = "%Y-%m-%d"),
+                .after = date_v0) %>%
+  # Remove the preliminary date columns
+  dplyr::select(-date_v0, -date, -date_format) %>%
+  # Rename date_actual to date
+  dplyr::rename(date = date_actual)
+
+# Check dates
+unique(tidy_v1c$year)
+unique(tidy_v1c$month)
+unique(tidy_v1c$day)
+sort(unique(tidy_v1c$date))
+
+# Check structure
+dplyr::glimpse(tidy_v1c)
 
