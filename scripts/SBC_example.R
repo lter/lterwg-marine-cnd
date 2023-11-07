@@ -221,6 +221,30 @@ unique(tidy_v1c$month)
 unique(tidy_v1c$day)
 sort(unique(tidy_v1c$date))
 
-# Check structure
-dplyr::glimpse(tidy_v1c)
+## -------------------------------------------- ##
+#                   Export ----
+## -------------------------------------------- ##
 
+# Create one final tidy object
+tidy_final <- tidy_v1c
+
+# Check structure
+dplyr::glimpse(tidy_final)
+
+# Grab today's date
+date <- gsub(pattern = "-", replacement = "", x = Sys.Date())
+
+# Generate a date-stamped file name for this file
+( tidy_filename <- paste0(date, "_harmonized_consumer.csv") )
+
+# Create necessary sub-folder(s)
+dir.create(path = file.path("tidy"), showWarnings = F)
+
+# Export locally
+write.csv(x = tidy_final, file = file.path("tidy", tidy_filename), na = '', row.names = F)
+
+# Export to Drive
+googledrive::drive_upload(media = file.path("tidy", tidy_filename), overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/1/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
+
+# End ----
