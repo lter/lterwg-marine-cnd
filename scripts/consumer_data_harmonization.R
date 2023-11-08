@@ -3,7 +3,7 @@
 ## ------------------------------------------ ##
 # Script author(s): Angel Chen
 
-# Site: SBC
+# Sites: SBC, FCE
 
 # Data Type: Consumer
 
@@ -17,7 +17,7 @@
 
 # Load necessary libraries
 # install.packages("librarian")
-librarian::shelf(tidyverse, googledrive, readxl)
+librarian::shelf(tidyverse, googledrive, readxl, taxize)
 
 # Create necessary sub-folder(s)
 dir.create(path = file.path("tier0"), showWarnings = F)
@@ -241,14 +241,67 @@ tidy_v1c %>%
                    dates = paste(unique(date), collapse = "; ")) %>%
   dplyr::glimpse()
 
+# Clean up environment
+rm(list = setdiff(ls(), c("tidy_v1c")))
+
+## -------------------------------------------- ##
+#    Filling Missing Taxonomic Information ----
+## -------------------------------------------- ##
+
+# Create tidy object 
+tidy_v2 <- tidy_v1c
+
+for (i in 1:length(tidy_v2$scientific_name)){
+  
+  # Message procesing start
+  message("Completing taxonomic information for row ", i, " of ", length(tidy_v2$scientific_name))
+  
+  if (!is.na(tidy_v2[i,]$scientific_name)){
+    if (is.na(tidy_v2[i,]$kingdom)){
+      query_results <- taxize::tax_name(sci = tidy_v2[i,]$scientific_name, get = "kingdom", db = "itis")
+      tidy_v2[i,]$kingdom <- query_results$kingdom
+    }
+    
+    if (is.na(tidy_v2[i,]$class)){
+      query_results <- taxize::tax_name(sci = tidy_v2[i,]$scientific_name, get = "class", db = "itis")
+      tidy_v2[i,]$class <- query_results$class
+    }
+    
+    if (is.na(tidy_v2[i,]$order)){
+      query_results <- taxize::tax_name(sci = tidy_v2[i,]$scientific_name, get = "order", db = "itis")
+      tidy_v2[i,]$order <- query_results$order
+    }
+    
+    if (is.na(tidy_v2[i,]$family)){
+      query_results <- taxize::tax_name(sci = tidy_v2[i,]$scientific_name, get = "family", db = "itis")
+      tidy_v2[i,]$family <- query_results$family
+    }
+    
+    if (is.na(tidy_v2[i,]$genus)){
+      query_results <- taxize::tax_name(sci = tidy_v2[i,]$scientific_name, get = "genus", db = "itis")
+      tidy_v2[i,]$genus <- query_results$genus
+    }
+    
+    if (is.na(tidy_v2[i,]$species)){
+      query_results <- taxize::tax_name(sci = tidy_v2[i,]$scientific_name, get = "species", db = "itis")
+      tidy_v2[i,]$species <- query_results$species
+    }
+    
+    if (is.na(tidy_v2[i,]$common_name)){
+      common_name_results <- sci2comm(sci=tidy_v2[i,]$scientific_name)
+      tidy_v2[i,]$common_name <- paste0(common_name_results[[1]], collapse = "; ")
+    }
+  }
+}
+
 ## -------------------------------------------- ##
 #      Reordering & Changing Column Types ----
 ## -------------------------------------------- ##
 
 # Check structure
-dplyr::glimpse(tidy_v1c)
+dplyr::glimpse(tidy_v2)
 
-tidy_v2 <- tidy_v1c %>%
+tidy_v3 <- tidy_v2 %>%
   dplyr::relocate(species, .before = taxa_group) %>%
   dplyr::relocate(sp_code, .after = species) %>%
   dplyr::relocate(density_num_m, .after = subsite) %>%
@@ -262,7 +315,7 @@ tidy_v2 <- tidy_v1c %>%
 ## -------------------------------------------- ##
 
 # Create one final tidy object
-tidy_final <- tidy_v2
+tidy_final <- tidy_v3
 
 # Check structure
 dplyr::glimpse(tidy_final)
