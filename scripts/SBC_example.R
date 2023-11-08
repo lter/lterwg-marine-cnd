@@ -19,12 +19,9 @@
 # install.packages("librarian")
 librarian::shelf(tidyverse, googledrive, readxl)
 
-# Set project
-project <- "SBC"
-
 # Create necessary sub-folder(s)
 dir.create(path = file.path("tier0"), showWarnings = F)
-dir.create(path = file.path("tier0", project), showWarnings = F)
+dir.create(path = file.path("tier0", "raw_data"), showWarnings = F)
 
 ## -------------------------------------------- ##
 #             Data Acquisition ----
@@ -36,25 +33,32 @@ raw_SBC_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.co
   dplyr::filter(name %in% c("Annual_All_Species_Biomass_at_transect_20230814.csv",
                             "IV_EC_talitrid_population.csv"))
 
+# Identify raw data files
+raw_FCE_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1guv_ULta7dlF2rYUTYhaRQ8NldSlMO_y")) %>%
+  dplyr::filter(name %in% c("MAP_years1thru19.csv"))
+
+# Combine file IDs
+raw_ids <- rbind(raw_SBC_ids, raw_FCE_ids)
+
 # Identify and download the data key
 googledrive::drive_ls(path = googledrive::as_id("https://drive.google.com/drive/u/1/folders/1-FDBq0jtEm3bJOfiyIkyxD0JftJ6qExe")) %>%
   dplyr::filter(name == "CND_Data_Key.xlsx") %>%
   googledrive::drive_download(file = .$id, path = file.path("tier0",.$name), overwrite = T)
 
 # For each raw data file, download it into its own site folder
-for(k in 1:nrow(raw_SBC_ids)){
+for(k in 1:nrow(raw_ids)){
   
   # Download file (but silence how chatty this function is)
   googledrive::with_drive_quiet(
-    googledrive::drive_download(file = raw_SBC_ids[k, ]$id, overwrite = T,
-                                path = file.path("tier0", project, raw_SBC_ids[k, ]$name)) )
+    googledrive::drive_download(file = raw_ids[k, ]$id, overwrite = T,
+                                path = file.path("tier0", "raw_data", raw_ids[k, ]$name)) )
   
   # Print success message
-  message("Downloaded file ", k, " of ", nrow(raw_SBC_ids))
+  message("Downloaded file ", k, " of ", nrow(raw_ids))
 }
 
 # Clear environment
-rm(list = setdiff(ls(), "project"))
+rm(list = ls())
 
 # Read in the key
 key <- readxl::read_excel(path = file.path("tier0", "CND_Data_Key.xlsx")) 
@@ -64,7 +68,7 @@ key <- readxl::read_excel(path = file.path("tier0", "CND_Data_Key.xlsx"))
 ## ------------------------------------------ ##
 
 # Identify all downloaded files
-( raw_files <- dir(path = file.path("tier0", project)) )
+( raw_files <- dir(path = file.path("tier0", "raw_data")) )
 
 # Make an empty list to store re-formatted raw data
 df_list <- list()
@@ -84,7 +88,7 @@ for (i in 1:length(raw_files)){
     # And only columns that have a synonymized equivalent
     dplyr::filter(!is.na(standardized_column_name) & nchar(standardized_column_name) != 0)
   
-  raw_df_v1 <- read.csv(file = file.path("tier0", project, raw_file_name))
+  raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", raw_file_name))
   
   raw_df_v2 <- raw_df_v1 %>%
     # Create a row number column and a column for the original file
@@ -165,6 +169,7 @@ tidy_v1a <- tidy_v0 %>%
   dplyr::mutate(date_format = dplyr::case_when(
     raw_filename == "Annual_All_Species_Biomass_at_transect_20230814.csv" ~ "YYYY-MM-DD",
     raw_filename == "IV_EC_talitrid_population.csv" ~ "MM/DD/YYYY",
+    raw_filename == "MAP_years1thru19.csv" ~ "MM/DD/YY",
     # raw_filename == "" ~ "",
     T ~ "UNKNOWN"))
 
@@ -173,6 +178,11 @@ tidy_v1a %>%
   dplyr::group_by(date_format) %>%
   dplyr::summarize(files = paste(unique(raw_filename), collapse = "; "))
 
+# Remind yourself what year/month/day/date columns do each raw file already contain
+key %>%
+  dplyr::select(raw_filename, standardized_column_name) %>%
+  dplyr::filter(standardized_column_name %in% c("year","month","day","date"))
+
 # Break apart the date column depending on the date format
 tidy_v1b <- tidy_v1a %>%
   tidyr::separate_wider_delim(date, delim = "-", names = c("year_fix1", "month_fix1", "day_fix1"), too_few = "align_start", cols_remove = F) %>%
@@ -180,10 +190,11 @@ tidy_v1b <- tidy_v1a %>%
 
 # Date wrangling
 tidy_v1c <- tidy_v1b %>%
-  # Use the day_fix1 column as the base for our day column
-  dplyr::rename(day = day_fix1) %>%
+  dplyr::relocate(day, .after = month) %>%
+  # Coalesce the day and day_fix1 columns together
+  dplyr::mutate(day = dplyr::coalesce(day, day_fix1)) %>%
   # Throw away the unneeded pieces from the YYYY-MM-DD date format
-  dplyr::select(-year_fix1, -month_fix1) %>%
+  dplyr::select(-year_fix1, -month_fix1, -day_fix1) %>%
   # If the date format is MM/DD/YYYY then...
   dplyr::mutate(
     # Use the year_fix2 column for the year
@@ -215,18 +226,43 @@ tidy_v1c <- tidy_v1b %>%
   # Rename date_actual to date
   dplyr::rename(date = date_actual)
 
-# Check dates
+# Check overall dates
 unique(tidy_v1c$year)
 unique(tidy_v1c$month)
 unique(tidy_v1c$day)
 sort(unique(tidy_v1c$date))
+
+# Check unique years/months/days/dates for each raw file
+tidy_v1c %>%
+  dplyr::group_by(raw_filename) %>%
+  dplyr::summarize(years = paste(unique(year), collapse = "; "),
+                   months = paste(unique(month), collapse = "; "),
+                   days = paste(unique(day), collapse = "; "),
+                   dates = paste(unique(date), collapse = "; ")) %>%
+  dplyr::glimpse()
+
+## -------------------------------------------- ##
+#      Reordering & Changing Column Types ----
+## -------------------------------------------- ##
+
+# Check structure
+dplyr::glimpse(tidy_v1c)
+
+tidy_v2 <- tidy_v1c %>%
+  dplyr::relocate(species, .before = taxa_group) %>%
+  dplyr::relocate(sp_code, .after = species) %>%
+  dplyr::relocate(density_num_m, .after = subsite) %>%
+  dplyr::relocate(drymass_g_m, .before = drymass_g_m2) %>%  
+  dplyr::relocate(wetmass_kg, .before = scientific_name) %>%  
+  dplyr::relocate(wetmass_g_m2, .before = wetmass_kg) %>%
+  dplyr::mutate(dplyr::across(.cols = c(year:day, density_num_m:wetmass_kg), .fns = as.numeric))
 
 ## -------------------------------------------- ##
 #                   Export ----
 ## -------------------------------------------- ##
 
 # Create one final tidy object
-tidy_final <- tidy_v1c
+tidy_final <- tidy_v2
 
 # Check structure
 dplyr::glimpse(tidy_final)
