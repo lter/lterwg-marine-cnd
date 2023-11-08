@@ -249,59 +249,79 @@ rm(list = setdiff(ls(), c("tidy_v1c")))
 ## -------------------------------------------- ##
 
 # Create tidy object 
-tidy_v2 <- tidy_v1c
+tidy_v2a <- tidy_v1c
 
-for (i in 1:length(tidy_v2$scientific_name)){
-  
-  # Message procesing start
-  message("Completing taxonomic information for row ", i, " of ", length(tidy_v2$scientific_name))
-  
-  if (!is.na(tidy_v2[i,]$scientific_name)){
-    if (is.na(tidy_v2[i,]$kingdom)){
-      query_results <- taxize::tax_name(sci = tidy_v2[i,]$scientific_name, get = "kingdom", db = "itis")
-      tidy_v2[i,]$kingdom <- query_results$kingdom
-    }
+taxon_fix <- tidy_v2a %>%
+  # Grab all the species from our tidy object
+  dplyr::select(scientific_name) %>%
+  # Get a vector of all unique species
+  dplyr::distinct() %>%
+  # Make empty placeholder columns for our query results later
+  dplyr::mutate(kingdom_fix = NA,
+                class_fix = NA,
+                order_fix = NA,
+                family_fix = NA,
+                genus_fix = NA,
+                species_fix = NA,
+                common_name_fix = NA) %>%
+  # Rename species column
+  dplyr::rename(scientific_name_fix = scientific_name)
+
+# Check structure
+dplyr::glimpse(taxon_fix)
+
+# For each unique species...
+for (i in 1:length(taxon_fix$scientific_name_fix)){
+  # If the species name is non-empty...
+  if(!is.na(taxon_fix[i,]$scientific_name_fix)){
     
-    if (is.na(tidy_v2[i,]$class)){
-      query_results <- taxize::tax_name(sci = tidy_v2[i,]$scientific_name, get = "class", db = "itis")
-      tidy_v2[i,]$class <- query_results$class
-    }
+    # Message procesing start
+    message("Completing taxonomic information for row ", i, " of ", length(taxon_fix$scientific_name_fix))
     
-    if (is.na(tidy_v2[i,]$order)){
-      query_results <- taxize::tax_name(sci = tidy_v2[i,]$scientific_name, get = "order", db = "itis")
-      tidy_v2[i,]$order <- query_results$order
-    }
+    # Query species for its taxonomic information
+    query_results <- taxize::tax_name(sci = taxon_fix[i,]$scientific_name_fix,
+                                      get = c("kingdom", "class", "order", "family", "genus","species"),
+                                      db = "itis",
+                                      accepted = T)
     
-    if (is.na(tidy_v2[i,]$family)){
-      query_results <- taxize::tax_name(sci = tidy_v2[i,]$scientific_name, get = "family", db = "itis")
-      tidy_v2[i,]$family <- query_results$family
-    }
+    # Query species for its common name 
+    common_name_results <- taxize::sci2comm(sci = taxon_fix[i,]$scientific_name_fix, 
+                                            db = "itis",
+                                            accepted = T)
     
-    if (is.na(tidy_v2[i,]$genus)){
-      query_results <- taxize::tax_name(sci = tidy_v2[i,]$scientific_name, get = "genus", db = "itis")
-      tidy_v2[i,]$genus <- query_results$genus
-    }
-    
-    if (is.na(tidy_v2[i,]$species)){
-      query_results <- taxize::tax_name(sci = tidy_v2[i,]$scientific_name, get = "species", db = "itis")
-      tidy_v2[i,]$species <- query_results$species
-    }
-    
-    if (is.na(tidy_v2[i,]$common_name)){
-      common_name_results <- sci2comm(sci=tidy_v2[i,]$scientific_name)
-      tidy_v2[i,]$common_name <- paste0(common_name_results[[1]], collapse = "; ")
-    }
+    # Save the query results
+    taxon_fix[i,]$kingdom_fix <- paste0(query_results$kingdom, collapse = "")
+    taxon_fix[i,]$class_fix <- paste0(query_results$class, collapse = "")
+    taxon_fix[i,]$order_fix <- paste0(query_results$order, collapse = "")
+    taxon_fix[i,]$family_fix <- paste0(query_results$family, collapse = "")
+    taxon_fix[i,]$genus_fix <- paste0(query_results$genus, collapse = "")
+    taxon_fix[i,]$species_fix <- paste0(query_results$species, collapse = "")
+    taxon_fix[i,]$common_name_fix <- paste0(common_name_results[[1]], collapse = "; ")
   }
 }
+
+# Left join our current tidy dataframe with the table of taxonomic info
+tidy_v2b <- left_join(tidy_v2a, taxon_fix, by = c("scientific_name" = "scientific_name_fix") ) %>%
+  # Coalesce taxonomic columns together to fill in missing taxonomic info whenever possible
+  mutate(kingdom = dplyr::coalesce(kingdom, kingdom_fix),
+         class = dplyr::coalesce(class, class_fix),
+         order = dplyr::coalesce(order, order_fix),
+         family = dplyr::coalesce(family, family_fix),
+         genus = dplyr::coalesce(genus, genus_fix),
+         species = dplyr::coalesce(species, species_fix),
+         common_name = dplyr::coalesce(common_name, common_name_fix)) %>%
+  # Drop the columns from the taxon table
+  dplyr::select(-dplyr::contains("_fix"))
+
 
 ## -------------------------------------------- ##
 #      Reordering & Changing Column Types ----
 ## -------------------------------------------- ##
 
 # Check structure
-dplyr::glimpse(tidy_v2)
+dplyr::glimpse(tidy_v2b)
 
-tidy_v3 <- tidy_v2 %>%
+tidy_v3 <- tidy_v2b %>%
   dplyr::relocate(species, .before = taxa_group) %>%
   dplyr::relocate(sp_code, .after = species) %>%
   dplyr::relocate(density_num_m, .after = subsite) %>%
