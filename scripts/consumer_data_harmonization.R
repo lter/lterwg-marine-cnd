@@ -17,7 +17,7 @@
 
 # Load necessary libraries
 # install.packages("librarian")
-librarian::shelf(tidyverse, googledrive, readxl, taxize)
+librarian::shelf(tidyverse, googledrive, readxl, taxize, stringr)
 
 # Create necessary sub-folder(s)
 dir.create(path = file.path("tier0"), showWarnings = F)
@@ -251,7 +251,19 @@ rm(list = setdiff(ls(), c("tidy_v1c")))
 # Create tidy object 
 tidy_v2a <- tidy_v1c
 
-taxon_fix <- tidy_v2a %>%
+# Doing some preliminary wrangling on species names
+tidy_v2b <- tidy_v2a %>%
+  # Remove underscore from the species name
+  dplyr::mutate(scientific_name = gsub(pattern = "_",
+                                       replacement = " ",
+                                       x = scientific_name)) %>%
+  # Replace one of the missing value codes -99999 with NA values
+  dplyr::mutate(dplyr::across(.cols = -date, .fns = ~dplyr::na_if(., y = "-99999"))) %>%
+  # Replace empty strings with NA values
+  dplyr::mutate(dplyr::across(.cols = -date, .fns = ~dplyr::na_if(., y = "")))
+
+
+taxon_fix <- tidy_v2b %>%
   # Grab all the species from our tidy object
   dplyr::select(scientific_name) %>%
   # Get a vector of all unique species
@@ -265,16 +277,19 @@ taxon_fix <- tidy_v2a %>%
                 species_fix = NA,
                 common_name_fix = NA) %>%
   # Rename species column
-  dplyr::rename(scientific_name_fix = scientific_name)
+  dplyr::rename(scientific_name_fix = scientific_name) %>%
+  # Remove any non-specific or unidentified species
+  dplyr::filter(!stringr::str_detect(scientific_name_fix, pattern = "[:space:]sp.|[:space:]spp.|[:space:]sp|Unidentified")) %>%
+  # Remove rows without any value in the scientific_name_fix column
+  dplyr::filter(!is.na(scientific_name_fix) & nchar(scientific_name_fix) != 0)
+
 
 # Check structure
 dplyr::glimpse(taxon_fix)
 
 # For each unique species...
 for (i in 1:length(taxon_fix$scientific_name_fix)){
-  # If the species name is non-empty...
-  if(!is.na(taxon_fix[i,]$scientific_name_fix)){
-    
+
     # Message procesing start
     message("Completing taxonomic information for row ", i, " of ", length(taxon_fix$scientific_name_fix))
     
@@ -290,6 +305,7 @@ for (i in 1:length(taxon_fix$scientific_name_fix)){
                                             accepted = T)
     
     # Save the query results
+    # In case the query returns NULL, the paste0(..., collapse = "") will coerce NULL into an empty string
     taxon_fix[i,]$kingdom_fix <- paste0(query_results$kingdom, collapse = "")
     taxon_fix[i,]$class_fix <- paste0(query_results$class, collapse = "")
     taxon_fix[i,]$order_fix <- paste0(query_results$order, collapse = "")
@@ -297,21 +313,31 @@ for (i in 1:length(taxon_fix$scientific_name_fix)){
     taxon_fix[i,]$genus_fix <- paste0(query_results$genus, collapse = "")
     taxon_fix[i,]$species_fix <- paste0(query_results$species, collapse = "")
     taxon_fix[i,]$common_name_fix <- paste0(common_name_results[[1]], collapse = "; ")
-  }
+  
 }
 
+taxon_fix_v2 <- taxon_fix %>%
+  # Replace the string "NA" with actual NA values
+  dplyr::mutate(dplyr::across(.cols = dplyr::everything(), .fns = ~dplyr::na_if(., y = "NA"))) %>%
+  # Replace empty strings with NA values
+  dplyr::mutate(dplyr::across(.cols = dplyr::everything(), .fns = ~dplyr::na_if(., y = "")))
+  
+
 # Left join our current tidy dataframe with the table of taxonomic info
-tidy_v2b <- left_join(tidy_v2a, taxon_fix, by = c("scientific_name" = "scientific_name_fix") ) %>%
+tidy_v2c <- left_join(tidy_v2b, taxon_fix_v2, by = c("scientific_name" = "scientific_name_fix")) %>%
   # Coalesce taxonomic columns together to fill in missing taxonomic info whenever possible
   mutate(kingdom = dplyr::coalesce(kingdom, kingdom_fix),
          class = dplyr::coalesce(class, class_fix),
          order = dplyr::coalesce(order, order_fix),
          family = dplyr::coalesce(family, family_fix),
          genus = dplyr::coalesce(genus, genus_fix),
-         species = dplyr::coalesce(species, species_fix),
          common_name = dplyr::coalesce(common_name, common_name_fix)) %>%
-  # Drop the columns from the taxon table
-  dplyr::select(-dplyr::contains("_fix"))
+  # Drop the inferior species column (some entries actually have only the epithet instead of the full species)
+  dplyr::select(-species) %>%
+  # Keep species_fix as the superior species column
+  dplyr::rename(species = species_fix) %>%
+  # Drop the rest of the columns from the taxon table
+  dplyr::select(-dplyr::contains("_fix")) 
 
 
 ## -------------------------------------------- ##
@@ -319,9 +345,9 @@ tidy_v2b <- left_join(tidy_v2a, taxon_fix, by = c("scientific_name" = "scientifi
 ## -------------------------------------------- ##
 
 # Check structure
-dplyr::glimpse(tidy_v2b)
+dplyr::glimpse(tidy_v2c)
 
-tidy_v3 <- tidy_v2b %>%
+tidy_v3 <- tidy_v2c %>%
   dplyr::relocate(species, .before = taxa_group) %>%
   dplyr::relocate(sp_code, .after = species) %>%
   dplyr::relocate(density_num_m, .after = subsite) %>%
