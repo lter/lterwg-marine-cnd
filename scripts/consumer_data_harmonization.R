@@ -270,6 +270,7 @@ taxon_fix <- tidy_v2b %>%
   dplyr::distinct() %>%
   # Make empty placeholder columns for our query results later
   dplyr::mutate(kingdom_fix = NA,
+                phylum_fix = NA,
                 class_fix = NA,
                 order_fix = NA,
                 family_fix = NA,
@@ -295,7 +296,7 @@ for (i in 1:length(taxon_fix$scientific_name_fix)){
     
     # Query species for its taxonomic information
     query_results <- taxize::tax_name(sci = taxon_fix[i,]$scientific_name_fix,
-                                      get = c("kingdom", "class", "order", "family", "genus","species"),
+                                      get = c("kingdom", "phylum", "class", "order", "family", "genus", "species"),
                                       db = "itis",
                                       accepted = T)
     
@@ -307,6 +308,7 @@ for (i in 1:length(taxon_fix$scientific_name_fix)){
     # Save the query results
     # In case the query returns NULL, the paste0(..., collapse = "") will coerce NULL into an empty string
     taxon_fix[i,]$kingdom_fix <- paste0(query_results$kingdom, collapse = "")
+    taxon_fix[i,]$phylum_fix <- paste0(query_results$phylum, collapse = "")
     taxon_fix[i,]$class_fix <- paste0(query_results$class, collapse = "")
     taxon_fix[i,]$order_fix <- paste0(query_results$order, collapse = "")
     taxon_fix[i,]$family_fix <- paste0(query_results$family, collapse = "")
@@ -327,6 +329,7 @@ taxon_fix_v2 <- taxon_fix %>%
 tidy_v2c <- left_join(tidy_v2b, taxon_fix_v2, by = c("scientific_name" = "scientific_name_fix")) %>%
   # Coalesce taxonomic columns together to fill in missing taxonomic info whenever possible
   mutate(kingdom = dplyr::coalesce(kingdom, kingdom_fix),
+         phylum = dplyr::coalesce(phylum, phylum_fix),
          class = dplyr::coalesce(class, class_fix),
          order = dplyr::coalesce(order, order_fix),
          family = dplyr::coalesce(family, family_fix),
