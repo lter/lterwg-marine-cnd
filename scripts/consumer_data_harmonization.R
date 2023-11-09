@@ -376,7 +376,7 @@ date <- gsub(pattern = "-", replacement = "", x = Sys.Date())
 dir.create(path = file.path("tidy"), showWarnings = F)
 
 # Export locally
-write.csv(x = tidy_final, file = file.path("tidy", tidy_filename), na = '', row.names = F)
+write.csv(x = tidy_final, file = file.path("tidy", tidy_filename), na = 'NA', row.names = F)
 
 # Export to Drive
 googledrive::drive_upload(media = file.path("tidy", tidy_filename), overwrite = T,
