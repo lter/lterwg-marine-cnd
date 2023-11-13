@@ -352,7 +352,10 @@ species_table <- tidy_v2c %>%
 tidy_v2d <- tidy_v2c %>%
   # Now that we have our species table, we don't need the other taxa columns in our harmonized dataset
   dplyr::select(-common_name, -kingdom, -phylum, -class, -order, -family, -genus, -species, -taxa_group)
-  
+
+# Clean up environment
+rm(list = setdiff(ls(), c("tidy_v2d", "species_table")))
+
 ## -------------------------------------------- ##
 #      Reordering & Changing Column Types ----
 ## -------------------------------------------- ##
@@ -361,23 +364,45 @@ tidy_v2d <- tidy_v2c %>%
 dplyr::glimpse(tidy_v2d)
 
 tidy_v3 <- tidy_v2d %>%
-  dplyr::relocate(density_num_m, .after = subsite) %>%
+  dplyr::relocate(sp_code, .after = subsite) %>%
+  dplyr::relocate(scientific_name, .after = sp_code) %>%
+  dplyr::relocate(density_num_m, .after = scientific_name) %>%
   dplyr::relocate(drymass_g_m, .before = drymass_g_m2) %>%  
   dplyr::relocate(wetmass_g_m2, .before = wetmass_kg) %>%
   dplyr::relocate(wetmass_kg, .after = wetmass_g_m2) %>%  
-  dplyr::relocate(sp_code, .after = wetmass_kg) %>%
-  dplyr::relocate(scientific_name, .after = sp_code) %>%
   dplyr::mutate(dplyr::across(.cols = c(year:day, density_num_m:wetmass_kg), .fns = as.numeric))
 
 # Check structure
 dplyr::glimpse(tidy_v3)
 
 ## -------------------------------------------- ##
+#  Convert Measurement Columns to Long Format
+## -------------------------------------------- ##
+
+tidy_v4 <- tidy_v3 %>%
+  # Pivot the measurement columns to long format
+  tidyr::pivot_longer(cols = density_num_m:wetmass_kg,
+               names_to = "measurement_type",
+               values_to = "measurement_value") %>%
+  # Create a measurement_unit column from measurement_type
+  tidyr::separate_wider_delim(measurement_type, delim = "_", names = c("measurement_type", "measurement_unit"), too_many = "merge") %>%
+  # Fix the units by replacing "_" with "/"
+  dplyr::mutate(measurement_unit = stringr::str_replace(measurement_unit, pattern = "_", replacement = "/")) %>%
+  # Drop rows where measurement_value is NA
+  dplyr::filter(!is.na(measurement_value)) %>%
+  # Moving columns around
+  dplyr::relocate(sp_code, .after = measurement_value) %>%
+  dplyr::relocate(scientific_name, .after = sp_code) 
+  
+# Check structure
+dplyr::glimpse(tidy_v4)
+
+## -------------------------------------------- ##
 #                   Export ----
 ## -------------------------------------------- ##
 
 # Create one final tidy object
-tidy_final <- tidy_v3
+tidy_final <- tidy_v4
 
 # Check structure
 dplyr::glimpse(tidy_final)
@@ -389,7 +414,7 @@ date <- gsub(pattern = "-", replacement = "", x = Sys.Date())
 ( tidy_filename <- paste0(date, "_harmonized_consumer.csv") )
 
 # Generate a date-stamped file name for the species table
-( species_filename <- paste0(date, "_harmonized_species_table.csv") )
+( species_filename <- paste0(date, "_harmonized_consumer_species_table.csv") )
 
 # Create necessary sub-folder(s)
 dir.create(path = file.path("tidy"), showWarnings = F)
