@@ -245,7 +245,7 @@ tidy_v1c %>%
 rm(list = setdiff(ls(), c("tidy_v1c")))
 
 ## -------------------------------------------- ##
-#    Filling Missing Taxonomic Information ----
+#               Wrangle Species ----
 ## -------------------------------------------- ##
 
 # Create tidy object 
@@ -342,22 +342,35 @@ tidy_v2c <- left_join(tidy_v2b, taxon_fix_v2, by = c("scientific_name" = "scient
   # Drop the rest of the columns from the taxon table
   dplyr::select(-dplyr::contains("_fix")) 
 
+# Check structure
+dplyr::glimpse(tidy_v2c)
 
+species_table <- tidy_v2c %>%
+  # Select the appropriate columns to create our species table
+  dplyr::select(sp_code, scientific_name, common_name, kingdom, phylum, class, order, family, genus, species, taxa_group)
+
+tidy_v2d <- tidy_v2c %>%
+  # Now that we have our species table, we don't need the other taxa columns in our harmonized dataset
+  dplyr::select(-common_name, -kingdom, -phylum, -class, -order, -family, -genus, -species, -taxa_group)
+  
 ## -------------------------------------------- ##
 #      Reordering & Changing Column Types ----
 ## -------------------------------------------- ##
 
 # Check structure
-dplyr::glimpse(tidy_v2c)
+dplyr::glimpse(tidy_v2d)
 
-tidy_v3 <- tidy_v2c %>%
-  dplyr::relocate(species, .before = taxa_group) %>%
-  dplyr::relocate(sp_code, .after = species) %>%
+tidy_v3 <- tidy_v2d %>%
   dplyr::relocate(density_num_m, .after = subsite) %>%
   dplyr::relocate(drymass_g_m, .before = drymass_g_m2) %>%  
-  dplyr::relocate(wetmass_kg, .before = scientific_name) %>%  
   dplyr::relocate(wetmass_g_m2, .before = wetmass_kg) %>%
+  dplyr::relocate(wetmass_kg, .after = wetmass_g_m2) %>%  
+  dplyr::relocate(sp_code, .after = wetmass_kg) %>%
+  dplyr::relocate(scientific_name, .after = sp_code) %>%
   dplyr::mutate(dplyr::across(.cols = c(year:day, density_num_m:wetmass_kg), .fns = as.numeric))
+
+# Check structure
+dplyr::glimpse(tidy_v3)
 
 ## -------------------------------------------- ##
 #                   Export ----
@@ -375,14 +388,24 @@ date <- gsub(pattern = "-", replacement = "", x = Sys.Date())
 # Generate a date-stamped file name for this file
 ( tidy_filename <- paste0(date, "_harmonized_consumer.csv") )
 
+# Generate a date-stamped file name for the species table
+( species_filename <- paste0(date, "_harmonized_species_table.csv") )
+
 # Create necessary sub-folder(s)
 dir.create(path = file.path("tidy"), showWarnings = F)
 
 # Export locally
 write.csv(x = tidy_final, file = file.path("tidy", tidy_filename), na = 'NA', row.names = F)
 
-# Export to Drive
+# Also export species table
+write.csv(x = tidy_final, file = file.path("tidy", species_filename), na = 'NA', row.names = F)
+
+# Export harmonized dataset to Drive
 googledrive::drive_upload(media = file.path("tidy", tidy_filename), overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/1/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
+
+# Export species table to Drive
+googledrive::drive_upload(media = file.path("tidy", species_filename), overwrite = T,
                           path = googledrive::as_id("https://drive.google.com/drive/u/1/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
 
 # End ----
