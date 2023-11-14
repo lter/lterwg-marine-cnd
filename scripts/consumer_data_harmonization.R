@@ -248,11 +248,8 @@ rm(list = setdiff(ls(), c("tidy_v1c")))
 #               Wrangle Species ----
 ## -------------------------------------------- ##
 
-# Create tidy object 
-tidy_v2a <- tidy_v1c
-
 # Doing some preliminary wrangling on species names
-tidy_v2b <- tidy_v2a %>%
+tidy_v2a <-  tidy_v1c %>%
   # Remove underscore from the species name
   dplyr::mutate(scientific_name = gsub(pattern = "_",
                                        replacement = " ",
@@ -263,7 +260,7 @@ tidy_v2b <- tidy_v2a %>%
   dplyr::mutate(dplyr::across(.cols = -date, .fns = ~dplyr::na_if(., y = "")))
 
 
-taxon_fix <- tidy_v2b %>%
+taxon_fix <- tidy_v2a %>%
   # Grab all the species from our tidy object
   dplyr::select(scientific_name) %>%
   # Get a vector of all unique species
@@ -326,7 +323,7 @@ taxon_fix_v2 <- taxon_fix %>%
   
 
 # Left join our current tidy dataframe with the table of taxonomic info
-tidy_v2c <- left_join(tidy_v2b, taxon_fix_v2, by = c("scientific_name" = "scientific_name_fix")) %>%
+tidy_v2b <- left_join(tidy_v2a, taxon_fix_v2, by = c("scientific_name" = "scientific_name_fix")) %>%
   # Coalesce taxonomic columns together to fill in missing taxonomic info whenever possible
   mutate(kingdom = dplyr::coalesce(kingdom, kingdom_fix),
          phylum = dplyr::coalesce(phylum, phylum_fix),
@@ -343,18 +340,18 @@ tidy_v2c <- left_join(tidy_v2b, taxon_fix_v2, by = c("scientific_name" = "scient
   dplyr::select(-dplyr::contains("_fix")) 
 
 # Check structure
-dplyr::glimpse(tidy_v2c)
+dplyr::glimpse(tidy_v2b)
 
-species_table <- tidy_v2c %>%
+species_table <- tidy_v2b %>%
   # Select the appropriate columns to create our species table
   dplyr::select(sp_code, scientific_name, common_name, kingdom, phylum, class, order, family, genus, species, taxa_group)
 
-tidy_v2d <- tidy_v2c %>%
+tidy_v2c <- tidy_v2b %>%
   # Now that we have our species table, we don't need the other taxa columns in our harmonized dataset
   dplyr::select(-common_name, -kingdom, -phylum, -class, -order, -family, -genus, -species, -taxa_group)
 
 # Clean up environment
-rm(list = setdiff(ls(), c("tidy_v2d", "species_table")))
+rm(list = setdiff(ls(), c("tidy_v2c", "species_table")))
 
 ## -------------------------------------------- ##
 #      Reordering & Changing Column Types ----
