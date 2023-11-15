@@ -60,12 +60,12 @@ for(k in 1:nrow(raw_ids)){
 # Clear environment
 rm(list = ls())
 
-# Read in the key
-key <- readxl::read_excel(path = file.path("tier0", "CND_Data_Key.xlsx")) 
-
 ## ------------------------------------------ ##
 #             Data Harmonizing ----
 ## ------------------------------------------ ##
+
+# Read in the key
+key <- readxl::read_excel(path = file.path("tier0", "CND_Data_Key.xlsx")) 
 
 # Identify all downloaded files
 ( raw_files <- dir(path = file.path("tier0", "raw_data")) )
@@ -344,7 +344,9 @@ dplyr::glimpse(tidy_v2b)
 
 species_table <- tidy_v2b %>%
   # Select the appropriate columns to create our species table
-  dplyr::select(sp_code, scientific_name, common_name, kingdom, phylum, class, order, family, genus, species, taxa_group)
+  dplyr::select(sp_code, scientific_name, common_name, kingdom, phylum, class, order, family, genus, species, taxa_group) %>%
+  # Get unique species
+  dplyr::distinct()
 
 tidy_v2c <- tidy_v2b %>%
   # Now that we have our species table, we don't need the other taxa columns in our harmonized dataset
@@ -358,9 +360,9 @@ rm(list = setdiff(ls(), c("tidy_v2c", "species_table")))
 ## -------------------------------------------- ##
 
 # Check structure
-dplyr::glimpse(tidy_v2d)
+dplyr::glimpse(tidy_v2c)
 
-tidy_v3 <- tidy_v2d %>%
+tidy_v3 <- tidy_v2c %>%
   dplyr::relocate(sp_code, .after = subsite) %>%
   dplyr::relocate(scientific_name, .after = sp_code) %>%
   dplyr::relocate(density_num_m, .after = scientific_name) %>%
@@ -411,7 +413,7 @@ date <- gsub(pattern = "-", replacement = "", x = Sys.Date())
 ( tidy_filename <- paste0(date, "_harmonized_consumer.csv") )
 
 # Generate a date-stamped file name for the species table
-( species_filename <- paste0(date, "_harmonized_consumer_species_table.csv") )
+( species_filename <- paste0(date, "_harmonized_consumer_species.csv") )
 
 # Create necessary sub-folder(s)
 dir.create(path = file.path("tidy"), showWarnings = F)
@@ -420,7 +422,7 @@ dir.create(path = file.path("tidy"), showWarnings = F)
 write.csv(x = tidy_final, file = file.path("tidy", tidy_filename), na = 'NA', row.names = F)
 
 # Also export species table
-write.csv(x = tidy_final, file = file.path("tidy", species_filename), na = 'NA', row.names = F)
+write.csv(x = species_table, file = file.path("tidy", species_filename), na = 'NA', row.names = F)
 
 # Export harmonized dataset to Drive
 googledrive::drive_upload(media = file.path("tidy", tidy_filename), overwrite = T,
