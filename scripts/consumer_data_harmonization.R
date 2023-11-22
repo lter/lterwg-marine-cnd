@@ -88,7 +88,7 @@ for (i in 1:length(raw_files)){
     # And only columns that have a synonymized equivalent
     dplyr::filter(!is.na(standardized_column_name) & nchar(standardized_column_name) != 0)
   
-  raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", raw_file_name))
+  raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", raw_file_name), na.strings = ".")
   
   raw_df_v2 <- raw_df_v1 %>%
     # Create a row number column and a column for the original file
