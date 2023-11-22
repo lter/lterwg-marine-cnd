@@ -344,7 +344,7 @@ dplyr::glimpse(tidy_v2b)
 
 species_table <- tidy_v2b %>%
   # Select the appropriate columns to create our species table
-  dplyr::select(sp_code, scientific_name, common_name, kingdom, phylum, class, order, family, genus, species, taxa_group) %>%
+  dplyr::select(project, sp_code, scientific_name, common_name, kingdom, phylum, class, order, family, genus, species, taxa_group) %>%
   # Get unique species
   dplyr::distinct()
 
