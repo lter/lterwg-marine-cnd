@@ -6,3 +6,4 @@ fish_species <- as.data.frame(unique(vcr_dat$speciesName)) |>
   mutate(a = NA, 
          b = NA)
 write_csv(fish_species, "vcr_fish_species_lwr.csv")
+
