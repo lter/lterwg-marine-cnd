@@ -31,14 +31,32 @@ dir.create(path = file.path("tier0", "raw_data"), showWarnings = F)
 # For example, here I'm pulling all the SBC consumer data from Google Drive
 raw_SBC_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1ycKkpiURLVclobAdCmZx2s_ewcaFAV9Y")) %>%
   dplyr::filter(name %in% c("Annual_All_Species_Biomass_at_transect_20230814.csv",
-                            "IV_EC_talitrid_population.csv"))
+                            "IV_EC_talitrid_population.csv",
+                            "Wrack_Cover_All_Years_20210929.csv"))
 
-# Identify raw data files
-raw_FCE_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1guv_ULta7dlF2rYUTYhaRQ8NldSlMO_y")) %>%
+raw_FCE_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1BSQSXEbjgkSBJVN0p9CxhjVmfiv82U1t")) %>%
   dplyr::filter(name %in% c("MAP_years1thru19.csv"))
 
+raw_VCR_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1PoVGjZoE_Dlr93dt45LRp4P2Jjuez94l")) %>%
+  dplyr::filter(name %in% c("VCR14232_1.csv"))
+
+raw_coastal_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1vT-u9EFsssA8t9_y1A163BTr6ENGBelC")) %>%
+  dplyr::filter(name %in% c("MLPA_fish_biomass_density_transect_raw.csv",
+                            "MLPA_benthic_site_means.csv"))
+
+raw_MCR_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1bMVr5VSXD2azlwD9DioeMwy4RR94uqF5")) %>%
+  dplyr::filter(name %in% c("MCR_Fish_Biomass.csv"))
+
+raw_PIE_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1yAoT0RtkRf2gxtBl3MXpi6cuGji5kuEE")) %>%
+  dplyr::filter(name %in% c("LTE-TIDE-NektonFlumeDensity_v5_1.csv",
+                            "LTE-TIDE-NektonFlumeIndividual_v6_2.csv"))
+
+raw_CCE_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/19INhcRd1xBKgDVd1G5W1B3QI4mlBr587")) %>%
+  dplyr::filter(name %in% c("CCE_PROPOOS_net_data_individual_categories_line80_90_12_08_2023.csv",
+                            "sumofallbiomass.csv"))
+
 # Combine file IDs
-raw_ids <- rbind(raw_SBC_ids, raw_FCE_ids)
+raw_ids <- rbind(raw_SBC_ids, raw_FCE_ids, raw_VCR_ids, raw_coastal_ids, raw_MCR_ids, raw_PIE_ids, raw_CCE_ids)
 
 # Identify and download the data key
 googledrive::drive_ls(path = googledrive::as_id("https://drive.google.com/drive/u/1/folders/1-FDBq0jtEm3bJOfiyIkyxD0JftJ6qExe")) %>%
@@ -88,7 +106,24 @@ for (i in 1:length(raw_files)){
     # And only columns that have a synonymized equivalent
     dplyr::filter(!is.na(standardized_column_name) & nchar(standardized_column_name) != 0)
   
+  if (raw_file_name == "sumofallbiomass.csv") {
+    raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", raw_file_name), na.strings = ".", skip = 2, check.names = F)
+  } 
+  else if (raw_file_name == "CCE_PROPOOS_net_data_individual_categories_line80_90_12_08_2023.csv") {
+    raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", raw_file_name), na.strings = ".", check.names = F)
+  } 
+  else if (raw_file_name == "VCR14232_1.csv") {
+    raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", raw_file_name), na.strings = ".", skip = 21)
+  } 
+  else if (raw_file_name == "LTE-TIDE-NektonFlumeDensity_v5_1.csv") {
+    raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", raw_file_name), na.strings = ".", check.names = F)
+  } 
+  else if (raw_file_name == "LTE-TIDE-NektonFlumeIndividual_v6_2.csv") {
+    raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", raw_file_name), na.strings = ".", check.names = F)
+  }
+  else {
   raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", raw_file_name), na.strings = ".")
+  }
   
   raw_df_v2 <- raw_df_v1 %>%
     # Create a row number column and a column for the original file
@@ -131,7 +166,7 @@ for (i in 1:length(raw_files)){
                                         yes = paste0(standardized_column_name, "_", units_fix),
                                         no = standardized_column_name)) %>%
     # Pare down to only needed columns (implicitly removes unspecified columns)
-    dplyr::select(row_num, project, data_type, raw_filename, names_actual, values) %>%
+    dplyr::select(row_num, project, data_type, habitat, raw_filename, names_actual, values) %>%
     # Pivot back to wide format with revised column names
     tidyr::pivot_wider(names_from = names_actual, values_from = values, values_fill = NA) %>%
     # Drop row number column
