@@ -3,7 +3,7 @@
 ## ------------------------------------------ ##
 # Script author(s): Angel Chen
 
-# Sites: SBC, FCE
+# Sites: SBC, CCE, Coastal CA, FCE, MCR, PIE, VCR
 
 # Data Type: Consumer
 
@@ -106,6 +106,7 @@ for (i in 1:length(raw_files)){
     # And only columns that have a synonymized equivalent
     dplyr::filter(!is.na(standardized_column_name) & nchar(standardized_column_name) != 0)
   
+  # Special cases for reading in certain csv files 
   if (raw_file_name == "sumofallbiomass.csv") {
     raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", raw_file_name), na.strings = ".", skip = 2, check.names = F)
   } 
@@ -166,7 +167,7 @@ for (i in 1:length(raw_files)){
                                         yes = paste0(standardized_column_name, "_", units_fix),
                                         no = standardized_column_name)) %>%
     # Pare down to only needed columns (implicitly removes unspecified columns)
-    dplyr::select(row_num, project, data_type, habitat, raw_filename, names_actual, values) %>%
+    dplyr::select(row_num, project, habitat, raw_filename, names_actual, values) %>%
     # Pivot back to wide format with revised column names
     tidyr::pivot_wider(names_from = names_actual, values_from = values, values_fill = NA) %>%
     # Drop row number column
@@ -178,7 +179,63 @@ for (i in 1:length(raw_files)){
   df_list[[raw_file_name]] <- raw_df_v3
 }
 
-# Unlist the list we just generated
+## -------------------------------------------- ##
+#  Convert Wide Species Columns to Long Format
+## -------------------------------------------- ##
+
+# MLPA_benthic_site_means.csv --------------------------------------------------
+
+MLPA_p1 <- df_list[["MLPA_benthic_site_means.csv"]] %>%
+  # Select all relevant columns
+  dplyr::select(project, habitat, raw_filename, year, site, dplyr::starts_with("wide_den")) %>%
+  # Pivot all "wide_den" columns to long format
+  tidyr::pivot_longer(cols = dplyr::starts_with("wide_den"), names_to = "sp_code", values_to = "density_num_m2") %>%
+  # Extract the species code
+  dplyr::mutate(sp_code = stringr::str_extract(sp_code, "[A-Z]+"))
+
+MLPA_p2 <- df_list[["MLPA_benthic_site_means.csv"]] %>%
+  # Select all relevant columns
+  dplyr::select(project, habitat, raw_filename, year, site, dplyr::starts_with("wide_COVER")) %>%
+  # Pivot all "wide_COVER" columns to long format
+  tidyr::pivot_longer(cols = dplyr::starts_with("wide_COVER"), names_to = "sp_code", values_to = "cover_percent") %>%
+  # Extract the species code
+  dplyr::mutate(sp_code = stringr::str_extract(sp_code, "(?<=wide_COVER_)[A-Z]+(?=_percent)"))
+
+# Full join both parts 
+MLPA_fixed <- full_join(MLPA_p1, MLPA_p2)
+
+# Replace the old, wide dataframe with the new, long version
+df_list[["MLPA_benthic_site_means.csv"]] <- MLPA_fixed
+
+# CCE_PROPOOS_net_data_individual_categories_line80_90_12_08_2023.csv -----------------------
+
+CCE_PROPOOS_p1 <- df_list[["CCE_PROPOOS_net_data_individual_categories_line80_90_12_08_2023.csv"]] %>%
+  # Select all relevant columns
+  dplyr::select(project, habitat, raw_filename, site, date, dplyr::starts_with("wide_dens")) %>%
+  # Pivot all "wide_dens" columns to long format
+  tidyr::pivot_longer(cols = dplyr::starts_with("wide_dens"), names_to = "scientific_name", values_to = "density_num_m2") %>%
+  # Extract the scientific name
+  dplyr::mutate(scientific_name = stringr::str_extract(scientific_name, "(?<=wide_dens_)[a-z]+_*[a-z]*(?=_num_m2)")) %>%
+  # Replace the underscore in the scientific name with a space
+  dplyr::mutate(scientific_name = stringr::str_replace(scientific_name, "_", " "))
+
+CCE_PROPOOS_p2 <- df_list[["CCE_PROPOOS_net_data_individual_categories_line80_90_12_08_2023.csv"]] %>%
+  # Select all relevant columns
+  dplyr::select(project, habitat, raw_filename, site, date, dplyr::starts_with("wide_dry_biomass")) %>%
+  # Pivot all "wide_dry_biomass" columns to long format
+  tidyr::pivot_longer(cols = dplyr::starts_with("wide_dry_biomass"), names_to = "scientific_name", values_to = "drymass_mgC_m2") %>%
+  # Extract the scientific name
+  dplyr::mutate(scientific_name = stringr::str_extract(scientific_name, "(?<=wide_dry_biomass_)[a-z]+_*[a-z]*(?=_mgC_m2)")) %>%
+  # Replace the underscore in the scientific name with a space
+  dplyr::mutate(scientific_name = stringr::str_replace(scientific_name, "_", " "))
+
+# Full join both parts 
+CCE_PROPOOS_fixed <- full_join(CCE_PROPOOS_p1, CCE_PROPOOS_p2)
+
+# Replace the old, wide dataframe with the new, long version
+df_list[["CCE_PROPOOS_net_data_individual_categories_line80_90_12_08_2023.csv"]] <- CCE_PROPOOS_fixed
+
+# Unlist the list we generated from above
 tidy_v0 <- df_list %>%
   purrr::list_rbind(x = .)
 
