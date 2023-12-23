@@ -242,6 +242,8 @@ tidy_v0 <- df_list %>%
 # Check that out
 dplyr::glimpse(tidy_v0)
 
+# Clean up environment
+rm(list = setdiff(ls(), c("key", "tidy_v0")))
 ## -------------------------------------------- ##
 #               Wrangle Dates ----
 ## -------------------------------------------- ##
@@ -260,8 +262,17 @@ tidy_v0 %>%
 tidy_v1a <- tidy_v0 %>%
   dplyr::mutate(date_format = dplyr::case_when(
     raw_filename == "Annual_All_Species_Biomass_at_transect_20230814.csv" ~ "YYYY-MM-DD",
+    raw_filename == "CCE_PROPOOS_net_data_individual_categories_line80_90_12_08_2023.csv" ~ "MM/DD/YYYY",
     raw_filename == "IV_EC_talitrid_population.csv" ~ "MM/DD/YYYY",
+    raw_filename == "LTE-TIDE-NektonFlumeDensity_v5_1.csv" ~ "YYYY-MM-DD",
+    raw_filename == "LTE-TIDE-NektonFlumeIndividual_v6_2.csv" ~ "YYYY-MM-DD",
     raw_filename == "MAP_years1thru19.csv" ~ "MM/DD/YY",
+    raw_filename == "MCR_Fish_Biomass.csv" ~ "NA", # only has year month day
+    raw_filename == "MLPA_benthic_site_means.csv" ~ "NA", # only has year
+    raw_filename == "MLPA_fish_biomass_density_transect_raw.csv" ~ "NA", # only has year month day
+    raw_filename == "VCR14232_1.csv" ~ "YYYY-MM-DD",
+    raw_filename == "Wrack_Cover_All_Years_20210929.csv" ~ "NA", # only has year month
+    raw_filename == "sumofallbiomass.csv" ~ "YYYY-MM-DD",
     # raw_filename == "" ~ "",
     T ~ "UNKNOWN"))
 
@@ -272,42 +283,44 @@ tidy_v1a %>%
 
 # Remind yourself what year/month/day/date columns do each raw file already contain
 key %>%
-  dplyr::select(raw_filename, standardized_column_name) %>%
-  dplyr::filter(standardized_column_name %in% c("year","month","day","date"))
+  dplyr::select(raw_filename, standardized_column_name, data_type) %>%
+  dplyr::filter(data_type == "consumer") %>%
+  dplyr::filter(standardized_column_name %in% c("year","month","day","date")) %>%
+  View()
 
 # Break apart the date column depending on the date format
 tidy_v1b <- tidy_v1a %>%
-  tidyr::separate_wider_delim(date, delim = "-", names = c("year_fix1", "month_fix1", "day_fix1"), too_few = "align_start", cols_remove = F) %>%
-  tidyr::separate_wider_delim(date, delim = "/", names = c("month_fix2", "day_fix2", "year_fix2"), too_few = "align_start", cols_remove = F) 
+  # YYYY-MM-DD
+  tidyr::separate_wider_delim(date, delim = "-", names = c("year_fix1", "month_fix1", "day_fix1"), too_few = "align_start", cols_remove = F) %>% 
+  # MM/DD/YY and MM/DD/YYYY
+  tidyr::separate_wider_delim(date, delim = "/", names = c("month_fix2", "day_fix2", "year_fix2"), too_few = "align_start", cols_remove = F) %>%
+  # If year_fix2 only has the last two digits of the year, add "20" to the front 
+  dplyr::mutate(year_fix2 = ifelse(nchar(year_fix2) == 2, yes = paste0("20", year_fix2), no = year_fix2)) %>%
+  # As a result of doing separate_wider_delim() twice, rows with the YYYY-MM-DD dates have values in the month_fix2 column (which we don't want)
+  dplyr::mutate(month_fix2 = ifelse(date_format == "YYYY-MM-DD", yes = NA, no = month_fix2)) %>%
+  # As a result of doing separate_wider_delim() twice, rows with the MM/DD/YY or MM/DD/YYYY dates have values in the year_fix1 column (which we don't want)
+  dplyr::mutate(year_fix1 = ifelse(date_format == "MM/DD/YY" | date_format == "MM/DD/YYYY", yes = NA, no = year_fix1)) 
+  
 
 # Date wrangling
 tidy_v1c <- tidy_v1b %>%
   dplyr::relocate(day, .after = month) %>%
-  # Coalesce the day and day_fix1 columns together
-  dplyr::mutate(day = dplyr::coalesce(day, day_fix1)) %>%
-  # Throw away the unneeded pieces from the YYYY-MM-DD date format
-  dplyr::select(-year_fix1, -month_fix1, -day_fix1) %>%
-  # If the date format is MM/DD/YYYY then...
-  dplyr::mutate(
-    # Use the year_fix2 column for the year
-    year = dplyr::case_when(
-      date_format == "MM/DD/YYYY" ~ year_fix2,
-      T ~ year),
-    # Use the month_fix2 column for the month
-    month = dplyr::case_when(
-      date_format == "MM/DD/YYYY" ~ month_fix2,
-      T ~ month),
-    # Use the day_fix2 column for the day
-    day = dplyr::case_when(
-      date_format == "MM/DD/YYYY" ~ day_fix2,
-      T ~ day)
-    ) %>%
-  # Throw away the unneeded pieces from the MM/DD/YYYY date format
-  dplyr::select(-year_fix2, -month_fix2, -day_fix2) %>%
+  # Coalesce the day, day_fix1, day_fix2 columns together
+  dplyr::mutate(day = dplyr::coalesce(day, day_fix1, day_fix2)) %>%
+  # Coalesce the month, month_fix1, month_fix2 columns together
+  dplyr::mutate(month = dplyr::coalesce(month, month_fix1, month_fix2)) %>%
+  # Coalesce the year, year_fix1, year_fix2 columns together
+  dplyr::mutate(year = dplyr::coalesce(year, year_fix1, year_fix2)) %>%
+  # Drop day, month, year columns that we don't need anymore
+  dplyr::select(-day_fix1, -day_fix2, -month_fix1, -month_fix2, -year_fix1, -year_fix2) %>%
   # Remove the leading 0 in the day column
   dplyr::mutate(day = gsub(pattern = "^0",
                            replacement = "",
                            x = day)) %>%
+  # Remove the leading 0 in the month column
+  dplyr::mutate(month = gsub(pattern = "^0",
+                           replacement = "",
+                           x = month)) %>%
   # Make a real date column
   dplyr::mutate(date_v0 = paste(year, month, day, sep = "-"),
                 .after = day) %>%
@@ -316,7 +329,11 @@ tidy_v1c <- tidy_v1b %>%
   # Remove the preliminary date columns
   dplyr::select(-date_v0, -date, -date_format) %>%
   # Rename date_actual to date
-  dplyr::rename(date = date_actual)
+  dplyr::rename(date = date_actual) %>%
+  # Replace empty strings with NA values
+  dplyr::mutate(dplyr::across(.cols = c(year, month, day), .fns = ~dplyr::na_if(., y = "NA"))) %>%
+  # Filter out the weird row with year as "(100840) rows" -this is the last line of MCR_Fish_Biomass
+  dplyr::filter(year != "(100840 rows)")
 
 # Check overall dates
 unique(tidy_v1c$year)
