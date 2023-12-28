@@ -330,7 +330,7 @@ tidy_v1c <- tidy_v1b %>%
   dplyr::select(-date_v0, -date, -date_format) %>%
   # Rename date_actual to date
   dplyr::rename(date = date_actual) %>%
-  # Replace empty strings with NA values
+  # Replace NA strings with actual NA values
   dplyr::mutate(dplyr::across(.cols = c(year, month, day), .fns = ~dplyr::na_if(., y = "NA"))) %>%
   # Filter out the weird row with year as "(100840) rows" -this is the last line of MCR_Fish_Biomass
   dplyr::filter(year != "(100840 rows)")
@@ -359,15 +359,53 @@ rm(list = setdiff(ls(), c("tidy_v1c")))
 
 # Doing some preliminary wrangling on species names
 tidy_v2a <-  tidy_v1c %>%
+  # Replace one of the missing value codes -99999 with NA values
+  dplyr::mutate(dplyr::across(.cols = c(-year, -month, -day, -date, -sp_code), .fns = ~dplyr::na_if(., y = "-99999"))) %>%
+  # Replace empty strings with NA values
+  dplyr::mutate(dplyr::across(.cols = c(-year, -month, -day, -date, -sp_code), .fns = ~dplyr::na_if(., y = ""))) %>%
+  # Replace NA strings with actual NA values
+  dplyr::mutate(dplyr::across(.cols = c(-year, -month, -day, -date, -sp_code), .fns = ~dplyr::na_if(., y = "NA"))) %>%
+  # Make a new scientific name column that combines info across many taxon columns
+  dplyr::mutate(new_sci_name = dplyr::coalesce(scientific_name, species, genus, family, order, class, phylum)) %>%
+  # Drop old scientific_name column
+  dplyr::select(-scientific_name) %>%
+  # Rename our new scientific name column
+  dplyr::rename(scientific_name = new_sci_name) %>%
   # Remove underscore from the species name
   dplyr::mutate(scientific_name = gsub(pattern = "_",
                                        replacement = " ",
                                        x = scientific_name)) %>%
-  # Replace one of the missing value codes -99999 with NA values
-  dplyr::mutate(dplyr::across(.cols = -date, .fns = ~dplyr::na_if(., y = "-99999"))) %>%
-  # Replace empty strings with NA values
-  dplyr::mutate(dplyr::across(.cols = -date, .fns = ~dplyr::na_if(., y = "")))
+  # If the species is just "spp " or "spp" then we can put the genus as the value in scientific_name
+  dplyr::mutate(scientific_name = dplyr::case_when(
+    species == "spp " | species == "spp" ~ genus,
+    T ~ scientific_name
+  )) %>%
+  # If the row is from the MLPA csv and the species is non-empty, put genus + species as the value in scientific_name
+  dplyr::mutate(scientific_name = dplyr::case_when(
+    raw_filename == "MLPA_fish_biomass_density_transect_raw.csv" & !is.na(species) ~ paste(genus, species),
+    T ~ scientific_name
+  )) %>%
+  # If the row is from the Wrack csv and the species is non-empty, put genus + species as the value in scientific_name
+  dplyr::mutate(scientific_name = dplyr::case_when(
+    raw_filename == "Wrack_Cover_All_Years_20210929.csv" & !is.na(species) ~ paste(genus, species),
+    T ~ scientific_name
+  )) %>%
+  # Fixing names in scientific_name:
+  # Remove any instance of "unidentified " + a number  
+  dplyr::mutate(scientific_name = stringr::str_replace(scientific_name, "unidentified [:digit:]*", "")) %>%
+  # Remove any instance of "Unidentified " or "Unidentifiable "
+  dplyr::mutate(scientific_name = stringr::str_replace(scientific_name, "Unidentified |Unidentifiable ", "")) %>%
+  # Remove any instance of " sp." or " spp." or " sp" or " spp. "
+  dplyr::mutate(scientific_name = stringr::str_replace(scientific_name, " sp.$| spp.$| sp$| spp. $", "")) %>%
+  # Remove any instance of " spp. (partial)" or " (partial)"
+  dplyr::mutate(scientific_name = stringr::str_replace(scientific_name, " spp. \\(partial\\)$| \\(partial\\)$", "")) %>%
+  # Remove any instance of " (cf)" or " sp. " + a number or "small "
+  dplyr::mutate(scientific_name = stringr::str_replace(scientific_name, " \\(cf\\)| sp. [:digit:]*|small ", "")) %>%
+  # Remove any instance of trailing space or trailing space + a number
+  dplyr::mutate(scientific_name = stringr::str_replace(scientific_name, "[:blank:]$|[:blank:][:digit:]?$", "")) 
 
+# Check unique scientific names
+unique(tidy_v2a$scientific_name)
 
 taxon_fix <- tidy_v2a %>%
   # Grab all the species from our tidy object
@@ -385,8 +423,6 @@ taxon_fix <- tidy_v2a %>%
                 common_name_fix = NA) %>%
   # Rename species column
   dplyr::rename(scientific_name_fix = scientific_name) %>%
-  # Remove any non-specific or unidentified species
-  dplyr::filter(!stringr::str_detect(scientific_name_fix, pattern = "[:space:]sp.|[:space:]spp.|[:space:]sp|Unidentified")) %>%
   # Remove rows without any value in the scientific_name_fix column
   dplyr::filter(!is.na(scientific_name_fix) & nchar(scientific_name_fix) != 0)
 
@@ -404,12 +440,14 @@ for (i in 1:length(taxon_fix$scientific_name_fix)){
     query_results <- taxize::tax_name(sci = taxon_fix[i,]$scientific_name_fix,
                                       get = c("kingdom", "phylum", "class", "order", "family", "genus", "species"),
                                       db = "itis",
-                                      accepted = T)
+                                      accepted = T,
+                                      ask = F)
     
     # Query species for its common name 
     common_name_results <- taxize::sci2comm(sci = taxon_fix[i,]$scientific_name_fix, 
                                             db = "itis",
-                                            accepted = T)
+                                            accepted = T,
+                                            ask = F)
     
     # Save the query results
     # In case the query returns NULL, the paste0(..., collapse = "") will coerce NULL into an empty string
