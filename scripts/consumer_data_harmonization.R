@@ -645,7 +645,47 @@ some_common_names_fix_v2 <- some_common_names_fix %>%
   dplyr::mutate(class_fix = dplyr::case_when(
     common_name == "Squid" ~ "Coleoidea",
     T ~ class_fix
-  )) 
+  )) %>%
+  dplyr::mutate(species_fix = dplyr::case_when(
+    common_name == "Striped Blenny" ~ "Meiacanthus grammistes",
+    T ~ species_fix
+  )) %>%
+  dplyr::mutate(species_fix = dplyr::case_when(
+    common_name == "Mangrove Snapper" ~ "Lutjanus griseus",
+    T ~ species_fix
+  )) %>%
+  dplyr::mutate(family_fix = dplyr::case_when(
+    common_name == "Pufferfish" ~ "Tetraodontidae",
+    T ~ family_fix
+  )) %>%
+  dplyr::mutate(species_fix = dplyr::case_when(
+    common_name == "Bluefish" ~ "Pomatomus saltatrix",
+    T ~ species_fix
+  )) %>%
+  dplyr::mutate(family_fix = dplyr::case_when(
+    common_name == "Filefish" ~ "Monacanthidae",
+    T ~ family_fix
+  )) %>%
+  dplyr::mutate(species_fix = dplyr::case_when(
+    common_name == "Menhaden" ~ "Brevoortia tyrannus",
+    T ~ species_fix
+  )) %>%
+  dplyr::mutate(family_fix = dplyr::case_when(
+    common_name == "American Anchovy" ~ "Engraulidae",
+    T ~ family_fix
+  )) %>%
+  dplyr::mutate(species_fix = dplyr::case_when(
+    common_name == "Croaker" ~ "Micropogonias undulatus",
+    T ~ species_fix
+  )) %>%
+  dplyr::mutate(species_fix = dplyr::case_when(
+    common_name == "Speckled Trout" ~ "Cynoscion nebulosus",
+    T ~ species_fix
+  )) %>%
+  dplyr::mutate(species_fix = dplyr::case_when(
+    common_name == "Skilletfish" ~ "Gobiesox strumosus",
+    T ~ species_fix
+  ))
   
 tidy_v2c <- left_join(tidy_v2b, some_common_names_fix_v2, by = "common_name") %>% 
   # Coalesce taxonomic columns together to fill in missing taxonomic info whenever possible
@@ -659,7 +699,10 @@ tidy_v2c <- left_join(tidy_v2b, some_common_names_fix_v2, by = "common_name") %>
   # Drop the rest of the columns from the taxon table
   dplyr::select(-dplyr::contains("_fix")) %>%
   # Combine info from across many taxon columns into scientific_name
-  dplyr::mutate(scientific_name = dplyr::coalesce(scientific_name, species, genus, family, order, class, phylum)) %>%
+  dplyr::mutate(scientific_name = dplyr::coalesce(scientific_name, species, genus, family, order, class, phylum)) 
+
+# Check unique scientific names
+unique(tidy_v2c$scientific_name)
 
 taxon_fix <- tidy_v2c %>%
   # Grab all the species from our tidy object
