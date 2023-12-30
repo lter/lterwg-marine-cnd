@@ -409,8 +409,8 @@ tidy_v2b <- tidy_v2a %>%
   dplyr::mutate(scientific_name = stringr::str_replace(scientific_name, " sp.$| spp.$| sp$| spp. $", "")) %>%
   # Remove any instance of " spp. (partial)" or " (partial)"
   dplyr::mutate(scientific_name = stringr::str_replace(scientific_name, " spp. \\(partial\\)$| \\(partial\\)$", "")) %>%
-  # Remove any instance of " (cf)" or " sp. " + a number or "small "
-  dplyr::mutate(scientific_name = stringr::str_replace(scientific_name, " \\(cf\\)| sp. [:digit:]*|small ", "")) %>%
+  # Remove any instance of " (cf)" or " sp. " + a number or "small " or " others"
+  dplyr::mutate(scientific_name = stringr::str_replace(scientific_name, " \\(cf\\)| sp. [:digit:]*|small | others$", "")) %>%
   # Remove any instance of trailing space or trailing space + a number
   dplyr::mutate(scientific_name = stringr::str_replace(scientific_name, "[:blank:]$|[:blank:][:digit:]?$", "")) %>%
   # Doing more custom fixes in scientific_name:
@@ -520,6 +520,10 @@ tidy_v2b <- tidy_v2a %>%
   )) %>%
   dplyr::mutate(scientific_name = dplyr::case_when(
     scientific_name == "eel species" ~ "Anguilliformes",
+    T ~ scientific_name
+  )) %>%
+  dplyr::mutate(scientific_name = dplyr::case_when(
+    scientific_name == "Surfperch" ~ "Embiotoca",
     T ~ scientific_name
   )) 
 
@@ -776,12 +780,19 @@ tidy_v2d <- left_join(tidy_v2c, taxon_fix_v2, by = c("scientific_name" = "scient
          family = dplyr::coalesce(family, family_fix),
          genus = dplyr::coalesce(genus, genus_fix),
          common_name = dplyr::coalesce(common_name, common_name_fix)) %>%
-  # Drop the inferior species column (some entries actually have only the epithet instead of the full species)
+  # Drop the inferior species column (some strings had numbers in them or had "(cf)")
   dplyr::select(-species) %>%
   # Keep species_fix as the superior species column
   dplyr::rename(species = species_fix) %>%
   # Drop the rest of the columns from the taxon table
-  dplyr::select(-dplyr::contains("_fix")) 
+  dplyr::select(-dplyr::contains("_fix")) %>%
+  # Make sure the first word is capitalized in scientific_name 
+  dplyr::mutate(scientific_name = stringr::str_to_sentence(scientific_name)) %>%
+  # Finally, if the species column is empty but the scientific_name column contains the full species name,
+  # fill in the species column with the value in scientific_name
+  dplyr::mutate(species = ifelse(stringr::str_detect(scientific_name, "[:blank:]"),
+                                 yes = scientific_name,
+                                 no = species))
 
 # Check structure
 dplyr::glimpse(tidy_v2d)
@@ -790,7 +801,9 @@ species_table <- tidy_v2d %>%
   # Select the appropriate columns to create our species table
   dplyr::select(project, sp_code, scientific_name, common_name, kingdom, phylum, class, order, family, genus, species, taxa_group) %>%
   # Get unique species
-  dplyr::distinct()
+  dplyr::distinct() %>%
+  # Sort by project and scientific_name
+  dplyr::arrange(project, scientific_name)
 
 tidy_v2e <- tidy_v2d %>%
   # Now that we have our species table, we don't need the other taxa columns in our harmonized dataset
@@ -807,13 +820,20 @@ rm(list = setdiff(ls(), c("tidy_v2e", "species_table")))
 dplyr::glimpse(tidy_v2e)
 
 tidy_v3 <- tidy_v2e %>%
-  dplyr::relocate(sp_code, .after = subsite) %>%
+  dplyr::relocate(sp_code, .after = subsite_level1) %>%
+  dplyr::relocate(subsite_level2, .after = subsite_level1) %>%
+  dplyr::relocate(subsite_level3, .after = subsite_level2) %>%
   dplyr::relocate(scientific_name, .after = sp_code) %>%
-  dplyr::relocate(density_num_m, .after = scientific_name) %>%
+  dplyr::relocate(biomass_g, .after = scientific_name) %>%
+  dplyr::relocate(coarse_grouping, .after = biomass_g) %>%
+  dplyr::relocate(count_num, .after = coarse_grouping) %>%
+  dplyr::relocate(cover_percent, .after = count_num) %>%
+  dplyr::relocate(density_num_m, .after = cover_percent) %>%
   dplyr::relocate(drymass_g_m, .before = drymass_g_m2) %>%  
+  dplyr::relocate(length_cm, .before = length_mm) %>%  
   dplyr::relocate(wetmass_g_m2, .before = wetmass_kg) %>%
   dplyr::relocate(wetmass_kg, .after = wetmass_g_m2) %>%  
-  dplyr::mutate(dplyr::across(.cols = c(year:day, density_num_m:wetmass_kg), .fns = as.numeric))
+  dplyr::mutate(dplyr::across(.cols = c(year:day, biomass_g:wetmass_kg_m), .fns = as.numeric))
 
 # Check structure
 dplyr::glimpse(tidy_v3)
