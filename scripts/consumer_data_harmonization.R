@@ -420,113 +420,32 @@ tidy_v2b <- tidy_v2a %>%
   # Doing more custom fixes in scientific_name:
   dplyr::mutate(scientific_name = dplyr::case_when(
     scientific_name == "No megalorchestia" ~ "Megalorchestia",
-    T ~ scientific_name
-  )) %>%
-  dplyr::mutate(scientific_name = dplyr::case_when(
     scientific_name == "juvenile kelp" ~ "Lessoniaceae",
-    T ~ scientific_name
-  )) %>%
-  dplyr::mutate(scientific_name = dplyr::case_when(
     scientific_name == "Flatfish" ~ "Bothidae",
-    T ~ scientific_name
-  )) %>%
-  dplyr::mutate(scientific_name = dplyr::case_when(
     scientific_name == "Halymenia spp.; Schizymenia pacifica" ~ "Florideophyceae",
-    T ~ scientific_name
-  )) %>%
-  dplyr::mutate(scientific_name = dplyr::case_when(
     scientific_name == "Branching Red Alga" ~ "Rhodophyta",
-    T ~ scientific_name
-  )) %>%
-  dplyr::mutate(scientific_name = dplyr::case_when(
     scientific_name == "Chondracanthus corymbiferus; Chondracanthus exasperatus" ~ "Chondracanthus",
-    T ~ scientific_name
-  )) %>%
-  dplyr::mutate(scientific_name = dplyr::case_when(
     scientific_name == "Cellaria diffusa; Cellaria mandibulata" ~ "Cellaria",
-    T ~ scientific_name
-  )) %>%
-  dplyr::mutate(scientific_name = dplyr::case_when(
     scientific_name == "Cucumaria salma; Cucumaria miniata" ~ "Cucumaria",
-    T ~ scientific_name
-  )) %>%
-  dplyr::mutate(scientific_name = dplyr::case_when(
     scientific_name == "Dictyota binghamiae; Dictyota flabellata; Dictyota coriacea" ~ "Dictyota",
-    T ~ scientific_name
-  )) %>%
-  dplyr::mutate(scientific_name = dplyr::case_when(
     scientific_name == "Ulva spp.; Sponogomorpha" ~ "Ulvophyceae",
-    T ~ scientific_name
-  )) %>%
-  dplyr::mutate(scientific_name = dplyr::case_when(
     scientific_name == "Neoptilota spp.; Ptilota spp.; Rhodoptilum" ~ "Ceramiales",
-    T ~ scientific_name
-  )) %>%
-  dplyr::mutate(scientific_name = dplyr::case_when(
     scientific_name == "Pomaulax gibberosus; Megastraea undosa" ~ "Turbinidae",
-    T ~ scientific_name
-  )) %>%
-  dplyr::mutate(scientific_name = dplyr::case_when(
     scientific_name == "YOY Sebastes" ~ "Sebastes",
-    T ~ scientific_name
-  )) %>%
-  dplyr::mutate(scientific_name = dplyr::case_when(
     scientific_name == "brown blade" ~ "Phaeophyceae",
-    T ~ scientific_name
-  )) %>%
-  dplyr::mutate(scientific_name = dplyr::case_when(
     scientific_name == "Ectopleura crocea; Eudendrium californicum; Schuchertinia milleri" ~ "Anthoathecata",
-    T ~ scientific_name
-  )) %>%
-  dplyr::mutate(scientific_name = dplyr::case_when(
     scientific_name == "salps" ~ "Salpidae",
-    T ~ scientific_name
-  )) %>%
-  dplyr::mutate(scientific_name = dplyr::case_when(
     scientific_name == "cichlid species" ~ "Cichlidae",
-    T ~ scientific_name
-  )) %>%
-  dplyr::mutate(scientific_name = dplyr::case_when(
     scientific_name == "No fishes collected" ~ NA,
-    T ~ scientific_name
-  )) %>%
-  dplyr::mutate(scientific_name = dplyr::case_when(
     scientific_name == "cyprinid" ~ "Cyprinidae",
-    T ~ scientific_name
-  )) %>%
-  dplyr::mutate(scientific_name = dplyr::case_when(
     scientific_name == "Parrotfish" ~ "Scaridae",
-    T ~ scientific_name
-  )) %>%
-  dplyr::mutate(scientific_name = dplyr::case_when(
     scientific_name == "Sebastes atrovirens,carnatus,chrysomelas,caurinus" ~ "Sebastes",
-    T ~ scientific_name
-  )) %>%
-  dplyr::mutate(scientific_name = dplyr::case_when(
     scientific_name == "Sebastes serranoides,flavidus" ~ "Sebastes",
-    T ~ scientific_name
-  )) %>%
-  dplyr::mutate(scientific_name = dplyr::case_when(
     scientific_name == "Sebastes chrysomelas/carnatus young of year" ~ "Sebastes",
-    T ~ scientific_name
-  )) %>%
-  dplyr::mutate(scientific_name = dplyr::case_when(
     scientific_name == "Sebastes serranoides,flavidus,melanops" ~ "Sebastes",
-    T ~ scientific_name
-  )) %>% 
-  dplyr::mutate(scientific_name = dplyr::case_when(
     scientific_name == "Sebastes carnatus, caurinus" ~ "Sebastes",
-    T ~ scientific_name
-  )) %>%
-  dplyr::mutate(scientific_name = dplyr::case_when(
     scientific_name == "fishes" ~ "Vertebrata",
-    T ~ scientific_name
-  )) %>%
-  dplyr::mutate(scientific_name = dplyr::case_when(
     scientific_name == "eel species" ~ "Anguilliformes",
-    T ~ scientific_name
-  )) %>%
-  dplyr::mutate(scientific_name = dplyr::case_when(
     scientific_name == "Surfperch" ~ "Embiotoca",
     T ~ scientific_name
   )) 
@@ -584,117 +503,48 @@ some_common_names_fix_v2 <- some_common_names_fix %>%
   # Manually find the scientific names for the rest of the common names that did not get automatically filled by taxize
   dplyr::mutate(species_fix = dplyr::case_when(
     common_name == "Spot" ~ "Leiostomus xanthurus",
-    T ~ species_fix
-  )) %>%
-  dplyr::mutate(species_fix = dplyr::case_when(
     common_name == "Pinfish" ~ "Lagodon rhomboides",
-    T ~ species_fix
-  )) %>%
-  dplyr::mutate(species_fix = dplyr::case_when(
     common_name == "Striped burrfish" ~ "Chilomycterus schoepfi",
-    T ~ species_fix
-  )) %>%
-  dplyr::mutate(order_fix = dplyr::case_when(
-    common_name == "Silversides" ~ "Atheriniformes",
-    T ~ order_fix
-  )) %>%
-  dplyr::mutate(family_fix = dplyr::case_when(
-    common_name == "Pipefish" ~ "Syngnathinae",
-    T ~ family_fix
-  )) %>%
-  dplyr::mutate(species_fix = dplyr::case_when(
     common_name == "Black Sea Bass" ~ "Centropristis striata",
+    common_name == "Pigfish" ~ "Orthopristis chrysoptera",
+    common_name == "Scup" ~ "Stenotomus chrysops",
+    common_name == "Sheepshead" ~ "Archosargus probatocephalus",
+    common_name == "Butterfish" ~ "Peprilus triacanthus",
+    common_name == "Summer Flounder" ~ "Paralichthys dentatus",
+    common_name == "Striped Blenny" ~ "Meiacanthus grammistes",
+    common_name == "Mangrove Snapper" ~ "Lutjanus griseus",
+    common_name == "Bluefish" ~ "Pomatomus saltatrix",
+    common_name == "Tautog" ~ "Tautoga onitis",
+    common_name == "Croaker" ~ "Micropogonias undulatus",
+    common_name == "Speckled Trout" ~ "Cynoscion nebulosus",
+    common_name == "Skilletfish" ~ "Gobiesox strumosus",
+    common_name == "Menhaden" ~ "Brevoortia tyrannus",
     T ~ species_fix
   )) %>%
   dplyr::mutate(genus_fix = dplyr::case_when(
     common_name == "Seahorse" ~ "Hippocampus",
     T ~ genus_fix
   )) %>%
-  dplyr::mutate(species_fix = dplyr::case_when(
-    common_name == "Pigfish" ~ "Orthopristis chrysoptera",
-    T ~ species_fix
-  )) %>%
-  dplyr::mutate(species_fix = dplyr::case_when(
-    common_name == "Scup" ~ "Stenotomus chrysops",
-    T ~ species_fix
-  )) %>%
   dplyr::mutate(family_fix = dplyr::case_when(
     common_name == "Mojarra" ~ "Gerreidae",
+    common_name == "Pipefish" ~ "Syngnathinae",
+    common_name == "Unknown Sciaenid" ~ "Sciaenid",
+    common_name == "Sand Mullet" ~ "Mugilidae",
+    common_name == "Pufferfish" ~ "Tetraodontidae",
+    common_name == "Filefish" ~ "Monacanthidae",
+    common_name == "American Anchovy" ~ "Engraulidae",
     T ~ family_fix
-  )) %>%
-  dplyr::mutate(species_fix = dplyr::case_when(
-    common_name == "Sheepshead" ~ "Archosargus probatocephalus",
-    T ~ species_fix
   )) %>%
   dplyr::mutate(order_fix = dplyr::case_when(
+    common_name == "Silversides" ~ "Atheriniformes",
     common_name == "Goby" ~ "Gobioidei",
     T ~ order_fix
-  )) %>%
-  dplyr::mutate(family_fix = dplyr::case_when(
-    common_name == "Unknown Sciaenid" ~ "Sciaenid",
-    T ~ family_fix
-  )) %>%
-  dplyr::mutate(species_fix = dplyr::case_when(
-    common_name == "Butterfish" ~ "Peprilus triacanthus",
-    T ~ species_fix
-  )) %>%
-  dplyr::mutate(species_fix = dplyr::case_when(
-    common_name == "Summer Flounder" ~ "Paralichthys dentatus",
-    T ~ species_fix
-  )) %>%
-  dplyr::mutate(species_fix = dplyr::case_when(
-    common_name == "Tautog" ~ "Tautoga onitis",
-    T ~ species_fix
-  )) %>%
-  dplyr::mutate(family_fix = dplyr::case_when(
-    common_name == "Sand Mullet" ~ "Mugilidae",
-    T ~ family_fix
   )) %>%
   dplyr::mutate(class_fix = dplyr::case_when(
     common_name == "Squid" ~ "Coleoidea",
     T ~ class_fix
-  )) %>%
-  dplyr::mutate(species_fix = dplyr::case_when(
-    common_name == "Striped Blenny" ~ "Meiacanthus grammistes",
-    T ~ species_fix
-  )) %>%
-  dplyr::mutate(species_fix = dplyr::case_when(
-    common_name == "Mangrove Snapper" ~ "Lutjanus griseus",
-    T ~ species_fix
-  )) %>%
-  dplyr::mutate(family_fix = dplyr::case_when(
-    common_name == "Pufferfish" ~ "Tetraodontidae",
-    T ~ family_fix
-  )) %>%
-  dplyr::mutate(species_fix = dplyr::case_when(
-    common_name == "Bluefish" ~ "Pomatomus saltatrix",
-    T ~ species_fix
-  )) %>%
-  dplyr::mutate(family_fix = dplyr::case_when(
-    common_name == "Filefish" ~ "Monacanthidae",
-    T ~ family_fix
-  )) %>%
-  dplyr::mutate(species_fix = dplyr::case_when(
-    common_name == "Menhaden" ~ "Brevoortia tyrannus",
-    T ~ species_fix
-  )) %>%
-  dplyr::mutate(family_fix = dplyr::case_when(
-    common_name == "American Anchovy" ~ "Engraulidae",
-    T ~ family_fix
-  )) %>%
-  dplyr::mutate(species_fix = dplyr::case_when(
-    common_name == "Croaker" ~ "Micropogonias undulatus",
-    T ~ species_fix
-  )) %>%
-  dplyr::mutate(species_fix = dplyr::case_when(
-    common_name == "Speckled Trout" ~ "Cynoscion nebulosus",
-    T ~ species_fix
-  )) %>%
-  dplyr::mutate(species_fix = dplyr::case_when(
-    common_name == "Skilletfish" ~ "Gobiesox strumosus",
-    T ~ species_fix
   ))
-  
+
 tidy_v2c <- left_join(tidy_v2b, some_common_names_fix_v2, by = "common_name") %>% 
   # Coalesce taxonomic columns together to fill in missing taxonomic info whenever possible
   dplyr::mutate(kingdom = dplyr::coalesce(kingdom, kingdom_fix),
