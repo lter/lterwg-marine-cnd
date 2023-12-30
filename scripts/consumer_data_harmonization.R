@@ -803,7 +803,9 @@ species_table <- tidy_v2d %>%
   # Get unique species
   dplyr::distinct() %>%
   # Sort by project and scientific_name
-  dplyr::arrange(project, scientific_name)
+  dplyr::arrange(project, scientific_name) %>%
+  # Remove rows that have NA values for both scientific_name and sp_code
+  dplyr::filter(!(is.na(scientific_name) & is.na(sp_code)))
 
 tidy_v2e <- tidy_v2d %>%
   # Now that we have our species table, we don't need the other taxa columns in our harmonized dataset
@@ -844,7 +846,7 @@ dplyr::glimpse(tidy_v3)
 
 tidy_v4 <- tidy_v3 %>%
   # Pivot the measurement columns to long format
-  tidyr::pivot_longer(cols = density_num_m:wetmass_kg,
+  tidyr::pivot_longer(cols = biomass_g:wetmass_kg_m,
                names_to = "measurement_type",
                values_to = "measurement_value") %>%
   # Create a measurement_unit column from measurement_type
