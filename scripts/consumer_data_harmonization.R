@@ -384,7 +384,11 @@ tidy_v2a <- tidy_v1c %>%
   dplyr::mutate(species = dplyr::case_when(
     raw_filename == "IV_EC_talitrid_population.csv" & !is.na(species) ~ paste(genus, species),
     T ~ species
-  )) 
+  )) %>%
+  # If the species is empty and the scientific_name column contains multiple species, put the scientific name as the value in species
+  dplyr::mutate(species = ifelse(is.na(species) & stringr::str_detect(scientific_name, "[:punct:]"),
+                                     yes = scientific_name,
+                                     no = species))
 
 # Check unique species names
 unique(tidy_v2a$species)
@@ -780,6 +784,18 @@ tidy_v2d <- left_join(tidy_v2c, taxon_fix_v2, by = c("scientific_name" = "scient
          family = dplyr::coalesce(family, family_fix),
          genus = dplyr::coalesce(genus, genus_fix),
          common_name = dplyr::coalesce(common_name, common_name_fix)) %>%
+  # If the species column is non-empty and contains punctuation indicating multiple species, put the species as the value in species_fix
+  dplyr::mutate(species_fix = ifelse(!is.na(species) & stringr::str_detect(species, "[\\;\\,\\/]"),
+                                     yes = species,
+                                     no = species_fix)) %>%
+  dplyr::mutate(species_fix = dplyr::case_when(
+    species_fix == "Sebastes atrovirens,carnatus,chrysomelas,caurinus" ~ "Sebastes atrovirens; Sebastes carnatus; Sebastes chrysomelas; Sebastes caurinus",
+    species_fix == "Sebastes serranoides,flavidus" ~ "Sebastes serranoides; Sebastes flavidus",
+    species_fix == "Sebastes chrysomelas/carnatus young of year" ~ "Sebastes chrysomelas; Sebastes carnatus",
+    species_fix == "Sebastes serranoides,flavidus,melanops" ~ "Sebastes serranoides; Sebastes flavidus; Sebastes melanops",
+    species_fix == "Sebastes carnatus, caurinus" ~ "Sebastes carnatus; Sebastes caurinus",
+    T ~ species_fix
+  )) %>%
   # Drop the inferior species column (some strings had numbers in them or had "(cf)")
   dplyr::select(-species) %>%
   # Keep species_fix as the superior species column
@@ -790,9 +806,15 @@ tidy_v2d <- left_join(tidy_v2c, taxon_fix_v2, by = c("scientific_name" = "scient
   dplyr::mutate(scientific_name = stringr::str_to_sentence(scientific_name)) %>%
   # Finally, if the species column is empty but the scientific_name column contains the full species name,
   # fill in the species column with the value in scientific_name
-  dplyr::mutate(species = ifelse(stringr::str_detect(scientific_name, "[:blank:]"),
+  dplyr::mutate(species = ifelse(is.na(species) & stringr::str_detect(scientific_name, "[:blank:]"),
                                  yes = scientific_name,
                                  no = species))
+
+# Check unique scientific names
+unique(tidy_v2d$scientific_name)
+
+# Check unique species names
+unique(tidy_v2d$species)
 
 # Check structure
 dplyr::glimpse(tidy_v2d)
