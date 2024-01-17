@@ -448,6 +448,11 @@ tidy_v2b <- tidy_v2a %>%
     scientific_name == "fishes" ~ "Vertebrata",
     scientific_name == "eel species" ~ "Anguilliformes",
     scientific_name == "Surfperch" ~ "Embiotoca",
+    scientific_name == "pyrosomes" ~ "pyrosoma",
+    scientific_name == "euphausiids" ~ "euphausiacea",
+    scientific_name == "doliolids" ~ "doliolida",
+    scientific_name == "nauplii" ~ "crustacea",
+    scientific_name == "polychaete" ~ "polychaeta",
     T ~ scientific_name
   )) 
 
@@ -765,10 +770,10 @@ write.csv(x = species_table, file = file.path("tidy", species_filename), na = 'N
 
 # Export harmonized dataset to Drive
 googledrive::drive_upload(media = file.path("tidy", tidy_filename), overwrite = T,
-                          path = googledrive::as_id("https://drive.google.com/drive/u/1/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
 
 # Export species table to Drive
 googledrive::drive_upload(media = file.path("tidy", species_filename), overwrite = T,
-                          path = googledrive::as_id("https://drive.google.com/drive/u/1/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
 
 # End ----
