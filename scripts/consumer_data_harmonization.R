@@ -22,6 +22,7 @@ librarian::shelf(tidyverse, googledrive, readxl, taxize, stringr)
 # Create necessary sub-folder(s)
 dir.create(path = file.path("tier0"), showWarnings = F)
 dir.create(path = file.path("tier0", "raw_data"), showWarnings = F)
+dir.create(path = file.path("tier0", "raw_data", "consumer"), showWarnings = F)
 
 ## -------------------------------------------- ##
 #             Data Acquisition ----
@@ -69,7 +70,7 @@ for(k in 1:nrow(raw_ids)){
   # Download file (but silence how chatty this function is)
   googledrive::with_drive_quiet(
     googledrive::drive_download(file = raw_ids[k, ]$id, overwrite = T,
-                                path = file.path("tier0", "raw_data", raw_ids[k, ]$name)) )
+                                path = file.path("tier0", "raw_data", "consumer", raw_ids[k, ]$name)) )
   
   # Print success message
   message("Downloaded file ", k, " of ", nrow(raw_ids))
@@ -86,7 +87,7 @@ rm(list = ls())
 key <- readxl::read_excel(path = file.path("tier0", "CND_Data_Key.xlsx")) 
 
 # Identify all downloaded files
-( raw_files <- dir(path = file.path("tier0", "raw_data")) )
+( raw_files <- dir(path = file.path("tier0", "raw_data", "consumer")) )
 
 # Make an empty list to store re-formatted raw data
 df_list <- list()
@@ -108,22 +109,22 @@ for (i in 1:length(raw_files)){
   
   # Special cases for reading in certain csv files 
   if (raw_file_name == "sumofallbiomass.csv") {
-    raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", raw_file_name), na.strings = ".", skip = 2, check.names = F)
+    raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", "consumer", raw_file_name), na.strings = ".", skip = 2, check.names = F)
   } 
   else if (raw_file_name == "CCE_PROPOOS_net_data_individual_categories_line80_90_12_08_2023.csv") {
-    raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", raw_file_name), na.strings = ".", check.names = F)
+    raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", "consumer", raw_file_name), na.strings = ".", check.names = F)
   } 
   else if (raw_file_name == "VCR14232_1.csv") {
-    raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", raw_file_name), na.strings = ".", skip = 21)
+    raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", "consumer", raw_file_name), na.strings = ".", skip = 21)
   } 
   else if (raw_file_name == "LTE-TIDE-NektonFlumeDensity_v5_1.csv") {
-    raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", raw_file_name), na.strings = ".", check.names = F)
+    raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", "consumer", raw_file_name), na.strings = ".", check.names = F)
   } 
   else if (raw_file_name == "LTE-TIDE-NektonFlumeIndividual_v6_2.csv") {
-    raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", raw_file_name), na.strings = ".", check.names = F)
+    raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", "consumer", raw_file_name), na.strings = ".", check.names = F)
   }
   else {
-  raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", raw_file_name), na.strings = ".")
+  raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", "consumer", raw_file_name), na.strings = ".")
   }
   
   raw_df_v2 <- raw_df_v1 %>%
@@ -748,10 +749,10 @@ dplyr::glimpse(tidy_final)
 date <- gsub(pattern = "-", replacement = "", x = Sys.Date())
 
 # Generate a date-stamped file name for this file
-( tidy_filename <- paste0(date, "_harmonized_consumer.csv") )
+( tidy_filename <- paste0("harmonized_consumer_", date, ".csv") )
 
 # Generate a date-stamped file name for the species table
-( species_filename <- paste0(date, "_harmonized_consumer_species.csv") )
+( species_filename <- paste0("harmonized_consumer_species_", date, ".csv") )
 
 # Create necessary sub-folder(s)
 dir.create(path = file.path("tidy"), showWarnings = F)
