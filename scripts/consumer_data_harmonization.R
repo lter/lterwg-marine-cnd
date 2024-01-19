@@ -32,8 +32,7 @@ dir.create(path = file.path("tier0", "raw_data", "consumer"), showWarnings = F)
 # For example, here I'm pulling all the SBC consumer data from Google Drive
 raw_SBC_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1ycKkpiURLVclobAdCmZx2s_ewcaFAV9Y")) %>%
   dplyr::filter(name %in% c("Annual_All_Species_Biomass_at_transect_20230814.csv",
-                            "IV_EC_talitrid_population.csv",
-                            "Wrack_Cover_All_Years_20210929.csv"))
+                            "IV_EC_talitrid_population.csv"))
 
 raw_FCE_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1BSQSXEbjgkSBJVN0p9CxhjVmfiv82U1t")) %>%
   dplyr::filter(name %in% c("MAP_years1thru19.csv"))
@@ -272,7 +271,6 @@ tidy_v1a <- tidy_v0 %>%
     raw_filename == "MLPA_benthic_site_means.csv" ~ "NA", # only has year
     raw_filename == "MLPA_fish_biomass_density_transect_raw.csv" ~ "NA", # only has year month day
     raw_filename == "VCR14232_1.csv" ~ "YYYY-MM-DD",
-    raw_filename == "Wrack_Cover_All_Years_20210929.csv" ~ "NA", # only has year month
     raw_filename == "sumofallbiomass.csv" ~ "YYYY-MM-DD",
     # raw_filename == "" ~ "",
     T ~ "UNKNOWN"))
@@ -374,11 +372,6 @@ tidy_v2a <- tidy_v1c %>%
   # If the row is from the MLPA csv and the species is non-empty, put genus + species as the value in species
   dplyr::mutate(species = dplyr::case_when(
     raw_filename == "MLPA_fish_biomass_density_transect_raw.csv" & !is.na(species) ~ paste(genus, species),
-    T ~ species
-  )) %>%
-  # If the row is from the Wrack csv and the species is non-empty, put genus + species as the value in species
-  dplyr::mutate(species = dplyr::case_when(
-    raw_filename == "Wrack_Cover_All_Years_20210929.csv" & !is.na(species) ~ paste(genus, species),
     T ~ species
   )) %>%
   # If the row is from the IV_EC csv and the species is non-empty, put genus + species as the value in species
