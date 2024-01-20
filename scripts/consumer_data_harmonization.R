@@ -473,6 +473,13 @@ tidy_v2b <- tidy_v2a %>%
     scientific_name == "doliolids" ~ "doliolida",
     scientific_name == "nauplii" ~ "crustacea",
     scientific_name == "polychaete" ~ "polychaeta",
+    scientific_name == "Bryozoan" ~ "Bryozoa",
+    scientific_name == "Cnidaria ctenophores" ~ "Coelenterata",
+    scientific_name == "Copepoda calanoida" ~ "Calanoida",
+    scientific_name == "Copepoda eucalanids" ~ "Eucalanidae",
+    scientific_name == "Copepoda harpacticoida" ~ "Harpacticoida",
+    scientific_name == "Copepoda oithona" ~ "Oithona",
+    scientific_name == "Copepoda poecilostomatoids" ~ "Poecilostomatoida",
     T ~ scientific_name
   )) 
 
