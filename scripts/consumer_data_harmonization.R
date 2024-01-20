@@ -735,8 +735,7 @@ tidy_v3 <- tidy_v2f %>%
   dplyr::relocate(subsite_level2, .after = subsite_level1) %>%
   dplyr::relocate(subsite_level3, .after = subsite_level2) %>%
   dplyr::relocate(scientific_name, .after = sp_code) %>%
-  dplyr::relocate(biomass_g, .after = scientific_name) %>%
-  dplyr::relocate(coarse_grouping, .after = biomass_g) %>%
+  dplyr::relocate(coarse_grouping, .after = scientific_name) %>%
   dplyr::relocate(count_num, .after = coarse_grouping) %>%
   dplyr::relocate(cover_percent, .after = count_num) %>%
   dplyr::relocate(density_num_m, .after = cover_percent) %>%
@@ -744,7 +743,7 @@ tidy_v3 <- tidy_v2f %>%
   dplyr::relocate(length_cm, .before = length_mm) %>%  
   dplyr::relocate(wetmass_g_m2, .before = wetmass_kg) %>%
   dplyr::relocate(wetmass_kg, .after = wetmass_g_m2) %>%  
-  dplyr::mutate(dplyr::across(.cols = c(year:day, biomass_g:wetmass_kg_m), .fns = as.numeric))
+  dplyr::mutate(dplyr::across(.cols = c(year:day, coarse_grouping:wetmass_kg_m), .fns = as.numeric))
 
 # Check structure
 dplyr::glimpse(tidy_v3)
@@ -755,7 +754,7 @@ dplyr::glimpse(tidy_v3)
 
 tidy_v4 <- tidy_v3 %>%
   # Pivot the measurement columns to long format
-  tidyr::pivot_longer(cols = biomass_g:wetmass_kg_m,
+  tidyr::pivot_longer(cols = coarse_grouping:wetmass_kg_m,
                names_to = "measurement_type",
                values_to = "measurement_value") %>%
   # Create a measurement_unit column from measurement_type
