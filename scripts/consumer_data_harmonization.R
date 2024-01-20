@@ -58,17 +58,18 @@ raw_CCE_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.co
 # Combine file IDs
 raw_ids <- rbind(raw_SBC_ids, raw_FCE_ids, raw_VCR_ids, raw_coastal_ids, raw_MCR_ids, raw_PIE_ids, raw_CCE_ids)
 
-# Identify and download the data key
-googledrive::drive_ls(path = googledrive::as_id("https://drive.google.com/drive/u/1/folders/1-FDBq0jtEm3bJOfiyIkyxD0JftJ6qExe")) %>%
-  dplyr::filter(name == "CND_Data_Key.xlsx") %>%
-  googledrive::drive_download(file = .$id, path = file.path("tier0",.$name), overwrite = T)
+# Identify data key file
+data_key_id <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/1/folders/1-FDBq0jtEm3bJOfiyIkyxD0JftJ6qExe")) %>%
+  dplyr::filter(name %in% c("CND_Data_Key.xlsx"))
 
-# Identify and download the table for PIE species codes
-googledrive::drive_ls(path = googledrive::as_id("https://drive.google.com/drive/folders/1LYffjtQdLcNYkStrf_FukihQ6tPKlw1a")) %>%
-  dplyr::filter(name == "PIE_speciescode_table.xlsx") %>%
-  googledrive::drive_download(file = .$id, path = file.path("tier0",.$name), overwrite = T)
+# Identify PIE and CoastalCA species code tables
+sp_codes_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/1LYffjtQdLcNYkStrf_FukihQ6tPKlw1a")) %>%
+  dplyr::filter(name %in% c("PIE_speciescode_table.xlsx", "CoastalCA_speciescode_table.csv"))
 
-# For each raw data file, download it into its own site folder
+# Combine file IDs
+other_ids <- rbind(data_key_id, sp_codes_ids)
+
+# For each raw data file, download it into the consumer folder
 for(k in 1:nrow(raw_ids)){
   
   # Download file (but silence how chatty this function is)
@@ -78,6 +79,18 @@ for(k in 1:nrow(raw_ids)){
   
   # Print success message
   message("Downloaded file ", k, " of ", nrow(raw_ids))
+}
+
+# For the data key and species code tables, download it into the tier0 folder
+for(k in 1:nrow(other_ids)){
+  
+  # Download file (but silence how chatty this function is)
+  googledrive::with_drive_quiet(
+    googledrive::drive_download(file = other_ids[k, ]$id, overwrite = T,
+                                path = file.path("tier0", other_ids[k, ]$name)) )
+  
+  # Print success message
+  message("Downloaded file ", k, " of ", nrow(other_ids))
 }
 
 # Clear environment
@@ -363,6 +376,7 @@ rm(list = setdiff(ls(), c("tidy_v1c")))
 
 # Read in the table for PIE species codes (for later)
 PIE_sp_codes <- readxl::read_excel(path = file.path("tier0", "PIE_speciescode_table.xlsx")) 
+CoastalCA_sp_codes <- read.csv(file = file.path("tier0", "CoastalCA_speciescode_table.csv"))
 
 # Doing some preliminary wrangling on species names
 tidy_v2a <- tidy_v1c %>%
@@ -703,10 +717,27 @@ tidy_v2e <- tidy_v2d %>%
   # Drop the duplicate columns that resulted from joining
   dplyr::select(-contains("."))
 
-# Check structure
-dplyr::glimpse(tidy_v2e)
+# Now join with the table for CoastalCA species codes 
+tidy_v2f <- tidy_v2e %>%
+  # Join with the table
+  dplyr::left_join(CoastalCA_sp_codes, by = c("project", "sp_code")) %>%
+  # Coalesce with the new columns to fill in the missing taxonomic info for PIE species 
+  dplyr::mutate(common_name = dplyr::coalesce(common_name.x, common_name.y),
+                scientific_name = dplyr::coalesce(scientific_name.x, scientific_name.y),
+                kingdom = dplyr::coalesce(kingdom.x, kingdom.y),
+                phylum = dplyr::coalesce(phylum.x, phylum.y),
+                class = dplyr::coalesce(class.x, class.y),
+                order = dplyr::coalesce(order.x, order.y),
+                family = dplyr::coalesce(family.x, family.y),
+                genus = dplyr::coalesce(genus.x, genus.y),
+                species = dplyr::coalesce(species.x, species.y)) %>%
+  # Drop the duplicate columns that resulted from joining
+  dplyr::select(-contains("."))
 
-species_table <- tidy_v2e %>%
+# Check structure
+dplyr::glimpse(tidy_v2f)
+
+species_table <- tidy_v2f %>%
   # Select the appropriate columns to create our species table
   dplyr::select(project, sp_code, scientific_name, common_name, kingdom, phylum, class, order, family, genus, species, taxa_group) %>%
   # Get unique species
@@ -716,19 +747,19 @@ species_table <- tidy_v2e %>%
   # Remove rows that have NA values for both scientific_name and sp_code
   dplyr::filter(!(is.na(scientific_name) & is.na(sp_code)))
 
-tidy_v2f <- tidy_v2e %>%
+tidy_v2g <- tidy_v2f %>%
   # Now that we have our species table, we don't need the other taxa columns in our harmonized dataset
   dplyr::select(-common_name, -kingdom, -phylum, -class, -order, -family, -genus, -species, -taxa_group)
 
 # Clean up environment
-rm(list = setdiff(ls(), c("tidy_v2f", "species_table")))
+rm(list = setdiff(ls(), c("tidy_v2g", "species_table")))
 
 ## -------------------------------------------- ##
 #      Reordering & Changing Column Types ----
 ## -------------------------------------------- ##
 
 # Check structure
-dplyr::glimpse(tidy_v2f)
+dplyr::glimpse(tidy_v2g)
 
 tidy_v3 <- tidy_v2f %>%
   dplyr::relocate(sp_code, .after = subsite_level1) %>%
