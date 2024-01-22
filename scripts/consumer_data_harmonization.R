@@ -38,18 +38,18 @@ raw_FCE_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.co
   dplyr::filter(name %in% c("MAP_years1thru19.csv"))
 
 raw_VCR_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1PoVGjZoE_Dlr93dt45LRp4P2Jjuez94l")) %>%
-  dplyr::filter(name %in% c("VCR14232_1.csv"))
+  dplyr::filter(name %in% c("VCR14232_2.csv"))
 
 raw_coastal_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1vT-u9EFsssA8t9_y1A163BTr6ENGBelC")) %>%
-  dplyr::filter(name %in% c("MLPA_fish_biomass_density_transect_raw.csv",
+  dplyr::filter(name %in% c("MLPA_fish_biomass_density_transect_raw_v2.csv",
                             "MLPA_benthic_site_means.csv"))
 
 raw_MCR_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1bMVr5VSXD2azlwD9DioeMwy4RR94uqF5")) %>%
-  dplyr::filter(name %in% c("MCR_Fish_Biomass_v2.csv"))
+  dplyr::filter(name %in% c("MCR_Fish_Biomass_v3.csv"))
 
 raw_PIE_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1yAoT0RtkRf2gxtBl3MXpi6cuGji5kuEE")) %>%
   dplyr::filter(name %in% c("LTE-TIDE-NektonFlumeDensity_v5_1.csv",
-                            "LTE-TIDE-NektonFlumeIndividual_v6_2.csv"))
+                            "LTE-TIDE-NektonFlumeIndividual_v6_3.csv"))
 
 raw_CCE_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/19INhcRd1xBKgDVd1G5W1B3QI4mlBr587")) %>%
   dplyr::filter(name %in% c("CCE_PROPOOS_net_data_individual_categories_line80_90_12_08_2023.csv",
@@ -63,7 +63,7 @@ raw_ids <- rbind(raw_SBC_ids, raw_FCE_ids, raw_VCR_ids, raw_coastal_ids, raw_MCR
 
 # Identify data key file
 data_key_id <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/1/folders/1-FDBq0jtEm3bJOfiyIkyxD0JftJ6qExe")) %>%
-  dplyr::filter(name %in% c("CND_Data_Key.xlsx"))
+  dplyr::filter(name %in% c("CND_Data_Key_spatial.xlsx"))
 
 # Identify PIE and CoastalCA species code tables
 sp_codes_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/1LYffjtQdLcNYkStrf_FukihQ6tPKlw1a")) %>%
@@ -104,7 +104,7 @@ rm(list = ls())
 ## ------------------------------------------ ##
 
 # Read in the key
-key <- readxl::read_excel(path = file.path("tier0", "CND_Data_Key.xlsx")) 
+key <- readxl::read_excel(path = file.path("tier0", "CND_Data_Key_spatial.xlsx")) 
 
 # Identify all downloaded files
 ( raw_files <- dir(path = file.path("tier0", "raw_data", "consumer")) )
@@ -134,13 +134,13 @@ for (i in 1:length(raw_files)){
   else if (raw_file_name == "CCE_PROPOOS_net_data_individual_categories_line80_90_12_08_2023.csv") {
     raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", "consumer", raw_file_name), na.strings = ".", check.names = F)
   } 
-  else if (raw_file_name == "VCR14232_1.csv") {
+  else if (raw_file_name == "VCR14232_2.csv") {
     raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", "consumer", raw_file_name), na.strings = ".", skip = 21)
   } 
   else if (raw_file_name == "LTE-TIDE-NektonFlumeDensity_v5_1.csv") {
     raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", "consumer", raw_file_name), na.strings = ".", check.names = F)
   } 
-  else if (raw_file_name == "LTE-TIDE-NektonFlumeIndividual_v6_2.csv") {
+  else if (raw_file_name == "LTE-TIDE-NektonFlumeIndividual_v6_3.csv") {
     raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", "consumer", raw_file_name), na.strings = ".", check.names = F)
   }
   else {
@@ -286,12 +286,12 @@ tidy_v1a <- tidy_v0 %>%
     raw_filename == "CCE_PROPOOS_net_data_individual_categories_line80_90_12_08_2023.csv" ~ "MM/DD/YYYY",
     raw_filename == "IV_EC_talitrid_population.csv" ~ "MM/DD/YYYY",
     raw_filename == "LTE-TIDE-NektonFlumeDensity_v5_1.csv" ~ "YYYY-MM-DD",
-    raw_filename == "LTE-TIDE-NektonFlumeIndividual_v6_2.csv" ~ "YYYY-MM-DD",
+    raw_filename == "LTE-TIDE-NektonFlumeIndividual_v6_3.csv" ~ "YYYY-MM-DD",
     raw_filename == "MAP_years1thru19.csv" ~ "MM/DD/YY",
-    raw_filename == "MCR_Fish_Biomass_v2.csv" ~ "NA", # only has year month day
+    raw_filename == "MCR_Fish_Biomass_v3.csv" ~ "NA", # only has year month day
     raw_filename == "MLPA_benthic_site_means.csv" ~ "NA", # only has year
-    raw_filename == "MLPA_fish_biomass_density_transect_raw.csv" ~ "NA", # only has year month day
-    raw_filename == "VCR14232_1.csv" ~ "YYYY-MM-DD",
+    raw_filename == "MLPA_fish_biomass_density_transect_raw_v2.csv" ~ "NA", # only has year month day
+    raw_filename == "VCR14232_2.csv" ~ "YYYY-MM-DD",
     raw_filename == "sumofallbiomass.csv" ~ "YYYY-MM-DD",
     raw_filename == "nga_combined_clean.csv" ~ "YYYY-MM-DDTHH:MM:SS-0800",
     # raw_filename == "" ~ "",
@@ -395,9 +395,9 @@ tidy_v2a <- tidy_v1c %>%
   dplyr::mutate(dplyr::across(.cols = c(-year, -month, -day, -date, -sp_code), .fns = ~dplyr::na_if(., y = ""))) %>%
   # Replace NA strings with actual NA values
   dplyr::mutate(dplyr::across(.cols = c(-year, -month, -day, -date, -sp_code), .fns = ~dplyr::na_if(., y = "NA"))) %>%
-  # Replace any mention of -1 (missing value indicator in MCR_Fish_Biomass_v2.csv) with actual NA values
+  # Replace any mention of -1 (missing value indicator in MCR_Fish_Biomass_v3.csv) with actual NA values
   dplyr::mutate(wetmass_g = dplyr::case_when(
-    raw_filename == "MCR_Fish_Biomass_v2.csv" & wetmass_g == -1 ~ NA,
+    raw_filename == "MCR_Fish_Biomass_v3.csv" & wetmass_g == -1 ~ NA,
     T ~ wetmass_g
   )) %>%
   # If the species is just "spp " or "spp" or "spp." or "partial" or "No fish observed" then we can set it as NA 
@@ -407,7 +407,7 @@ tidy_v2a <- tidy_v1c %>%
   )) %>%
   # If the row is from the MLPA csv and the species is non-empty, put genus + species as the value in species
   dplyr::mutate(species = dplyr::case_when(
-    raw_filename == "MLPA_fish_biomass_density_transect_raw.csv" & !is.na(species) ~ paste(genus, species),
+    raw_filename == "MLPA_fish_biomass_density_transect_raw_v2.csv" & !is.na(species) ~ paste(genus, species),
     T ~ species
   )) %>%
   # If the row is from the IV_EC csv and the species is non-empty, put genus + species as the value in species
