@@ -7,3 +7,4 @@ data/other/BioTIMEQuery_24_06_2021.csv
 *.Rproj
 tier0/
 tidy/
+*.csv
