@@ -185,7 +185,7 @@ for (i in 1:length(raw_files)){
     dplyr::mutate(units_fix = gsub(pattern = "\\/| |\\-", replacement = "_", x = units)) %>%
     # Combine concentration units with column name (where conc units are provided)
     dplyr::mutate(names_actual = ifelse(test = !is.na(units_fix),
-                                        yes = paste0(standardized_column_name, "_", units_fix),
+                                        yes = paste0(standardized_column_name, ".", units_fix),
                                         no = standardized_column_name)) %>%
     # Pare down to only needed columns (implicitly removes unspecified columns)
     dplyr::select(row_num, project, habitat, raw_filename, names_actual, values) %>%
@@ -783,14 +783,14 @@ tidy_v3 <- tidy_v2f %>%
   dplyr::relocate(subsite_level3, .after = subsite_level2) %>%
   dplyr::relocate(scientific_name, .after = sp_code) %>%
   dplyr::relocate(coarse_grouping, .after = scientific_name) %>%
-  dplyr::relocate(count_num, .after = coarse_grouping) %>%
-  dplyr::relocate(cover_percent, .after = count_num) %>%
-  dplyr::relocate(density_num_m, .after = cover_percent) %>%
-  dplyr::relocate(drymass_g_m, .before = drymass_g_m2) %>%  
-  dplyr::relocate(length_cm, .before = length_mm) %>%  
-  dplyr::relocate(wetmass_g_m2, .before = wetmass_kg) %>%
-  dplyr::relocate(wetmass_kg, .after = wetmass_g_m2) %>%  
-  dplyr::mutate(dplyr::across(.cols = c(year:day, coarse_grouping:wetmass_kg_m), .fns = as.numeric))
+  dplyr::relocate(count.num, .after = coarse_grouping) %>%
+  dplyr::relocate(cover.percent, .after = count.num) %>%
+  dplyr::relocate(density.num_m, .after = cover.percent) %>%
+  dplyr::relocate(drymass.g_m, .before = drymass.g_m2) %>%  
+  dplyr::relocate(length.cm, .before = length.mm) %>%  
+  dplyr::relocate(wetmass.g_m2, .before = wetmass.kg) %>%
+  dplyr::relocate(wetmass.kg, .after = wetmass.g_m2) %>%  
+  dplyr::mutate(dplyr::across(.cols = c(year:day, coarse_grouping:wetmass.kg_m), .fns = as.numeric))
 
 # Check structure
 dplyr::glimpse(tidy_v3)
@@ -801,11 +801,11 @@ dplyr::glimpse(tidy_v3)
 
 tidy_v4 <- tidy_v3 %>%
   # Pivot the measurement columns to long format
-  tidyr::pivot_longer(cols = coarse_grouping:wetmass_kg_m,
+  tidyr::pivot_longer(cols = coarse_grouping:wetmass.kg_m,
                names_to = "measurement_type",
                values_to = "measurement_value") %>%
   # Create a measurement_unit column from measurement_type
-  tidyr::separate_wider_delim(measurement_type, delim = "_", names = c("measurement_type", "measurement_unit"), too_many = "merge") %>%
+  tidyr::separate_wider_delim(measurement_type, delim = ".", names = c("measurement_type", "measurement_unit"), too_many = "merge") %>%
   # Fix the units by replacing "_" with "/"
   dplyr::mutate(measurement_unit = stringr::str_replace(measurement_unit, pattern = "_", replacement = "/")) %>%
   # Drop rows where measurement_value is NA
