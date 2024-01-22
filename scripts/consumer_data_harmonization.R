@@ -293,6 +293,7 @@ tidy_v1a <- tidy_v0 %>%
     raw_filename == "MLPA_fish_biomass_density_transect_raw.csv" ~ "NA", # only has year month day
     raw_filename == "VCR14232_1.csv" ~ "YYYY-MM-DD",
     raw_filename == "sumofallbiomass.csv" ~ "YYYY-MM-DD",
+    raw_filename == "nga_combined_clean.csv" ~ "YYYY-MM-DDTHH:MM:SS-0800",
     # raw_filename == "" ~ "",
     T ~ "UNKNOWN"))
 
@@ -310,6 +311,11 @@ key %>%
 
 # Break apart the date column depending on the date format
 tidy_v1b <- tidy_v1a %>%
+  # If the date format is "YYYY-MM-DDTHH:MM:SS-0800", remove the rest of the date starting with "T"
+  # so we actually end with up "YYYY-MM-DD"
+  dplyr::mutate(date = ifelse(date_format == "YYYY-MM-DDTHH:MM:SS-0800", yes = stringr::str_replace(date, "T(.+)", ""), no = date)) %>%
+  # If the date format is ""YYYY-MM-DDTHH:MM:SS-0800", change the date format column to "YYYY-MM-DD" now
+  dplyr::mutate(date_format = ifelse(date_format == "YYYY-MM-DDTHH:MM:SS-0800", yes = "YYYY-MM-DD", no = date_format)) %>%
   # YYYY-MM-DD
   tidyr::separate_wider_delim(date, delim = "-", names = c("year_fix1", "month_fix1", "day_fix1"), too_few = "align_start", cols_remove = F) %>% 
   # MM/DD/YY and MM/DD/YYYY
