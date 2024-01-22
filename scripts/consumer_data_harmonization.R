@@ -3,7 +3,7 @@
 ## ------------------------------------------ ##
 # Script author(s): Angel Chen
 
-# Sites: SBC, CCE, Coastal CA, FCE, MCR, PIE, VCR
+# Sites: SBC, CCE, Coastal CA, FCE, MCR, NGA, PIE, VCR, 
 
 # Data Type: Consumer
 
@@ -45,7 +45,7 @@ raw_coastal_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.googl
                             "MLPA_benthic_site_means.csv"))
 
 raw_MCR_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1bMVr5VSXD2azlwD9DioeMwy4RR94uqF5")) %>%
-  dplyr::filter(name %in% c("MCR_Fish_Biomass.csv"))
+  dplyr::filter(name %in% c("MCR_Fish_Biomass_v2.csv"))
 
 raw_PIE_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1yAoT0RtkRf2gxtBl3MXpi6cuGji5kuEE")) %>%
   dplyr::filter(name %in% c("LTE-TIDE-NektonFlumeDensity_v5_1.csv",
@@ -55,8 +55,11 @@ raw_CCE_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.co
   dplyr::filter(name %in% c("CCE_PROPOOS_net_data_individual_categories_line80_90_12_08_2023.csv",
                             "sumofallbiomass.csv"))
 
+raw_NGA_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1j8QGQR6_vD1SQnFwVnaAy0W-1c_owCRv")) %>%
+  dplyr::filter(name %in% c("nga_combined_clean.csv"))
+
 # Combine file IDs
-raw_ids <- rbind(raw_SBC_ids, raw_FCE_ids, raw_VCR_ids, raw_coastal_ids, raw_MCR_ids, raw_PIE_ids, raw_CCE_ids)
+raw_ids <- rbind(raw_SBC_ids, raw_FCE_ids, raw_VCR_ids, raw_coastal_ids, raw_MCR_ids, raw_PIE_ids, raw_CCE_ids, raw_NGA_ids)
 
 # Identify data key file
 data_key_id <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/1/folders/1-FDBq0jtEm3bJOfiyIkyxD0JftJ6qExe")) %>%
