@@ -288,7 +288,7 @@ tidy_v1a <- tidy_v0 %>%
     raw_filename == "LTE-TIDE-NektonFlumeDensity_v5_1.csv" ~ "YYYY-MM-DD",
     raw_filename == "LTE-TIDE-NektonFlumeIndividual_v6_2.csv" ~ "YYYY-MM-DD",
     raw_filename == "MAP_years1thru19.csv" ~ "MM/DD/YY",
-    raw_filename == "MCR_Fish_Biomass.csv" ~ "NA", # only has year month day
+    raw_filename == "MCR_Fish_Biomass_v2.csv" ~ "NA", # only has year month day
     raw_filename == "MLPA_benthic_site_means.csv" ~ "NA", # only has year
     raw_filename == "MLPA_fish_biomass_density_transect_raw.csv" ~ "NA", # only has year month day
     raw_filename == "VCR14232_1.csv" ~ "YYYY-MM-DD",
@@ -395,9 +395,9 @@ tidy_v2a <- tidy_v1c %>%
   dplyr::mutate(dplyr::across(.cols = c(-year, -month, -day, -date, -sp_code), .fns = ~dplyr::na_if(., y = ""))) %>%
   # Replace NA strings with actual NA values
   dplyr::mutate(dplyr::across(.cols = c(-year, -month, -day, -date, -sp_code), .fns = ~dplyr::na_if(., y = "NA"))) %>%
-  # Replace any mention of -1 (missing value indicator in MCR_Fish_Biomass.csv) with actual NA values
+  # Replace any mention of -1 (missing value indicator in MCR_Fish_Biomass_v2.csv) with actual NA values
   dplyr::mutate(wetmass_g = dplyr::case_when(
-    raw_filename == "MCR_Fish_Biomass.csv" & wetmass_g == -1 ~ NA,
+    raw_filename == "MCR_Fish_Biomass_v2.csv" & wetmass_g == -1 ~ NA,
     T ~ wetmass_g
   )) %>%
   # If the species is just "spp " or "spp" or "spp." or "partial" or "No fish observed" then we can set it as NA 
