@@ -779,12 +779,14 @@ rm(list = setdiff(ls(), c("tidy_v2g", "species_table")))
 dplyr::glimpse(tidy_v2g)
 
 tidy_v3 <- tidy_v2g %>%
-  dplyr::relocate(sp_code, .after = subsite_level1) %>%
   dplyr::relocate(subsite_level2, .after = subsite_level1) %>%
   dplyr::relocate(subsite_level3, .after = subsite_level2) %>%
+  dplyr::relocate(sp_code, .after = subsite_level3) %>%
   dplyr::relocate(scientific_name, .after = sp_code) %>%
   dplyr::relocate(coarse_grouping, .after = scientific_name) %>%
-  dplyr::relocate(count.num, .after = coarse_grouping) %>%
+  dplyr::relocate(transect_area.m, .after = coarse_grouping) %>%  
+  dplyr::relocate(transect_area.m2, .after = transect_area.m) %>% 
+  dplyr::relocate(count.num, .after = transect_area.m2) %>%
   dplyr::relocate(cover.percent, .after = count.num) %>%
   dplyr::relocate(density.num_m, .after = cover.percent) %>%
   dplyr::relocate(density.num_m2, .after = density.num_m) %>%
@@ -796,9 +798,7 @@ tidy_v3 <- tidy_v2g %>%
   dplyr::relocate(length.cm, .after = excretion_egestion.ug_m3) %>%  
   dplyr::relocate(length.mm, .after = length.cm) %>%  
   dplyr::relocate(length.um, .after = length.mm) %>%  
-  dplyr::relocate(transect_area.m, .after = length.um) %>%  
-  dplyr::relocate(transect_area.m2, .after = transect_area.m) %>% 
-  dplyr::relocate(wetmass.g, .after = transect_area.m2) %>%  
+  dplyr::relocate(wetmass.g, .after = length.um) %>%  
   dplyr::relocate(wetmass.g_m2, .after = wetmass.g) %>%
   dplyr::relocate(wetmass.kg, .after = wetmass.g_m2) %>% 
   dplyr::relocate(wetmass.mg_m3, .after = wetmass.kg) %>%  
