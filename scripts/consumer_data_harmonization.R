@@ -134,9 +134,6 @@ for (i in 1:length(raw_files)){
   else if (raw_file_name == "CCE_PROPOOS_net_data_individual_categories_line80_90_12_08_2023.csv") {
     raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", "consumer", raw_file_name), na.strings = ".", check.names = F)
   } 
-  else if (raw_file_name == "VCR14232_2.csv") {
-    raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", "consumer", raw_file_name), na.strings = ".", skip = 21)
-  } 
   else if (raw_file_name == "LTE-TIDE-NektonFlumeDensity_v5_1.csv") {
     raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", "consumer", raw_file_name), na.strings = ".", check.names = F)
   } 
@@ -210,7 +207,7 @@ MLPA_p1 <- df_list[["MLPA_benthic_site_means.csv"]] %>%
   # Select all relevant columns
   dplyr::select(project, habitat, raw_filename, year, site, dplyr::starts_with("wide_den")) %>%
   # Pivot all "wide_den" columns to long format
-  tidyr::pivot_longer(cols = dplyr::starts_with("wide_den"), names_to = "sp_code", values_to = "density_num_m2") %>%
+  tidyr::pivot_longer(cols = dplyr::starts_with("wide_den"), names_to = "sp_code", values_to = "density.num_m2") %>%
   # Extract the species code
   dplyr::mutate(sp_code = stringr::str_extract(sp_code, "[A-Z]+"))
 
@@ -218,9 +215,9 @@ MLPA_p2 <- df_list[["MLPA_benthic_site_means.csv"]] %>%
   # Select all relevant columns
   dplyr::select(project, habitat, raw_filename, year, site, dplyr::starts_with("wide_COVER")) %>%
   # Pivot all "wide_COVER" columns to long format
-  tidyr::pivot_longer(cols = dplyr::starts_with("wide_COVER"), names_to = "sp_code", values_to = "cover_percent") %>%
+  tidyr::pivot_longer(cols = dplyr::starts_with("wide_COVER"), names_to = "sp_code", values_to = "cover.percent") %>%
   # Extract the species code
-  dplyr::mutate(sp_code = stringr::str_extract(sp_code, "(?<=wide_COVER_)[A-Z]+(?=_percent)"))
+  dplyr::mutate(sp_code = stringr::str_extract(sp_code, "(?<=wide_COVER_)[A-Z]+(?=.percent)"))
 
 # Full join both parts 
 MLPA_fixed <- full_join(MLPA_p1, MLPA_p2)
@@ -234,9 +231,9 @@ CCE_PROPOOS_p1 <- df_list[["CCE_PROPOOS_net_data_individual_categories_line80_90
   # Select all relevant columns
   dplyr::select(project, habitat, raw_filename, site, date, dplyr::starts_with("wide_dens")) %>%
   # Pivot all "wide_dens" columns to long format
-  tidyr::pivot_longer(cols = dplyr::starts_with("wide_dens"), names_to = "scientific_name", values_to = "density_num_m2") %>%
+  tidyr::pivot_longer(cols = dplyr::starts_with("wide_dens"), names_to = "scientific_name", values_to = "density.num_m2") %>%
   # Extract the scientific name
-  dplyr::mutate(scientific_name = stringr::str_extract(scientific_name, "(?<=wide_dens_)[a-z]+_*[a-z]*(?=_num_m2)")) %>%
+  dplyr::mutate(scientific_name = stringr::str_extract(scientific_name, "(?<=wide_dens_)[a-z]+_*[a-z]*(?=.num_m2)")) %>%
   # Replace the underscore in the scientific name with a space
   dplyr::mutate(scientific_name = stringr::str_replace(scientific_name, "_", " "))
 
@@ -244,9 +241,9 @@ CCE_PROPOOS_p2 <- df_list[["CCE_PROPOOS_net_data_individual_categories_line80_90
   # Select all relevant columns
   dplyr::select(project, habitat, raw_filename, site, date, dplyr::starts_with("wide_dry_biomass")) %>%
   # Pivot all "wide_dry_biomass" columns to long format
-  tidyr::pivot_longer(cols = dplyr::starts_with("wide_dry_biomass"), names_to = "scientific_name", values_to = "drymass_mgC_m2") %>%
+  tidyr::pivot_longer(cols = dplyr::starts_with("wide_dry_biomass"), names_to = "scientific_name", values_to = "drymass.mgC_m2") %>%
   # Extract the scientific name
-  dplyr::mutate(scientific_name = stringr::str_extract(scientific_name, "(?<=wide_dry_biomass_)[a-z]+_*[a-z]*(?=_mgC_m2)")) %>%
+  dplyr::mutate(scientific_name = stringr::str_extract(scientific_name, "(?<=wide_dry_biomass_)[a-z]+_*[a-z]*(?=.mgC_m2)")) %>%
   # Replace the underscore in the scientific name with a space
   dplyr::mutate(scientific_name = stringr::str_replace(scientific_name, "_", " "))
 
@@ -291,7 +288,7 @@ tidy_v1a <- tidy_v0 %>%
     raw_filename == "MCR_Fish_Biomass_v3.csv" ~ "NA", # only has year month day
     raw_filename == "MLPA_benthic_site_means.csv" ~ "NA", # only has year
     raw_filename == "MLPA_fish_biomass_density_transect_raw_v2.csv" ~ "NA", # only has year month day
-    raw_filename == "VCR14232_2.csv" ~ "YYYY-MM-DD",
+    raw_filename == "VCR14232_2.csv" ~ "MM/DD/YY",
     raw_filename == "sumofallbiomass.csv" ~ "YYYY-MM-DD",
     raw_filename == "nga_combined_clean.csv" ~ "YYYY-MM-DDTHH:MM:SS-0800",
     # raw_filename == "" ~ "",
@@ -383,7 +380,7 @@ rm(list = setdiff(ls(), c("tidy_v1c")))
 #               Wrangle Species ----
 ## -------------------------------------------- ##
 
-# Read in the table for PIE species codes (for later)
+# Read in the tables for PIE and CoastalCA species codes (for later)
 PIE_sp_codes <- readxl::read_excel(path = file.path("tier0", "PIE_speciescode_table.xlsx")) 
 CoastalCA_sp_codes <- read.csv(file = file.path("tier0", "CoastalCA_speciescode_table.csv"))
 
@@ -396,9 +393,9 @@ tidy_v2a <- tidy_v1c %>%
   # Replace NA strings with actual NA values
   dplyr::mutate(dplyr::across(.cols = c(-year, -month, -day, -date, -sp_code), .fns = ~dplyr::na_if(., y = "NA"))) %>%
   # Replace any mention of -1 (missing value indicator in MCR_Fish_Biomass_v3.csv) with actual NA values
-  dplyr::mutate(wetmass_g = dplyr::case_when(
-    raw_filename == "MCR_Fish_Biomass_v3.csv" & wetmass_g == -1 ~ NA,
-    T ~ wetmass_g
+  dplyr::mutate(wetmass.g = dplyr::case_when(
+    raw_filename == "MCR_Fish_Biomass_v3.csv" & wetmass.g == -1 ~ NA,
+    T ~ wetmass.g
   )) %>%
   # If the species is just "spp " or "spp" or "spp." or "partial" or "No fish observed" then we can set it as NA 
   dplyr::mutate(species = dplyr::case_when(
@@ -482,13 +479,17 @@ tidy_v2b <- tidy_v2a %>%
     scientific_name == "doliolids" ~ "doliolida",
     scientific_name == "nauplii" ~ "crustacea",
     scientific_name == "polychaete" ~ "polychaeta",
-    scientific_name == "Bryozoan" ~ "Bryozoa",
-    scientific_name == "Cnidaria ctenophores" ~ "Coelenterata",
-    scientific_name == "Copepoda calanoida" ~ "Calanoida",
-    scientific_name == "Copepoda eucalanids" ~ "Eucalanidae",
-    scientific_name == "Copepoda harpacticoida" ~ "Harpacticoida",
-    scientific_name == "Copepoda oithona" ~ "Oithona",
-    scientific_name == "Copepoda poecilostomatoids" ~ "Poecilostomatoida",
+    scientific_name == "bryozoan" ~ "Bryozoa",
+    scientific_name == "cnidaria ctenophores" ~ "Coelenterata",
+    scientific_name == "copepoda calanoida" ~ "Calanoida",
+    scientific_name == "copepoda eucalanids" ~ "Eucalanidae",
+    scientific_name == "copepoda harpacticoida" ~ "Harpacticoida",
+    scientific_name == "copepoda oithona" ~ "Oithona",
+    scientific_name == "copepoda poecilostomatoids" ~ "Poecilostomatoida",
+    scientific_name == "Arborescent Bryozoan" ~ "Bryozoa",
+    scientific_name == "crustose coralline algae" ~ "Corallinales",
+    scientific_name == "Encrusting Bryozoa" ~ "Bryozoa",
+    scientific_name == "ostracods" ~ "Ostracoda",
     T ~ scientific_name
   )) 
 
@@ -731,7 +732,7 @@ tidy_v2e <- tidy_v2d %>%
                 genus = dplyr::coalesce(genus.x, genus.y),
                 species = dplyr::coalesce(species.x, species.y)) %>%
   # Drop the duplicate columns that resulted from joining
-  dplyr::select(-contains("."))
+  dplyr::select(-contains(".x"), -contains(".y"))
 
 # Now join with the table for CoastalCA species codes 
 tidy_v2f <- tidy_v2e %>%
@@ -748,7 +749,7 @@ tidy_v2f <- tidy_v2e %>%
                 genus = dplyr::coalesce(genus.x, genus.y),
                 species = dplyr::coalesce(species.x, species.y)) %>%
   # Drop the duplicate columns that resulted from joining
-  dplyr::select(-contains("."))
+  dplyr::select(-contains(".x"), -contains(".y"))
 
 # Check structure
 dplyr::glimpse(tidy_v2f)
@@ -777,7 +778,7 @@ rm(list = setdiff(ls(), c("tidy_v2g", "species_table")))
 # Check structure
 dplyr::glimpse(tidy_v2g)
 
-tidy_v3 <- tidy_v2f %>%
+tidy_v3 <- tidy_v2g %>%
   dplyr::relocate(sp_code, .after = subsite_level1) %>%
   dplyr::relocate(subsite_level2, .after = subsite_level1) %>%
   dplyr::relocate(subsite_level3, .after = subsite_level2) %>%
@@ -786,11 +787,22 @@ tidy_v3 <- tidy_v2f %>%
   dplyr::relocate(count.num, .after = coarse_grouping) %>%
   dplyr::relocate(cover.percent, .after = count.num) %>%
   dplyr::relocate(density.num_m, .after = cover.percent) %>%
-  dplyr::relocate(drymass.g_m, .before = drymass.g_m2) %>%  
-  dplyr::relocate(length.cm, .before = length.mm) %>%  
-  dplyr::relocate(wetmass.g_m2, .before = wetmass.kg) %>%
-  dplyr::relocate(wetmass.kg, .after = wetmass.g_m2) %>%  
-  dplyr::mutate(dplyr::across(.cols = c(year:day, coarse_grouping:wetmass.kg_m), .fns = as.numeric))
+  dplyr::relocate(density.num_m2, .after = density.num_m) %>%
+  dplyr::relocate(density.num_m3, .after = density.num_m2) %>%
+  dplyr::relocate(drymass.g_m, .after = density.num_m3) %>% 
+  dplyr::relocate(drymass.g_m2, .after = drymass.g_m) %>%  
+  dplyr::relocate(drymass.mgC_m2, .after = drymass.g_m2) %>%  
+  dplyr::relocate(excretion_egestion.ug_m3, .after = drymass.mgC_m2) %>%  
+  dplyr::relocate(length.cm, .after = excretion_egestion.ug_m3) %>%  
+  dplyr::relocate(length.mm, .after = length.cm) %>%  
+  dplyr::relocate(length.um, .after = length.mm) %>%  
+  dplyr::relocate(transect_area.m, .after = length.um) %>%  
+  dplyr::relocate(transect_area.m2, .after = transect_area.m) %>% 
+  dplyr::relocate(wetmass.g, .after = transect_area.m2) %>%  
+  dplyr::relocate(wetmass.g_m2, .after = wetmass.g) %>%
+  dplyr::relocate(wetmass.kg, .after = wetmass.g_m2) %>% 
+  dplyr::relocate(wetmass.mg_m3, .after = wetmass.kg) %>%  
+  dplyr::mutate(dplyr::across(.cols = c(year:day, count.num:wetmass.mg_m3), .fns = as.numeric))
 
 # Check structure
 dplyr::glimpse(tidy_v3)
@@ -801,7 +813,7 @@ dplyr::glimpse(tidy_v3)
 
 tidy_v4 <- tidy_v3 %>%
   # Pivot the measurement columns to long format
-  tidyr::pivot_longer(cols = coarse_grouping:wetmass.kg_m,
+  tidyr::pivot_longer(cols = count.num:wetmass.mg_m3,
                names_to = "measurement_type",
                values_to = "measurement_value") %>%
   # Create a measurement_unit column from measurement_type
