@@ -56,6 +56,25 @@ ggplot(sbc_summ, aes(fill = diet_cat, x=year, y = as.numeric(mean_bm))) +
 #        units = c("cm"),
 #        dpi = 300)
 
+### generation of global biomass percentage per project per diet category
+
+ggplot(sbc_summ, aes(fill = diet_cat, x=year, y = as.numeric(mean_bm))) + 
+  geom_bar(position = "fill", stat = "identity") +
+  labs(x = "Year", 
+       y = "Mean Annual Biomass (g/m2)") +
+  theme(panel.grid.major = element_blank(),
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"),
+        axis.text.x = element_text(angle = 45, hjust = 1., vjust = 1.1),axis.text = element_text(color="black"),
+        panel.grid.minor = element_blank(),legend.position = "top")
+
+# ggsave(filename='plots/figure_one/sbc_aqua_percent_bm',
+#        plot = last_plot(),
+#        scale = 2.5,
+#        width = 8,
+#        height = 5,
+#        units = c("cm"),
+#        dpi = 300)
 
 # FCE data ----------------------------------------------------------------
 
@@ -189,6 +208,263 @@ ggplot(map, aes(fill = diet_cat, x=hydroyear,
 #        height = 5,
 #        units = c("cm"),
 #        dpi = 300)
+
+
+# PIE calculations and figure one -----------------------------------------
+
+cons <- read_csv("data/LTE-TIDE-NektonFlumeIndividual_v6_3.csv") |> 
+  rename(sp_code = Species)
+spcode <- read_csv("data/PIE_speciescode_table.csv")
+
+pie <- left_join(cons, spcode, by = "sp_code")
+
+diet <- read_csv("data/diet_tax.csv") |> 
+  filter(project == "PIE")
+
+pie <- left_join(pie, diet, by = "common_name") |> 
+  janitor::clean_names() |> 
+  filter(year >=1901) # for some reason, odd year of 1900... removed
+
+na_weight <- which(is.na(pie$weight)) #missing 20870 out of 66093 obs
+
+# Group by 'Grouping_Column' and calculate the average value for each group
+avg_weight <- pie %>%
+  group_by(common_name) %>%
+  mutate(avg_weight = mean(weight, na.rm = TRUE))
+glimpse(avg_weight)
+
+# Replace NAs with the corresponding group's average value
+pie_weight <- avg_weight %>%
+  mutate(weight = ifelse(is.na(weight), 
+                         avg_weight, 
+                         weight))
+glimpse(pie_weight)
+
+na_weight_clean <- which(is.na(pie_weight$weight)) #no more NAs
+
+all_combinations <- expand.grid(common_name = unique(pie_weight$common_name),
+                                year = unique(pie_weight$year),
+                                creek = unique(pie_weight$creek),
+                                branch = unique(pie_weight$branch),
+                                replicate = unique(pie_weight$replicate))
+
+result <- merge(all_combinations, pie_weight, 
+                by = c("common_name", "year", "creek", "branch",
+                       "replicate"), all.x = TRUE)
+
+glimpse(result)
+
+na_number_of_fish_result <- which(is.na(result$number_of_fish))
+result$number_of_fish[is.na(result$number_of_fish)] <- 0
+na_number_of_fish_result_zero <- which(is.na(result$number_of_fish)) #NAs for catch changed to zeros
+
+na_weight_result <- which(is.na(result$weight))
+result$weight[is.na(result$weight)] <- 0
+na_weight_result_zero <- which(is.na(result$weight)) #Nas replaced with zeros
+
+glimpse(result)
+
+result_clean <- result |> 
+  select(date, common_name, year, branch, replicate, number_of_fish, length,
+         weight, mean_area, scientific_name, kingdom, phylum, class, order, 
+         family, genus, diet_cat_x) |> 
+  rename(diet_cat = diet_cat_x) |> 
+  group_by(year) |> 
+  mutate(transect_area = mean(mean_area, na.rm = TRUE)) |> 
+  select(-mean_area)
+  
+glimpse(result_clean)
+
+# na_area_result <- which(is.na(result_clean$transect_area))
+
+pie_cpue <- result_clean |> 
+  group_by(year, common_name) |>
+  # mutate(weight_g = weight*1000) |> 
+  summarise(sumwt = sum(weight),
+            sumdist = sum(transect_area),
+            bm_cpue_m = (sumwt/sumdist))
+
+pie_join <- left_join(pie_cpue, diet, by = "common_name")
+glimpse(pie_join)  
+unique(pie_join$year)
+
+pie <- pie_join |> 
+  group_by(year, diet_cat) |> 
+  summarise(bm = sum(bm_cpue_m))
+
+glimpse(pie)
+
+ggplot(pie, aes(fill = diet_cat, x=year, y = as.numeric(bm))) + 
+  geom_bar(position = "stack", stat = "identity") +
+  labs(x = "Year", 
+       y = "Mean Annual Biomass (g/m)") +
+  theme(panel.grid.major = element_blank(),
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"),
+        axis.text.x = element_text(angle = 45, hjust = 1., vjust = 1.1),axis.text = element_text(color="black"),
+        panel.grid.minor = element_blank(),legend.position = "top")
+
+# ggsave(filename='plots/pie_all_meanannual_biomass_01222024.png',
+#        plot = last_plot(),
+#        scale = 2.5,
+#        width = 7,
+#        height = 5,
+#        units = c("cm"),
+#        dpi = 300)
+
+ggplot(pie, aes(fill = diet_cat, x=year, 
+                y = as.numeric(bm))) + 
+  geom_bar(position = "fill", stat = "identity") +
+  labs(x = "Hydrologic Year", 
+       y = "Mean Annual Biomass (% of total)") +
+  theme(panel.grid.major = element_blank(), 
+        # panel.grid.minor = element_blank(),
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"),
+        # plot.title = element_text(hjust = 0.5, size=14, face="bold", color = "black"),
+        # axis.text = element_text(size=12,face="bold", color = "black"),
+        # axis.title = element_text(size=12,face="bold", color = "black"), 
+        axis.text.x = element_text(angle = 45, hjust = 1., vjust = 1.1),axis.text = element_text(color="black"),
+        panel.grid.minor = element_blank(),legend.position = "top") 
+
+# ggsave(filename='plots/pie_all_percent_biomass_01222024.png',
+#        plot = last_plot(),
+#        scale = 2.5,
+#        width = 7,
+#        height = 5,
+#        units = c("cm"),
+#        dpi = 300)
+
+# VCR calculations and figure ---------------------------------------------
+
+cons <- read_csv("data/VCR14232_2.csv") |> 
+  rename(common_name = speciesName)
+
+diet <- read_csv("data/diet_tax.csv") |> 
+  filter(project == "VCR")
+
+vcr <- left_join(cons, diet, by = "common_name") |> 
+  janitor::clean_names()
+glimpse(vcr)
+  
+na_weight <- which(is.na(vcr$weight))#missing 84 out of 2417 obs
+
+nofish <- vcr |> 
+  filter(site_comment == "No fish collected") #51 events
+
+# Group by 'Grouping_Column' and calculate the average value for each group
+avg_weight <- vcr %>%
+  group_by(common_name) %>%
+  mutate(avg_weight = mean(weight, na.rm = TRUE))
+glimpse(avg_weight)
+
+# Replace NAs with the corresponding group's average value
+vcr_weight <- avg_weight %>%
+  mutate(weight = ifelse(is.na(weight), 
+                         avg_weight, 
+                         weight))
+glimpse(vcr_weight)
+
+na_weight_clean <- which(is.na(vcr_weight$weight))
+vcr_weight$weight[is.na(vcr_weight$weight)] <- 0
+na_weight_clean <- which(is.na(vcr_weight$weight))
+
+vcr_weight$date <- mdy(vcr_weight$sample_date)
+glimpse(vcr_weight)
+
+vcr_weight$year <- year(vcr_weight$date)
+vcr_weight$month <- month(vcr_weight$date)
+vcr_weight$day <- day(vcr_weight$date)
+glimpse(vcr_weight)
+
+vcr_weight_clean <- vcr_weight |> 
+  select(year, month, site, common_name, length_cm, weight, count, 
+         temperature, salinity, transect_area, scientific_name, kingdom, 
+         phylum, class, order, family, genus, species, diet_cat)
+
+
+all_combinations <- expand.grid(common_name = unique(vcr_weight_clean$common_name),
+                                year = unique(vcr_weight_clean$year),
+                                site = unique(vcr_weight_clean$site))
+
+result <- merge(all_combinations, vcr_weight_clean, 
+                by = c("common_name", "year", "site"), all.x = TRUE)
+
+glimpse(result)
+
+na_count_result <- which(is.na(result$count))
+result$count[is.na(result$count)] <- 0
+na_count_result_zero <- which(is.na(result$count)) #NAs for catch changed to zeros
+
+na_weight_result <- which(is.na(result$weight))
+result$weight[is.na(result$weight)] <- 0
+na_weight_result_zero <- which(is.na(result$weight)) #Nas replaced with zeros
+
+na_transectarea_result <- which(is.na(result$transect_area))
+result$transect_area[is.na(result$transect_area)] <- 25
+na_transectarea_result_zero <- which(is.na(result$transect_area)) #Nas replaced with zeros
+
+glimpse(result)
+
+vcr_cpue <- result |> 
+  group_by(year, common_name) |>
+  # mutate(weight_g = weight*1000) |> 
+  summarise(sumwt = sum(weight),
+            sumdist = sum(transect_area),
+            bm_cpue_m2 = (sumwt/sumdist))
+
+vcr_join <- left_join(vcr_cpue, diet, by = "common_name")
+# glimpse(vcr_join)  
+# unique(vcr_join$year)
+
+vcr <- vcr_join |> 
+  group_by(year, diet_cat) |> 
+  summarise(bm = sum(bm_cpue_m2)) |> 
+  filter(complete.cases(diet_cat))
+
+glimpse(vcr)
+
+ggplot(vcr, aes(fill = diet_cat, x=year, y = as.numeric(bm))) + 
+  geom_bar(position = "stack", stat = "identity") +
+  labs(x = "Year", 
+       y = "Mean Annual Biomass (g/m2)") +
+  theme(panel.grid.major = element_blank(),
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"),
+        axis.text.x = element_text(angle = 45, hjust = 1., vjust = 1.1),axis.text = element_text(color="black"),
+        panel.grid.minor = element_blank(),legend.position = "top")
+
+# ggsave(filename='plots/vcr_all_meanannual_biomass_01222024.png',
+#        plot = last_plot(),
+#        scale = 2.5,
+#        width = 7,
+#        height = 5,
+#        units = c("cm"),
+#        dpi = 300)
+
+ggplot(vcr, aes(fill = diet_cat, x=year, 
+                y = as.numeric(bm))) + 
+  geom_bar(position = "fill", stat = "identity") +
+  labs(x = "Hydrologic Year", 
+       y = "Mean Annual Biomass (% of total)") +
+  theme(panel.grid.major = element_blank(), 
+        # panel.grid.minor = element_blank(),
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"),
+        # plot.title = element_text(hjust = 0.5, size=14, face="bold", color = "black"),
+        # axis.text = element_text(size=12,face="bold", color = "black"),
+        # axis.title = element_text(size=12,face="bold", color = "black"), 
+        axis.text.x = element_text(angle = 45, hjust = 1., vjust = 1.1),axis.text = element_text(color="black"),
+        panel.grid.minor = element_blank(),legend.position = "top") 
+
+ggsave(filename='plots/vcr_all_percent_biomass_01222024.png',
+       plot = last_plot(),
+       scale = 2.5,
+       width = 7,
+       height = 5,
+       units = c("cm"),
+       dpi = 300)
+
 
 ###########################################################################
 # FIGURE TWO: EXCRETION ---------------------------------------------------
