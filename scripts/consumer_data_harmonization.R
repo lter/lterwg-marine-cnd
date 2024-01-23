@@ -12,6 +12,14 @@
 ## Finishes with a harmonized data file in long format
 
 ## ------------------------------------------ ##
+#            User Settings -----
+## ------------------------------------------ ##
+
+# Does the species table need to be updated? 
+# Put 0 for no, 1 for yes
+species_update_flag <- 0
+
+## ------------------------------------------ ##
 #            Housekeeping -----
 ## ------------------------------------------ ##
 
@@ -97,7 +105,7 @@ for(k in 1:nrow(other_ids)){
 }
 
 # Clear environment
-rm(list = ls())
+rm(list = setdiff(ls(), c("species_update_flag")))
 
 ## ------------------------------------------ ##
 #             Data Harmonizing ----
@@ -261,7 +269,7 @@ tidy_v0 <- df_list %>%
 dplyr::glimpse(tidy_v0)
 
 # Clean up environment
-rm(list = setdiff(ls(), c("key", "tidy_v0")))
+rm(list = setdiff(ls(), c("key", "tidy_v0", "species_update_flag")))
 ## -------------------------------------------- ##
 #               Wrangle Dates ----
 ## -------------------------------------------- ##
@@ -303,8 +311,7 @@ tidy_v1a %>%
 key %>%
   dplyr::select(raw_filename, standardized_column_name, data_type) %>%
   dplyr::filter(data_type == "consumer") %>%
-  dplyr::filter(standardized_column_name %in% c("year","month","day","date")) %>%
-  View()
+  dplyr::filter(standardized_column_name %in% c("year","month","day","date")) 
 
 # Break apart the date column depending on the date format
 tidy_v1b <- tidy_v1a %>%
@@ -374,7 +381,7 @@ tidy_v1c %>%
   dplyr::glimpse()
 
 # Clean up environment
-rm(list = setdiff(ls(), c("tidy_v1c")))
+rm(list = setdiff(ls(), c("tidy_v1c", "species_update_flag")))
 
 ## -------------------------------------------- ##
 #               Wrangle Species ----
@@ -605,6 +612,7 @@ tidy_v2c <- left_join(tidy_v2b, some_common_names_fix_v2, by = "common_name") %>
 # Check unique scientific names
 unique(tidy_v2c$scientific_name)
 
+if (species_update_flag == 1){
 taxon_fix <- tidy_v2c %>%
   # Grab all the species from our tidy object
   dplyr::select(scientific_name) %>%
@@ -630,23 +638,23 @@ dplyr::glimpse(taxon_fix)
 
 # For each unique species...
 for (i in 1:length(taxon_fix$scientific_name_fix)){
-
+  
     # Message procesing start
     message("Completing taxonomic information for row ", i, " of ", length(taxon_fix$scientific_name_fix))
-    
+      
     # Query species for its taxonomic information
     query_results <- taxize::tax_name(sci = taxon_fix[i,]$scientific_name_fix,
                                       get = c("kingdom", "phylum", "class", "order", "family", "genus", "species"),
                                       db = "itis",
                                       accepted = T,
                                       ask = F)
-    
+      
     # Query species for its common name 
     common_name_results <- taxize::sci2comm(sci = taxon_fix[i,]$scientific_name_fix, 
                                             db = "itis",
                                             accepted = T,
                                             ask = F)
-    
+      
     # Save the query results
     # In case the query returns NULL, the paste0(..., collapse = "") will coerce NULL into an empty string
     taxon_fix[i,]$kingdom_fix <- paste0(query_results$kingdom, collapse = "")
@@ -657,15 +665,15 @@ for (i in 1:length(taxon_fix$scientific_name_fix)){
     taxon_fix[i,]$genus_fix <- paste0(query_results$genus, collapse = "")
     taxon_fix[i,]$species_fix <- paste0(query_results$species, collapse = "")
     taxon_fix[i,]$common_name_fix <- paste0(common_name_results[[1]], collapse = "; ")
-  
-}
+    
+  }
 
 taxon_fix_v2 <- taxon_fix %>%
   # Replace the string "NA" with actual NA values
   dplyr::mutate(dplyr::across(.cols = dplyr::everything(), .fns = ~dplyr::na_if(., y = "NA"))) %>%
   # Replace empty strings with NA values
   dplyr::mutate(dplyr::across(.cols = dplyr::everything(), .fns = ~dplyr::na_if(., y = "")))
-  
+   
 
 # Left join our current tidy dataframe with the table of taxonomic info
 tidy_v2d <- left_join(tidy_v2c, taxon_fix_v2, by = c("scientific_name" = "scientific_name_fix")) %>%
@@ -711,6 +719,10 @@ unique(tidy_v2d$species)
 
 # Check structure
 dplyr::glimpse(tidy_v2d)
+  
+} else if (species_update_flag == 0){
+    tidy_v2d <- tidy_v2c
+}
 
 # Now join with the table for PIE species codes 
 tidy_v2e <- tidy_v2d %>%
@@ -754,6 +766,7 @@ tidy_v2f <- tidy_v2e %>%
 # Check structure
 dplyr::glimpse(tidy_v2f)
 
+if (species_update_flag == 1){
 species_table <- tidy_v2f %>%
   # Select the appropriate columns to create our species table
   dplyr::select(project, sp_code, scientific_name, common_name, kingdom, phylum, class, order, family, genus, species, taxa_group) %>%
@@ -763,8 +776,11 @@ species_table <- tidy_v2f %>%
   dplyr::arrange(project, scientific_name) %>%
   # Remove rows that have NA values for both scientific_name and sp_code
   dplyr::filter(!(is.na(scientific_name) & is.na(sp_code)))
+}
 
 tidy_v2g <- tidy_v2f %>%
+  # Make sure that the first letter of scientific name is capitalized 
+  dplyr::mutate(scientific_name = stringr::str_to_sentence(scientific_name)) %>%
   # Now that we have our species table, we don't need the other taxa columns in our harmonized dataset
   dplyr::select(-common_name, -kingdom, -phylum, -class, -order, -family, -genus, -species, -taxa_group)
 
