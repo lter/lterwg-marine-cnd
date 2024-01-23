@@ -182,13 +182,13 @@ ggplot(map, aes(fill = diet_cat, x=hydroyear,
         axis.text.x = element_text(angle = 45, hjust = 1., vjust = 1.1),axis.text = element_text(color="black"),
         panel.grid.minor = element_blank(),legend.position = "top") 
 
-ggsave(filename='plots/fce_all_percent_biomass_01222024.png',
-       plot = last_plot(),
-       scale = 2.5,
-       width = 7,
-       height = 5,
-       units = c("cm"),
-       dpi = 300)
+# ggsave(filename='plots/fce_all_percent_biomass_01222024.png',
+#        plot = last_plot(),
+#        scale = 2.5,
+#        width = 7,
+#        height = 5,
+#        units = c("cm"),
+#        dpi = 300)
 
 ###########################################################################
 # FIGURE TWO: EXCRETION ---------------------------------------------------
