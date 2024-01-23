@@ -820,7 +820,8 @@ tidy_v3 <- tidy_v2g %>%
   dplyr::relocate(wetmass.g_m2, .after = wetmass.g) %>%
   dplyr::relocate(wetmass.kg, .after = wetmass.g_m2) %>% 
   dplyr::relocate(wetmass.mg_m3, .after = wetmass.kg) %>%  
-  dplyr::mutate(dplyr::across(.cols = c(year:day, count.num:wetmass.mg_m3), .fns = as.numeric))
+  dplyr::relocate(wetmass.kg_transect, .after = wetmass.mg_m3) %>%  
+  dplyr::mutate(dplyr::across(.cols = c(year:day, count.num:wetmass.kg_transect), .fns = as.numeric))
 
 # Check structure
 dplyr::glimpse(tidy_v3)
@@ -831,7 +832,7 @@ dplyr::glimpse(tidy_v3)
 
 tidy_v4 <- tidy_v3 %>%
   # Pivot the measurement columns to long format
-  tidyr::pivot_longer(cols = count.num:wetmass.mg_m3,
+  tidyr::pivot_longer(cols = count.num:wetmass.kg_transect,
                names_to = "measurement_type",
                values_to = "measurement_value") %>%
   # Create a measurement_unit column from measurement_type
