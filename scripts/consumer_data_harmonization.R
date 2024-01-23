@@ -193,11 +193,11 @@ for (i in 1:length(raw_files)){
                                         yes = paste0(standardized_column_name, ".", units_fix),
                                         no = standardized_column_name)) %>%
     # Pare down to only needed columns (implicitly removes unspecified columns)
-    dplyr::select(row_num, project, habitat, raw_filename, names_actual, values) %>%
+    dplyr::select(project, habitat, raw_filename, row_num, names_actual, values) %>%
     # Pivot back to wide format with revised column names
     tidyr::pivot_wider(names_from = names_actual, values_from = values, values_fill = NA) %>%
-    # Drop row number column
-    dplyr::select(-row_num) %>%
+    # Change the row number column to include file name
+    dplyr::mutate(row_num = paste0(raw_filename, "_", row_num)) %>%
     # Drop non-unique rows (there shouldn't be any but better safe than sorry)
     dplyr::distinct()
   
@@ -213,7 +213,7 @@ for (i in 1:length(raw_files)){
 
 MLPA_p1 <- df_list[["MLPA_benthic_site_means.csv"]] %>%
   # Select all relevant columns
-  dplyr::select(project, habitat, raw_filename, year, site, dplyr::starts_with("wide_den")) %>%
+  dplyr::select(project, habitat, raw_filename, row_num, year, site, dplyr::starts_with("wide_den")) %>%
   # Pivot all "wide_den" columns to long format
   tidyr::pivot_longer(cols = dplyr::starts_with("wide_den"), names_to = "sp_code", values_to = "density.num_m2") %>%
   # Extract the species code
@@ -221,7 +221,7 @@ MLPA_p1 <- df_list[["MLPA_benthic_site_means.csv"]] %>%
 
 MLPA_p2 <- df_list[["MLPA_benthic_site_means.csv"]] %>%
   # Select all relevant columns
-  dplyr::select(project, habitat, raw_filename, year, site, dplyr::starts_with("wide_COVER")) %>%
+  dplyr::select(project, habitat, raw_filename, row_num, year, site, dplyr::starts_with("wide_COVER")) %>%
   # Pivot all "wide_COVER" columns to long format
   tidyr::pivot_longer(cols = dplyr::starts_with("wide_COVER"), names_to = "sp_code", values_to = "cover.percent") %>%
   # Extract the species code
@@ -237,7 +237,7 @@ df_list[["MLPA_benthic_site_means.csv"]] <- MLPA_fixed
 
 CCE_PROPOOS_p1 <- df_list[["CCE_PROPOOS_net_data_individual_categories_line80_90_12_08_2023.csv"]] %>%
   # Select all relevant columns
-  dplyr::select(project, habitat, raw_filename, site, date, dplyr::starts_with("wide_dens")) %>%
+  dplyr::select(project, habitat, raw_filename, row_num, site, date, dplyr::starts_with("wide_dens")) %>%
   # Pivot all "wide_dens" columns to long format
   tidyr::pivot_longer(cols = dplyr::starts_with("wide_dens"), names_to = "scientific_name", values_to = "density.num_m2") %>%
   # Extract the scientific name
@@ -247,7 +247,7 @@ CCE_PROPOOS_p1 <- df_list[["CCE_PROPOOS_net_data_individual_categories_line80_90
 
 CCE_PROPOOS_p2 <- df_list[["CCE_PROPOOS_net_data_individual_categories_line80_90_12_08_2023.csv"]] %>%
   # Select all relevant columns
-  dplyr::select(project, habitat, raw_filename, site, date, dplyr::starts_with("wide_dry_biomass")) %>%
+  dplyr::select(project, habitat, raw_filename, row_num, site, date, dplyr::starts_with("wide_dry_biomass")) %>%
   # Pivot all "wide_dry_biomass" columns to long format
   tidyr::pivot_longer(cols = dplyr::starts_with("wide_dry_biomass"), names_to = "scientific_name", values_to = "drymass.mgC_m2") %>%
   # Extract the scientific name
@@ -795,6 +795,7 @@ rm(list = setdiff(ls(), c("tidy_v2g", "species_table")))
 dplyr::glimpse(tidy_v2g)
 
 tidy_v3 <- tidy_v2g %>%
+  dplyr::relocate(row_num, .after = raw_filename) %>%
   dplyr::relocate(subsite_level2, .after = subsite_level1) %>%
   dplyr::relocate(subsite_level3, .after = subsite_level2) %>%
   dplyr::relocate(sp_code, .after = subsite_level3) %>%
