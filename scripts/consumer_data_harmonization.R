@@ -17,7 +17,7 @@
 
 # Does the species table need to be updated? 
 # Put 0 for no, 1 for yes
-species_update_flag <- 0
+species_update_flag <- 1
 
 ## ------------------------------------------ ##
 #            Housekeeping -----
@@ -782,7 +782,7 @@ tidy_v2g <- tidy_v2f %>%
   # Make sure that the first letter of scientific name is capitalized 
   dplyr::mutate(scientific_name = stringr::str_to_sentence(scientific_name)) %>%
   # Now that we have our species table, we don't need the other taxa columns in our harmonized dataset
-  dplyr::select(-common_name, -kingdom, -phylum, -class, -order, -family, -genus, -species, -taxa_group)
+  dplyr::select(-common_name, -kingdom, -phylum, -class, -order, -family, -genus, -taxa_group)
 
 # Clean up environment
 rm(list = setdiff(ls(), c("tidy_v2g", "species_table")))
@@ -800,7 +800,8 @@ tidy_v3 <- tidy_v2g %>%
   dplyr::relocate(subsite_level3, .after = subsite_level2) %>%
   dplyr::relocate(sp_code, .after = subsite_level3) %>%
   dplyr::relocate(scientific_name, .after = sp_code) %>%
-  dplyr::relocate(coarse_grouping, .after = scientific_name) %>%
+  dplyr::relocate(species, .after = scientific_name) %>%
+  dplyr::relocate(coarse_grouping, .after = species) %>%
   dplyr::relocate(transect_area.m, .after = coarse_grouping) %>%  
   dplyr::relocate(transect_area.m2, .after = transect_area.m) %>% 
   dplyr::relocate(count.num, .after = transect_area.m2) %>%
@@ -841,7 +842,8 @@ tidy_v4 <- tidy_v3 %>%
   dplyr::filter(!is.na(measurement_value)) %>%
   # Moving columns around
   dplyr::relocate(sp_code, .after = measurement_value) %>%
-  dplyr::relocate(scientific_name, .after = sp_code) 
+  dplyr::relocate(scientific_name, .after = sp_code) %>%
+  dplyr::relocate(species, .after = scientific_name) 
   
 # Check structure
 dplyr::glimpse(tidy_v4)
@@ -866,10 +868,17 @@ date <- gsub(pattern = "-", replacement = "", x = Sys.Date())
 dir.create(path = file.path("tidy"), showWarnings = F)
 
 # Export locally
-write.csv(x = tidy_final, file = file.path("tidy", tidy_filename), na = 'NA', row.names = F)
+write.csv(x = tidy_final, file = file.path("tidy", tidy_filename), na = '.', row.names = F)
+
+# Export locally under the general dataset name
+write.csv(x = tidy_final, file = file.path("tidy", "harmonized_consumer.csv"), na = '.', row.names = F)
 
 # Export harmonized dataset to Drive
 googledrive::drive_upload(media = file.path("tidy", tidy_filename), overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
+
+# Export harmonized dataset to Drive under the general dataset name
+googledrive::drive_upload(media = file.path("tidy", "harmonized_consumer.csv"), overwrite = T,
                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
 
 if (species_update_flag == 1){
@@ -877,7 +886,7 @@ if (species_update_flag == 1){
 ( species_filename <- paste0("harmonized_consumer_species_", date, ".csv") )
 
 # Also export species table
-write.csv(x = species_table, file = file.path("tidy", species_filename), na = 'NA', row.names = F)
+write.csv(x = species_table, file = file.path("tidy", species_filename), na = '.', row.names = F)
 
 # Export species table to Drive
 googledrive::drive_upload(media = file.path("tidy", species_filename), overwrite = T,
