@@ -861,24 +861,25 @@ date <- gsub(pattern = "-", replacement = "", x = Sys.Date())
 # Generate a date-stamped file name for this file
 ( tidy_filename <- paste0("harmonized_consumer_", date, ".csv") )
 
-# Generate a date-stamped file name for the species table
-( species_filename <- paste0("harmonized_consumer_species_", date, ".csv") )
-
 # Create necessary sub-folder(s)
 dir.create(path = file.path("tidy"), showWarnings = F)
 
 # Export locally
 write.csv(x = tidy_final, file = file.path("tidy", tidy_filename), na = 'NA', row.names = F)
 
-# Also export species table
-write.csv(x = species_table, file = file.path("tidy", species_filename), na = 'NA', row.names = F)
-
 # Export harmonized dataset to Drive
 googledrive::drive_upload(media = file.path("tidy", tidy_filename), overwrite = T,
                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
 
+if (species_update_flag == 1){
+# Generate a date-stamped file name for the species table
+( species_filename <- paste0("harmonized_consumer_species_", date, ".csv") )
+
+# Also export species table
+write.csv(x = species_table, file = file.path("tidy", species_filename), na = 'NA', row.names = F)
+
 # Export species table to Drive
 googledrive::drive_upload(media = file.path("tidy", species_filename), overwrite = T,
                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
-
+}
 # End ----
