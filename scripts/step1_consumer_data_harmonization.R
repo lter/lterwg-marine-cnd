@@ -17,7 +17,7 @@
 
 # Does the species table need to be updated? 
 # Put 0 for no, 1 for yes
-species_update_flag <- 1
+species_update_flag <- 0
 
 ## ------------------------------------------ ##
 #            Housekeeping -----
@@ -77,8 +77,12 @@ data_key_id <- googledrive::drive_ls(googledrive::as_id("https://drive.google.co
 sp_codes_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/1LYffjtQdLcNYkStrf_FukihQ6tPKlw1a")) %>%
   dplyr::filter(name %in% c("PIE_speciescode_table.xlsx", "CoastalCA_speciescode_table.csv"))
 
+# Identify the latest harmonized species table
+harm_sp_codes_id <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH")) %>%
+  dplyr::filter(name %in% c("harmonized_consumer_species.csv"))
+
 # Combine file IDs
-other_ids <- rbind(data_key_id, sp_codes_ids)
+other_ids <- rbind(data_key_id, sp_codes_ids, harm_sp_codes_id)
 
 # For each raw data file, download it into the consumer folder
 for(k in 1:nrow(raw_ids)){
@@ -390,6 +394,8 @@ rm(list = setdiff(ls(), c("tidy_v1c", "species_update_flag")))
 # Read in the tables for PIE and CoastalCA species codes (for later)
 PIE_sp_codes <- readxl::read_excel(path = file.path("tier0", "PIE_speciescode_table.xlsx")) 
 CoastalCA_sp_codes <- read.csv(file = file.path("tier0", "CoastalCA_speciescode_table.csv"))
+harm_sp_codes <- read.csv(file = file.path("tier0", "harmonized_consumer_species.csv"), na.strings = ".") %>%
+  dplyr::select(project, sp_code, common_name, scientific_name, species) 
 
 # Doing some preliminary wrangling on species names
 tidy_v2a <- tidy_v1c %>%
@@ -407,6 +413,11 @@ tidy_v2a <- tidy_v1c %>%
   # If the species is just "spp " or "spp" or "spp." or "partial" or "No fish observed" then we can set it as NA 
   dplyr::mutate(species = dplyr::case_when(
     species == "spp " | species == "spp" | species == "spp." | species == "partial"| species == "No fish observed" ~ NA,
+    T ~ species
+  )) %>%
+  # If the species has " (cf)" in its name, then remove " (cf)"
+  dplyr::mutate(species = dplyr::case_when(
+    stringr::str_detect(species, " \\(cf\\)") ~ stringr::str_replace(species, " \\(cf\\)", ""),
     T ~ species
   )) %>%
   # If the row is from the MLPA csv and the species is non-empty, put genus + species as the value in species
@@ -724,6 +735,10 @@ dplyr::glimpse(tidy_v2d)
     tidy_v2d <- tidy_v2c
 }
 
+# Combine PIE and CoastalCA species codes
+PIE_CoastalCA_codes <- PIE_sp_codes %>%
+  dplyr::bind_rows(CoastalCA_sp_codes)
+
 # Now join with the table for PIE species codes 
 tidy_v2e <- tidy_v2d %>%
   # First replace the species code "XAN " with "XAN"
@@ -732,24 +747,7 @@ tidy_v2e <- tidy_v2d %>%
     T ~ sp_code
   )) %>%
   # Join with the table
-  dplyr::left_join(PIE_sp_codes, by = c("project", "sp_code")) %>%
-  # Coalesce with the new columns to fill in the missing taxonomic info for PIE species 
-  dplyr::mutate(common_name = dplyr::coalesce(common_name.x, common_name.y),
-                scientific_name = dplyr::coalesce(scientific_name.x, scientific_name.y),
-                kingdom = dplyr::coalesce(kingdom.x, kingdom.y),
-                phylum = dplyr::coalesce(phylum.x, phylum.y),
-                class = dplyr::coalesce(class.x, class.y),
-                order = dplyr::coalesce(order.x, order.y),
-                family = dplyr::coalesce(family.x, family.y),
-                genus = dplyr::coalesce(genus.x, genus.y),
-                species = dplyr::coalesce(species.x, species.y)) %>%
-  # Drop the duplicate columns that resulted from joining
-  dplyr::select(-contains(".x"), -contains(".y"))
-
-# Now join with the table for CoastalCA species codes 
-tidy_v2f <- tidy_v2e %>%
-  # Join with the table
-  dplyr::left_join(CoastalCA_sp_codes, by = c("project", "sp_code")) %>%
+  dplyr::left_join(PIE_CoastalCA_codes, by = c("project", "sp_code")) %>%
   # Coalesce with the new columns to fill in the missing taxonomic info for PIE species 
   dplyr::mutate(common_name = dplyr::coalesce(common_name.x, common_name.y),
                 scientific_name = dplyr::coalesce(scientific_name.x, scientific_name.y),
@@ -764,10 +762,10 @@ tidy_v2f <- tidy_v2e %>%
   dplyr::select(-contains(".x"), -contains(".y"))
 
 # Check structure
-dplyr::glimpse(tidy_v2f)
+dplyr::glimpse(tidy_v2e)
 
 if (species_update_flag == 1){
-species_table <- tidy_v2f %>%
+species_table <- tidy_v2e %>%
   # Select the appropriate columns to create our species table
   dplyr::select(project, sp_code, scientific_name, common_name, kingdom, phylum, class, order, family, genus, species, taxa_group) %>%
   # Get unique species
@@ -776,25 +774,57 @@ species_table <- tidy_v2f %>%
   dplyr::arrange(project, scientific_name) %>%
   # Remove rows that have NA values for both scientific_name and sp_code
   dplyr::filter(!(is.na(scientific_name) & is.na(sp_code)))
-}
+} else if (species_update_flag == 0){
+# Just in case, to make sure the species column is accurate,
+# join with the latest version of the harmonized consumer species table
+tidy_v2f <- tidy_v2e %>%
+  dplyr::mutate(species = ifelse(is.na(species) & stringr::str_detect(scientific_name, "[:blank:]"),
+                                 yes = scientific_name,
+                                 no = species)) %>%
+    # Join with the table
+    dplyr::left_join(harm_sp_codes, by = c("project", "sp_code", "scientific_name", "species")) %>%
+    mutate(common_name = coalesce(common_name.x, common_name.y)) %>%
+    select(-contains(".x"),-contains(".y"))
+  
+  # Make sure it's character(0)
+  print(setdiff(tidy_v2f$common_name, harm_sp_codes$common_name))
 
 tidy_v2g <- tidy_v2f %>%
+    # Join with the table
+    dplyr::left_join(harm_sp_codes, by = c("project", "sp_code", "scientific_name", "common_name")) %>%
+    dplyr::mutate(species.y = dplyr::case_when(
+      species.x == "Sebastes atrovirens,carnatus,chrysomelas,caurinus" ~ "Sebastes atrovirens; Sebastes carnatus; Sebastes chrysomelas; Sebastes caurinus",
+      species.x == "Sebastes serranoides,flavidus" ~ "Sebastes serranoides; Sebastes flavidus",
+      species.x == "Sebastes chrysomelas/carnatus young of year" ~ "Sebastes chrysomelas; Sebastes carnatus",
+      species.x == "Sebastes serranoides,flavidus,melanops" ~ "Sebastes serranoides; Sebastes flavidus; Sebastes melanops",
+      species.x == "Sebastes carnatus, caurinus" ~ "Sebastes carnatus; Sebastes caurinus",
+      T ~ species.y
+    )) %>%
+    dplyr::select(-species.x) %>%
+    dplyr::rename(species = species.y)
+  
+  # Make sure it's character(0)
+  print(setdiff(tidy_v2g$species, harm_sp_codes$species))
+  print(setdiff(harm_sp_codes$species, tidy_v2g$species))
+}
+
+tidy_v2h <- tidy_v2g %>%
   # Make sure that the first letter of scientific name is capitalized 
   dplyr::mutate(scientific_name = stringr::str_to_sentence(scientific_name)) %>%
   # Now that we have our species table, we don't need the other taxa columns in our harmonized dataset
   dplyr::select(-common_name, -kingdom, -phylum, -class, -order, -family, -genus, -taxa_group)
 
 # Clean up environment
-rm(list = setdiff(ls(), c("tidy_v2g", "species_table")))
+rm(list = setdiff(ls(), c("tidy_v2h", "species_table")))
 
 ## -------------------------------------------- ##
 #      Reordering & Changing Column Types ----
 ## -------------------------------------------- ##
 
 # Check structure
-dplyr::glimpse(tidy_v2g)
+dplyr::glimpse(tidy_v2h)
 
-tidy_v3 <- tidy_v2g %>%
+tidy_v3 <- tidy_v2h %>%
   dplyr::relocate(row_num, .after = raw_filename) %>%
   dplyr::relocate(subsite_level2, .after = subsite_level1) %>%
   dplyr::relocate(subsite_level3, .after = subsite_level2) %>%
@@ -802,8 +832,6 @@ tidy_v3 <- tidy_v2g %>%
   dplyr::relocate(scientific_name, .after = sp_code) %>%
   dplyr::relocate(species, .after = scientific_name) %>%
   dplyr::relocate(coarse_grouping, .after = species) %>%
-  dplyr::relocate(transect_area.m, .after = coarse_grouping) %>%  
-  dplyr::relocate(transect_area.m2, .after = transect_area.m) %>% 
   dplyr::relocate(count.num, .after = transect_area.m2) %>%
   dplyr::relocate(cover.percent, .after = count.num) %>%
   dplyr::relocate(density.num_m, .after = cover.percent) %>%
@@ -816,12 +844,14 @@ tidy_v3 <- tidy_v2g %>%
   dplyr::relocate(length.cm, .after = excretion_egestion.ug_m3) %>%  
   dplyr::relocate(length.mm, .after = length.cm) %>%  
   dplyr::relocate(length.um, .after = length.mm) %>%  
-  dplyr::relocate(wetmass.g, .after = length.um) %>%  
+  dplyr::relocate(transect_area.m, .after = length.um) %>%  
+  dplyr::relocate(transect_area.m2, .after = transect_area.m) %>% 
+  dplyr::relocate(wetmass.g, .after = transect_area.m2) %>%  
   dplyr::relocate(wetmass.g_m2, .after = wetmass.g) %>%
   dplyr::relocate(wetmass.kg, .after = wetmass.g_m2) %>% 
-  dplyr::relocate(wetmass.mg_m3, .after = wetmass.kg) %>%  
-  dplyr::relocate(wetmass.kg_transect, .after = wetmass.mg_m3) %>%  
-  dplyr::mutate(dplyr::across(.cols = c(year:day, count.num:wetmass.kg_transect), .fns = as.numeric))
+  dplyr::relocate(wetmass.kg_transect, .after = wetmass.kg) %>%  
+  dplyr::relocate(wetmass.mg_m3, .after = wetmass.kg_transect) %>%  
+  dplyr::mutate(dplyr::across(.cols = c(year:day, count.num:wetmass.mg_m3), .fns = as.numeric))
 
 # Check structure
 dplyr::glimpse(tidy_v3)
@@ -832,7 +862,7 @@ dplyr::glimpse(tidy_v3)
 
 tidy_v4 <- tidy_v3 %>%
   # Pivot the measurement columns to long format
-  tidyr::pivot_longer(cols = count.num:wetmass.kg_transect,
+  tidyr::pivot_longer(cols = count.num:wetmass.mg_m3,
                names_to = "measurement_type",
                values_to = "measurement_value") %>%
   # Create a measurement_unit column from measurement_type
