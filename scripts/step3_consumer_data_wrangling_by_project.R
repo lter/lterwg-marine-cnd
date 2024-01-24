@@ -138,10 +138,11 @@ coastalca_dt <- dt %>%
 #convert wetmass into dry mass
 # calculate the biomass density for coastal CA
 coastalca_dt1 <- coastalca_dt %>%
+  mutate(measurement_type=gsub("_", "", measurement_type)) %>%
   pivot_wider(names_from = c(measurement_type, measurement_unit),values_from = measurement_value) %>%
-  mutate(`drymass_g/m2`=(`wetmass_kg/transect`*0.29/`transect_area_m2`)*1000, #convert from kg to g
+  mutate(`drymass_g/m2`=(`wetmass_kg/transect`*0.29/`transectarea_m2`)*1000, #convert from kg to g
          `dmperind_g/ind` = `wetmass_kg/transect`*0.29*1000/`count_num`,
-         `density_num/m2` = `count_num`/`transect_area_m2`,
+         `density_num/m2` = `count_num`/`transectarea_m2`,
          `temp_c` = sbc_temp_ave$MEAN) 
 
 coastalca_dt2 <-coastalca_dt1 %>%
@@ -150,7 +151,7 @@ coastalca_dt2 <-coastalca_dt1 %>%
                values_to = "measurement_value")
 
 coastalca_ready <- coastalca_dt2 %>%
-  separate(measurement_type, into = c("measurement_type", "measurement_unit"), sep = "_", remove = FALSE) 
+  separate(measurement_type, into = c("measurement_type", "measurement_unit"),sep = "_", remove = FALSE) 
   
 # peace<-coastalca_ready %>%  
 #   distinct(measurement_type,measurement_unit)
@@ -173,6 +174,8 @@ sbc_dt <- dt %>%
 
 sbc_dt1 <- sbc_dt %>%
   pivot_wider(names_from = c(measurement_type,measurement_unit), values_from = measurement_value) %>%
+  #if there is a shell-free drymass we used it ,otherwise, we use dry mass
+  mutate(`drymass_g/m2` = ifelse(!is.na(`sfdrymass_g/m2`),`sfdrymass_g/m2`,`drymass_g/m2`)) %>%
   mutate(`dmperindv_g/ind`=`drymass_g/m2`/`density_num/m2`,
          temp_c = sbc_temp_ave$MEAN)  #using the ones from coastal CA chunk
 
@@ -180,7 +183,7 @@ sbc_ready<- sbc_dt1 %>%
     pivot_longer(cols = `density_num/m2`:temp_c, 
                  names_to = "measurement_type",
                  values_to = "measurement_value") %>%
-   separate(measurement_type, into = c("measurement_type", "measurement_unit"), sep = "_", remove = FALSE) 
+   separate(measurement_type, into = c("measurement_type", "measurement_unit"), sep = "_",remove = FALSE) 
  
 #### SBC ocean end
 

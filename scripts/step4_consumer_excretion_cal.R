@@ -95,7 +95,8 @@ dt3 <-dt2 %>%
 #using bradley's code below for excretion calculation
 cons <- dt3
 
-cons_n <- cons %>% 
+cons_np_ratio <- cons %>% 
+  #N
   mutate(N_vert_coef = if_else(phylum == "Chordata", 0.7804, 0),
          N_diet_coef = if_else(diet_cat == "algae_detritus", -0.0389,
                                if_else(diet_cat == "invert", -0.2013,
@@ -105,14 +106,39 @@ cons_n <- cons %>%
                                                                NA))))),
          Nexc_log10 = 1.461 + 0.6840*(log10(dmperind)) + 0.0246*temp + N_diet_coef + N_vert_coef,
          Nexc_log10 = 1.461 + 0.6840*(log10(dmperind)) + 0.0246*temp + N_diet_coef + N_vert_coef,
-         Nexc_log10 = if_else(Nexc_log10 > 0, Nexc_log10, 0))
+         Nexc_log10 = if_else(Nexc_log10 > 0, Nexc_log10, 0),
+         `nind_ug/hr` = Nexc_log10) %>%
+  # p
+  mutate(P_vert_coef = if_else(phylum == "Chordata", 0.7504, 0),
+         P_diet_coef = if_else(diet_cat == "algae_detritus", 0.0173,
+                                              if_else(diet_cat == "invert", -0.2480,
+                                                      if_else(diet_cat == "fish", -0.0337,
+                                                              if_else(diet_cat == "fish_invert", -0.4525, 
+                                                                      if_else(diet_cat == "algae_invert",0,
+                                                                              NA))))),
+         Pexc_log10 = 0.6757 + 0.5656*(log10(dmperind)) + 0.0194*temp + P_diet_coef + P_vert_coef,
+         Pexc_log10 = if_else(Pexc_log10 > 0, Pexc_log10, 0),
+         `pind_ug/hr` = Pexc_log10) %>%
+  #N:P ratio
+  mutate(NtoPexc_molar = 58.526 + 13.681*(log10(dmperind)),
+         NtoPexc_molar = if_else(NtoPexc_molar > 0, NtoPexc_molar, 0),
+         `npind_ug/hr` = NtoPexc_molar)
 
+##################### end of bradley's code #####################
+##### Data clean up #######
+
+dt_final <- cons_np_ratio %>% 
+  dplyr::select(-c(common_name,kingdom,phylum,class,order,family,genus,taxa_group,N_vert_coef,N_diet_coef,Nexc_log10,P_vert_coef,P_diet_coef,Pexc_log10,NtoPexc_molar)) %>%
+  pivot_longer(cols = -c(project,habitat,raw_filename,row_num,year,month,day,date,site,subsite_level1,subsite_level2,subsite_level3,sp_code,scientific_name,species), 
+             names_to = "measurement_type",
+             values_to = "measurement_value") %>%
+  separate(measurement_type, into = c("measurement_type", "measurement_unit"),sep = "_", remove = FALSE) 
 
 #### export and write to the drive
 # Export locally
 tidy_filename <- "harmonized_consumer_excretion.csv"
 
-write.csv(cons_n, file = file.path("tier2", tidy_filename), na = '.', row.names = F)
+write.csv(dt_final, file = file.path("tier2", tidy_filename), na = '.', row.names = F)
 
 # Export harmonized clean dataset to Drive
 googledrive::drive_upload(media= file.path("tier2",tidy_filename), overwrite = T,
