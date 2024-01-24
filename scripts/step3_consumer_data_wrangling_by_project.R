@@ -36,11 +36,14 @@ dir.create(path = file.path("other"), showWarnings = F)
 consumer_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/1/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH")) %>%
   dplyr::filter(name %in% c("harmonized_consumer.csv"))
 
+env_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/1/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH")) %>%
+  dplyr::filter(name %in% c("harmonized_environment.csv"))
+
 species_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/1/folders/1CEgNtAnk4DuPNpR3lJN9IqpjWq0cM8F4")) %>%
   dplyr::filter(name %in% c("CNDWG_harmonized_consumer_species.xlsx"))
 
 # Combine file IDs
-harmonized_ids <- rbind(consumer_ids, species_ids)
+harmonized_ids <- rbind(consumer_ids, env_ids, species_ids)
 
 # For each raw data file, download it into the consumer folder
 for(k in 1:nrow(harmonized_ids)){
@@ -65,6 +68,8 @@ rm(list = ls())
 # read in the harmonized data and start the wrangling, by project
 dt <- read.csv(file.path("tier1", "harmonized_consumer.csv"),stringsAsFactors = F,na.strings =".") 
 
+env <- read.csv(file.path("tier1", "harmonized_environment.csv"),stringsAsFactors = F,na.strings =".") 
+
 species_list <- readxl::read_excel(path = file.path("tier1", "CNDWG_harmonized_consumer_species.xlsx"),na=".")
 
 
@@ -87,23 +92,20 @@ googledrive::with_drive_quiet(
 
 pisco_site <- readxl::read_excel(path = file.path("other", "master_site_table.xlsx")) 
 
-sbc_temp <- read.csv(file.path("other", "Bottom_temp_all_years_20230724.csv")) 
+sbc_temp <- env %>%
+  filter(project=="SBC") %>%
+  filter(measurement_type=="temperature") %>%
+  rename(temp=measurement_value)
 
 ###calculate temperature from SBC data for summer-fall months (Jul - Oct)
-#  change DATE to date class
-sbc_temp$DATE_LOCAL <- as.Date(sbc_temp$DATE_LOCAL, format= '%Y-%m-%d')
-#filter to just study sites
-#  Get months
-sbc_temp$MONTH <-months.Date(sbc_temp$DATE_LOCAL, abbreviate = TRUE)
-
 sbc_temp_summer<-sbc_temp %>% 
-  filter(MONTH %in% c("Jul", "Aug", "Sep") )
+  filter(month %in% c(7,8,9) )
 
 #take average, min, max of summer temperatures from all sites and years
 sbc_temp_ave <- sbc_temp_summer %>%
-  dplyr:: summarise(MEAN= mean(TEMP_C,  na.rm=TRUE),
-                    MAX= max(TEMP_C,  na.rm=TRUE),
-                    MIN= min(TEMP_C,  na.rm=TRUE))
+  dplyr:: summarise(MEAN= mean(temp,  na.rm=TRUE),
+                    MAX= max(temp,  na.rm=TRUE),
+                    MIN= min(temp,  na.rm=TRUE))
 
 
 # filter out the site we need
@@ -168,8 +170,6 @@ sbc_dt <- dt %>%
   dplyr::filter(project=="SBC") %>%
   dplyr::filter(habitat=="ocean") %>%
   dplyr::filter(sp_code %in% sbc_species$sp_code|is.na(sp_code))
-
-unit <- sbc_dt 
 
 sbc_dt1 <- sbc_dt %>%
   pivot_wider(names_from = c(measurement_type,measurement_unit), values_from = measurement_value) %>%
