@@ -901,15 +901,13 @@ dir.create(path = file.path("tidy"), showWarnings = F)
 # Export locally
 write.csv(x = tidy_final, file = file.path("tidy", tidy_filename), na = '.', row.names = F)
 
-# Export locally under the general dataset name
-write.csv(x = tidy_final, file = file.path("tidy", "harmonized_consumer.csv"), na = '.', row.names = F)
-
 # Export harmonized dataset to Drive
 googledrive::drive_upload(media = file.path("tidy", tidy_filename), overwrite = T,
                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
 
 # Export harmonized dataset to Drive under the general dataset name
-googledrive::drive_upload(media = file.path("tidy", "harmonized_consumer.csv"), overwrite = T,
+googledrive::drive_upload(media = file.path("tidy", tidy_filename), overwrite = T,
+                          name = "harmonized_consumer.csv",
                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
 
 if (species_update_flag == 1){
@@ -922,5 +920,11 @@ write.csv(x = species_table, file = file.path("tidy", species_filename), na = '.
 # Export species table to Drive
 googledrive::drive_upload(media = file.path("tidy", species_filename), overwrite = T,
                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
+
+# Export species table to Drive under the general dataset name
+googledrive::drive_upload(media = file.path("tidy", species_filename), overwrite = T,
+                          name = "harmonized_consumer_species.csv",
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
+
 }
 # End ----
