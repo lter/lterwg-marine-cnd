@@ -260,15 +260,15 @@ tidy_v0 %>%
 tidy_v1a <- tidy_v0 %>%
   dplyr::mutate(date_format = dplyr::case_when(
     raw_filename == "Annual_All_Species_Biomass_at_transect_20230814.csv" ~ "YYYY-MM-DD",
-    raw_filename == "cce_prpoos_all_stations_1_24_2024.csv" ~ "MM/DD/YYYY",
     raw_filename == "IV_EC_talitrid_population_v2.csv" ~ "NA", # only has year and month
     raw_filename == "LTE-TIDE-NektonFlumeDensity_v5_1.csv" ~ "YYYY-MM-DD",
     raw_filename == "LTE-TIDE-NektonFlumeIndividual_v6_3.csv" ~ "YYYY-MM-DD",
     raw_filename == "MCR_LTER_Annual_Fish_Survey_20230615.csv" ~ "YYYY-MM-DD",
-    raw_filename == "map_revised01242024.csv" ~ "NA", # only has year and month
     raw_filename == "MLPA_benthic_site_means.csv" ~ "NA", # only has year
     raw_filename == "MLPA_fish_biomass_density_transect_raw_v2.csv" ~ "NA", # only has year month day
     raw_filename == "VCR14232_2.csv" ~ "MM/DD/YY",
+    raw_filename == "cce_prpoos_all_stations_1_24_2024.csv" ~ "MM/DD/YYYY",
+    raw_filename == "map_revised01242024.csv" ~ "NA", # only has year and month
     raw_filename == "nga_combined_clean.csv" ~ "YYYY-MM-DDTHH:MM:SS-0800",
     # raw_filename == "" ~ "",
     T ~ "UNKNOWN"))
@@ -807,12 +807,15 @@ tidy_v3 <- tidy_v2h %>%
   dplyr::relocate(sp_code, .after = subsite_level3) %>%
   dplyr::relocate(scientific_name, .after = sp_code) %>%
   dplyr::relocate(species, .after = scientific_name) %>%
-  dplyr::relocate(count.num, .after = species) %>%
+  dplyr::relocate(count.ind, .after = species) %>%
+  dplyr::relocate(count.num, .after = count.ind) %>%
   dplyr::relocate(cover.percent, .after = count.num) %>%
-  dplyr::relocate(density.num_m, .after = cover.percent) %>%
+  dplyr::relocate(density.ind_m, .after = cover.percent) %>%
+  dplyr::relocate(density.num_m, .after = density.ind_m) %>%
   dplyr::relocate(density.num_m2, .after = density.num_m) %>%
   dplyr::relocate(density.num_m3, .after = density.num_m2) %>%
-  dplyr::relocate(drymass.g_m, .after = density.num_m3) %>% 
+  dplyr::relocate(dmperind.g_ind, .after = density.num_m3) %>%
+  dplyr::relocate(drymass.g_m, .after = dmperind.g_ind) %>% 
   dplyr::relocate(drymass.g_m2, .after = drymass.g_m) %>%  
   dplyr::relocate(drymass.mgC_m2, .after = drymass.g_m2) %>%  
   dplyr::relocate(excretion_egestion.ug_m3, .after = drymass.mgC_m2) %>%  
@@ -820,14 +823,14 @@ tidy_v3 <- tidy_v2h %>%
   dplyr::relocate(length.mm, .after = length.cm) %>%  
   dplyr::relocate(length.um, .after = length.mm) %>%  
   dplyr::relocate(sfdrymass.g_m2, .after = length.um) %>%  
-  dplyr::relocate(transect_area.m, .after = sfdrymass.g_m2) %>%  
+  dplyr::relocate(temp.c, .after = sfdrymass.g_m2) %>%  
+  dplyr::relocate(transect_area.m, .after = temp.c) %>%  
   dplyr::relocate(transect_area.m2, .after = transect_area.m) %>% 
   dplyr::relocate(wetmass.g, .after = transect_area.m2) %>%  
   dplyr::relocate(wetmass.g_m2, .after = wetmass.g) %>%
-  dplyr::relocate(wetmass.kg, .after = wetmass.g_m2) %>% 
-  dplyr::relocate(wetmass.kg_transect, .after = wetmass.kg) %>%  
+  dplyr::relocate(wetmass.kg_transect, .after = wetmass.g_m2) %>%  
   dplyr::relocate(wetmass.mg_m3, .after = wetmass.kg_transect) %>%  
-  dplyr::mutate(dplyr::across(.cols = c(year:day, count.num:wetmass.mg_m3), .fns = as.numeric))
+  dplyr::mutate(dplyr::across(.cols = c(year:day, count.ind:wetmass.mg_m3), .fns = as.numeric))
 
 # Check structure
 dplyr::glimpse(tidy_v3)
@@ -838,7 +841,7 @@ dplyr::glimpse(tidy_v3)
 
 tidy_v4 <- tidy_v3 %>%
   # Pivot the measurement columns to long format
-  tidyr::pivot_longer(cols = count.num:wetmass.mg_m3,
+  tidyr::pivot_longer(cols = count.ind:wetmass.mg_m3,
                names_to = "measurement_type",
                values_to = "measurement_value") %>%
   # Create a measurement_unit column from measurement_type
