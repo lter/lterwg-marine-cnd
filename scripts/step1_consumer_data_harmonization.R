@@ -624,112 +624,112 @@ tidy_v2c <- left_join(tidy_v2b, some_common_names_fix_v2, by = "common_name") %>
 unique(tidy_v2c$scientific_name)
 
 if (species_update_flag == 1){
-taxon_fix <- tidy_v2c %>%
-  # Grab all the species from our tidy object
-  dplyr::select(scientific_name) %>%
-  # Get a vector of all unique species
-  dplyr::distinct() %>%
-  # Make empty placeholder columns for our query results later
-  dplyr::mutate(kingdom_fix = NA,
-                phylum_fix = NA,
-                class_fix = NA,
-                order_fix = NA,
-                family_fix = NA,
-                genus_fix = NA,
-                species_fix = NA,
-                common_name_fix = NA) %>%
-  # Rename species column
-  dplyr::rename(scientific_name_fix = scientific_name) %>%
-  # Remove rows without any value in the scientific_name_fix column
-  dplyr::filter(!is.na(scientific_name_fix) & nchar(scientific_name_fix) != 0)
-
-
-# Check structure
-dplyr::glimpse(taxon_fix)
-
-# For each unique species...
-for (i in 1:length(taxon_fix$scientific_name_fix)){
+  taxon_fix <- tidy_v2c %>%
+    # Grab all the species from our tidy object
+    dplyr::select(scientific_name) %>%
+    # Get a vector of all unique species
+    dplyr::distinct() %>%
+    # Make empty placeholder columns for our query results later
+    dplyr::mutate(kingdom_fix = NA,
+                  phylum_fix = NA,
+                  class_fix = NA,
+                  order_fix = NA,
+                  family_fix = NA,
+                  genus_fix = NA,
+                  species_fix = NA,
+                  common_name_fix = NA) %>%
+    # Rename species column
+    dplyr::rename(scientific_name_fix = scientific_name) %>%
+    # Remove rows without any value in the scientific_name_fix column
+    dplyr::filter(!is.na(scientific_name_fix) & nchar(scientific_name_fix) != 0)
   
-    # Message procesing start
-    message("Completing taxonomic information for row ", i, " of ", length(taxon_fix$scientific_name_fix))
-      
-    # Query species for its taxonomic information
-    query_results <- taxize::tax_name(sci = taxon_fix[i,]$scientific_name_fix,
-                                      get = c("kingdom", "phylum", "class", "order", "family", "genus", "species"),
-                                      db = "itis",
-                                      accepted = T,
-                                      ask = F)
-      
-    # Query species for its common name 
-    common_name_results <- taxize::sci2comm(sci = taxon_fix[i,]$scientific_name_fix, 
-                                            db = "itis",
-                                            accepted = T,
-                                            ask = F)
-      
-    # Save the query results
-    # In case the query returns NULL, the paste0(..., collapse = "") will coerce NULL into an empty string
-    taxon_fix[i,]$kingdom_fix <- paste0(query_results$kingdom, collapse = "")
-    taxon_fix[i,]$phylum_fix <- paste0(query_results$phylum, collapse = "")
-    taxon_fix[i,]$class_fix <- paste0(query_results$class, collapse = "")
-    taxon_fix[i,]$order_fix <- paste0(query_results$order, collapse = "")
-    taxon_fix[i,]$family_fix <- paste0(query_results$family, collapse = "")
-    taxon_fix[i,]$genus_fix <- paste0(query_results$genus, collapse = "")
-    taxon_fix[i,]$species_fix <- paste0(query_results$species, collapse = "")
-    taxon_fix[i,]$common_name_fix <- paste0(common_name_results[[1]], collapse = "; ")
+  
+  # Check structure
+  dplyr::glimpse(taxon_fix)
+  
+  # For each unique species...
+  for (i in 1:length(taxon_fix$scientific_name_fix)){
     
-  }
-
-taxon_fix_v2 <- taxon_fix %>%
-  # Replace the string "NA" with actual NA values
-  dplyr::mutate(dplyr::across(.cols = dplyr::everything(), .fns = ~dplyr::na_if(., y = "NA"))) %>%
-  # Replace empty strings with NA values
-  dplyr::mutate(dplyr::across(.cols = dplyr::everything(), .fns = ~dplyr::na_if(., y = "")))
-   
-
-# Left join our current tidy dataframe with the table of taxonomic info
-tidy_v2d <- left_join(tidy_v2c, taxon_fix_v2, by = c("scientific_name" = "scientific_name_fix")) %>%
-  # Coalesce taxonomic columns together to fill in missing taxonomic info whenever possible
-  mutate(kingdom = dplyr::coalesce(kingdom, kingdom_fix),
-         phylum = dplyr::coalesce(phylum, phylum_fix),
-         class = dplyr::coalesce(class, class_fix),
-         order = dplyr::coalesce(order, order_fix),
-         family = dplyr::coalesce(family, family_fix),
-         genus = dplyr::coalesce(genus, genus_fix),
-         common_name = dplyr::coalesce(common_name, common_name_fix)) %>%
-  # If the species column is non-empty and contains punctuation indicating multiple species, put the species as the value in species_fix
-  dplyr::mutate(species_fix = ifelse(!is.na(species) & stringr::str_detect(species, "[\\;\\,\\/]"),
-                                     yes = species,
-                                     no = species_fix)) %>%
-  dplyr::mutate(species_fix = dplyr::case_when(
-    species_fix == "Sebastes atrovirens,carnatus,chrysomelas,caurinus" ~ "Sebastes atrovirens; Sebastes carnatus; Sebastes chrysomelas; Sebastes caurinus",
-    species_fix == "Sebastes serranoides,flavidus" ~ "Sebastes serranoides; Sebastes flavidus",
-    species_fix == "Sebastes chrysomelas/carnatus young of year" ~ "Sebastes chrysomelas; Sebastes carnatus",
-    species_fix == "Sebastes serranoides,flavidus,melanops" ~ "Sebastes serranoides; Sebastes flavidus; Sebastes melanops",
-    species_fix == "Sebastes carnatus, caurinus" ~ "Sebastes carnatus; Sebastes caurinus",
-    T ~ species_fix
-  )) %>%
-  # Drop the inferior species column (some strings had numbers in them or had "(cf)")
-  dplyr::select(-species) %>%
-  # Keep species_fix as the superior species column
-  dplyr::rename(species = species_fix) %>%
-  # Drop the rest of the columns from the taxon table
-  dplyr::select(-dplyr::contains("_fix")) %>%
-  # Make sure the first word is capitalized in scientific_name 
-  dplyr::mutate(scientific_name = stringr::str_to_sentence(scientific_name)) %>%
-  # Finally, if the species column is empty but the scientific_name column contains the full species name,
-  # fill in the species column with the value in scientific_name
-  dplyr::mutate(species = ifelse(is.na(species) & stringr::str_detect(scientific_name, "[:blank:]"),
-                                 yes = scientific_name,
-                                 no = species))
-
-# Check unique scientific names
-unique(tidy_v2d$scientific_name)
-
-# Check unique species names
-unique(tidy_v2d$species)
-
-# Check structure
-dplyr::glimpse(tidy_v2d)
+      # Message procesing start
+      message("Completing taxonomic information for row ", i, " of ", length(taxon_fix$scientific_name_fix))
+        
+      # Query species for its taxonomic information
+      query_results <- taxize::tax_name(sci = taxon_fix[i,]$scientific_name_fix,
+                                        get = c("kingdom", "phylum", "class", "order", "family", "genus", "species"),
+                                        db = "itis",
+                                        accepted = T,
+                                        ask = F)
+        
+      # Query species for its common name 
+      common_name_results <- taxize::sci2comm(sci = taxon_fix[i,]$scientific_name_fix, 
+                                              db = "itis",
+                                              accepted = T,
+                                              ask = F)
+        
+      # Save the query results
+      # In case the query returns NULL, the paste0(..., collapse = "") will coerce NULL into an empty string
+      taxon_fix[i,]$kingdom_fix <- paste0(query_results$kingdom, collapse = "")
+      taxon_fix[i,]$phylum_fix <- paste0(query_results$phylum, collapse = "")
+      taxon_fix[i,]$class_fix <- paste0(query_results$class, collapse = "")
+      taxon_fix[i,]$order_fix <- paste0(query_results$order, collapse = "")
+      taxon_fix[i,]$family_fix <- paste0(query_results$family, collapse = "")
+      taxon_fix[i,]$genus_fix <- paste0(query_results$genus, collapse = "")
+      taxon_fix[i,]$species_fix <- paste0(query_results$species, collapse = "")
+      taxon_fix[i,]$common_name_fix <- paste0(common_name_results[[1]], collapse = "; ")
+      
+    }
+  
+  taxon_fix_v2 <- taxon_fix %>%
+    # Replace the string "NA" with actual NA values
+    dplyr::mutate(dplyr::across(.cols = dplyr::everything(), .fns = ~dplyr::na_if(., y = "NA"))) %>%
+    # Replace empty strings with NA values
+    dplyr::mutate(dplyr::across(.cols = dplyr::everything(), .fns = ~dplyr::na_if(., y = "")))
+     
+  
+  # Left join our current tidy dataframe with the table of taxonomic info
+  tidy_v2d <- left_join(tidy_v2c, taxon_fix_v2, by = c("scientific_name" = "scientific_name_fix")) %>%
+    # Coalesce taxonomic columns together to fill in missing taxonomic info whenever possible
+    mutate(kingdom = dplyr::coalesce(kingdom, kingdom_fix),
+           phylum = dplyr::coalesce(phylum, phylum_fix),
+           class = dplyr::coalesce(class, class_fix),
+           order = dplyr::coalesce(order, order_fix),
+           family = dplyr::coalesce(family, family_fix),
+           genus = dplyr::coalesce(genus, genus_fix),
+           common_name = dplyr::coalesce(common_name, common_name_fix)) %>%
+    # If the species column is non-empty and contains punctuation indicating multiple species, put the species as the value in species_fix
+    dplyr::mutate(species_fix = ifelse(!is.na(species) & stringr::str_detect(species, "[\\;\\,\\/]"),
+                                       yes = species,
+                                       no = species_fix)) %>%
+    dplyr::mutate(species_fix = dplyr::case_when(
+      species_fix == "Sebastes atrovirens,carnatus,chrysomelas,caurinus" ~ "Sebastes atrovirens; Sebastes carnatus; Sebastes chrysomelas; Sebastes caurinus",
+      species_fix == "Sebastes serranoides,flavidus" ~ "Sebastes serranoides; Sebastes flavidus",
+      species_fix == "Sebastes chrysomelas/carnatus young of year" ~ "Sebastes chrysomelas; Sebastes carnatus",
+      species_fix == "Sebastes serranoides,flavidus,melanops" ~ "Sebastes serranoides; Sebastes flavidus; Sebastes melanops",
+      species_fix == "Sebastes carnatus, caurinus" ~ "Sebastes carnatus; Sebastes caurinus",
+      T ~ species_fix
+    )) %>%
+    # Drop the inferior species column (some strings had numbers in them or had "(cf)")
+    dplyr::select(-species) %>%
+    # Keep species_fix as the superior species column
+    dplyr::rename(species = species_fix) %>%
+    # Drop the rest of the columns from the taxon table
+    dplyr::select(-dplyr::contains("_fix")) %>%
+    # Make sure the first word is capitalized in scientific_name 
+    dplyr::mutate(scientific_name = stringr::str_to_sentence(scientific_name)) %>%
+    # Finally, if the species column is empty but the scientific_name column contains the full species name,
+    # fill in the species column with the value in scientific_name
+    dplyr::mutate(species = ifelse(is.na(species) & stringr::str_detect(scientific_name, "[:blank:]"),
+                                   yes = scientific_name,
+                                   no = species))
+  
+  # Check unique scientific names
+  unique(tidy_v2d$scientific_name)
+  
+  # Check unique species names
+  unique(tidy_v2d$species)
+  
+  # Check structure
+  dplyr::glimpse(tidy_v2d)
   
 } else if (species_update_flag == 0){
     tidy_v2d <- tidy_v2c
@@ -765,44 +765,44 @@ tidy_v2e <- tidy_v2d %>%
 dplyr::glimpse(tidy_v2e)
 
 if (species_update_flag == 1){
-species_table <- tidy_v2e %>%
-  # Select the appropriate columns to create our species table
-  dplyr::select(project, sp_code, scientific_name, common_name, kingdom, phylum, class, order, family, genus, species, taxa_group) %>%
-  # Get unique species
-  dplyr::distinct() %>%
-  # Sort by project and scientific_name
-  dplyr::arrange(project, scientific_name) %>%
-  # Remove rows that have NA values for both scientific_name and sp_code
-  dplyr::filter(!(is.na(scientific_name) & is.na(sp_code)))
+  species_table <- tidy_v2e %>%
+    # Select the appropriate columns to create our species table
+    dplyr::select(project, sp_code, scientific_name, common_name, kingdom, phylum, class, order, family, genus, species, taxa_group) %>%
+    # Get unique species
+    dplyr::distinct() %>%
+    # Sort by project and scientific_name
+    dplyr::arrange(project, scientific_name) %>%
+    # Remove rows that have NA values for both scientific_name and sp_code
+    dplyr::filter(!(is.na(scientific_name) & is.na(sp_code)))
 } else if (species_update_flag == 0){
-# Just in case, to make sure the species column is accurate,
-# join with the latest version of the harmonized consumer species table
-tidy_v2f <- tidy_v2e %>%
-  dplyr::mutate(species = ifelse(is.na(species) & stringr::str_detect(scientific_name, "[:blank:]"),
-                                 yes = scientific_name,
-                                 no = species)) %>%
-    # Join with the table
-    dplyr::left_join(harm_sp_codes, by = c("project", "sp_code", "scientific_name", "species")) %>%
-    mutate(common_name = coalesce(common_name.x, common_name.y)) %>%
-    select(-contains(".x"),-contains(".y"))
-  
+  # Just in case, to make sure the species column is accurate,
+  # join with the latest version of the harmonized consumer species table
+  tidy_v2f <- tidy_v2e %>%
+    dplyr::mutate(species = ifelse(is.na(species) & stringr::str_detect(scientific_name, "[:blank:]"),
+                                   yes = scientific_name,
+                                   no = species)) %>%
+      # Join with the table
+      dplyr::left_join(harm_sp_codes, by = c("project", "sp_code", "scientific_name", "species")) %>%
+      mutate(common_name = coalesce(common_name.x, common_name.y)) %>%
+      select(-contains(".x"),-contains(".y"))
+    
   # Make sure it's character(0)
   print(setdiff(tidy_v2f$common_name, harm_sp_codes$common_name))
-
-tidy_v2g <- tidy_v2f %>%
-    # Join with the table
-    dplyr::left_join(harm_sp_codes, by = c("project", "sp_code", "scientific_name", "common_name")) %>%
-    dplyr::mutate(species.y = dplyr::case_when(
-      species.x == "Sebastes atrovirens,carnatus,chrysomelas,caurinus" ~ "Sebastes atrovirens; Sebastes carnatus; Sebastes chrysomelas; Sebastes caurinus",
-      species.x == "Sebastes serranoides,flavidus" ~ "Sebastes serranoides; Sebastes flavidus",
-      species.x == "Sebastes chrysomelas/carnatus young of year" ~ "Sebastes chrysomelas; Sebastes carnatus",
-      species.x == "Sebastes serranoides,flavidus,melanops" ~ "Sebastes serranoides; Sebastes flavidus; Sebastes melanops",
-      species.x == "Sebastes carnatus, caurinus" ~ "Sebastes carnatus; Sebastes caurinus",
-      T ~ species.y
-    )) %>%
-    dplyr::select(-species.x) %>%
-    dplyr::rename(species = species.y)
   
+  tidy_v2g <- tidy_v2f %>%
+      # Join with the table
+      dplyr::left_join(harm_sp_codes, by = c("project", "sp_code", "scientific_name", "common_name")) %>%
+      dplyr::mutate(species.y = dplyr::case_when(
+        species.x == "Sebastes atrovirens,carnatus,chrysomelas,caurinus" ~ "Sebastes atrovirens; Sebastes carnatus; Sebastes chrysomelas; Sebastes caurinus",
+        species.x == "Sebastes serranoides,flavidus" ~ "Sebastes serranoides; Sebastes flavidus",
+        species.x == "Sebastes chrysomelas/carnatus young of year" ~ "Sebastes chrysomelas; Sebastes carnatus",
+        species.x == "Sebastes serranoides,flavidus,melanops" ~ "Sebastes serranoides; Sebastes flavidus; Sebastes melanops",
+        species.x == "Sebastes carnatus, caurinus" ~ "Sebastes carnatus; Sebastes caurinus",
+        T ~ species.y
+      )) %>%
+      dplyr::select(-species.x) %>%
+      dplyr::rename(species = species.y)
+    
   # Make sure it's character(0)
   print(setdiff(tidy_v2g$species, harm_sp_codes$species))
   print(setdiff(harm_sp_codes$species, tidy_v2g$species))
@@ -911,20 +911,20 @@ googledrive::drive_upload(media = file.path("tidy", tidy_filename), overwrite = 
                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
 
 if (species_update_flag == 1){
-# Generate a date-stamped file name for the species table
-( species_filename <- paste0("harmonized_consumer_species_", date, ".csv") )
-
-# Also export species table
-write.csv(x = species_table, file = file.path("tidy", species_filename), na = '.', row.names = F)
-
-# Export species table to Drive
-googledrive::drive_upload(media = file.path("tidy", species_filename), overwrite = T,
-                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
-
-# Export species table to Drive under the general dataset name
-googledrive::drive_upload(media = file.path("tidy", species_filename), overwrite = T,
-                          name = "harmonized_consumer_species.csv",
-                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
+  # Generate a date-stamped file name for the species table
+  ( species_filename <- paste0("harmonized_consumer_species_", date, ".csv") )
+  
+  # Also export species table
+  write.csv(x = species_table, file = file.path("tidy", species_filename), na = '.', row.names = F)
+  
+  # Export species table to Drive
+  googledrive::drive_upload(media = file.path("tidy", species_filename), overwrite = T,
+                            path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
+  
+  # Export species table to Drive under the general dataset name
+  googledrive::drive_upload(media = file.path("tidy", species_filename), overwrite = T,
+                            name = "harmonized_consumer_species.csv",
+                            path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
 
 }
 # End ----
