@@ -17,7 +17,7 @@
 
 # Does the species table need to be updated? 
 # Put 0 for no, 1 for yes
-species_update_flag <- 0
+species_update_flag <- 1
 
 ## ------------------------------------------ ##
 #            Housekeeping -----
@@ -40,10 +40,10 @@ dir.create(path = file.path("tier0", "raw_data", "consumer"), showWarnings = F)
 # For example, here I'm pulling all the SBC consumer data from Google Drive
 raw_SBC_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1ycKkpiURLVclobAdCmZx2s_ewcaFAV9Y")) %>%
   dplyr::filter(name %in% c("Annual_All_Species_Biomass_at_transect_20230814.csv",
-                            "IV_EC_talitrid_population.csv"))
+                            "IV_EC_talitrid_population_v2.csv"))
 
 raw_FCE_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1BSQSXEbjgkSBJVN0p9CxhjVmfiv82U1t")) %>%
-  dplyr::filter(name %in% c("MAP_years1thru19.csv"))
+  dplyr::filter(name %in% c("map_revised01242024.csv"))
 
 raw_VCR_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1PoVGjZoE_Dlr93dt45LRp4P2Jjuez94l")) %>%
   dplyr::filter(name %in% c("VCR14232_2.csv"))
@@ -53,7 +53,7 @@ raw_coastal_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.googl
                             "MLPA_benthic_site_means.csv"))
 
 raw_MCR_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1bMVr5VSXD2azlwD9DioeMwy4RR94uqF5")) %>%
-  dplyr::filter(name %in% c("MCR_Fish_Biomass_v3.csv"))
+  dplyr::filter(name %in% c("MCR_LTER_Annual_Fish_Survey_20230615.csv"))
 
 raw_PIE_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1yAoT0RtkRf2gxtBl3MXpi6cuGji5kuEE")) %>%
   dplyr::filter(name %in% c("LTE-TIDE-NektonFlumeDensity_v5_1.csv",
@@ -261,11 +261,11 @@ tidy_v1a <- tidy_v0 %>%
   dplyr::mutate(date_format = dplyr::case_when(
     raw_filename == "Annual_All_Species_Biomass_at_transect_20230814.csv" ~ "YYYY-MM-DD",
     raw_filename == "cce_prpoos_all_stations_1_24_2024.csv" ~ "MM/DD/YYYY",
-    raw_filename == "IV_EC_talitrid_population.csv" ~ "MM/DD/YYYY",
+    raw_filename == "IV_EC_talitrid_population_v2.csv" ~ "NA", # only has year and month
     raw_filename == "LTE-TIDE-NektonFlumeDensity_v5_1.csv" ~ "YYYY-MM-DD",
     raw_filename == "LTE-TIDE-NektonFlumeIndividual_v6_3.csv" ~ "YYYY-MM-DD",
-    raw_filename == "MAP_years1thru19.csv" ~ "MM/DD/YY",
-    raw_filename == "MCR_Fish_Biomass_v3.csv" ~ "NA", # only has year month day
+    raw_filename == "MCR_LTER_Annual_Fish_Survey_20230615.csv" ~ "YYYY-MM-DD",
+    raw_filename == "map_revised01242024.csv" ~ "NA", # only has year and month
     raw_filename == "MLPA_benthic_site_means.csv" ~ "NA", # only has year
     raw_filename == "MLPA_fish_biomass_density_transect_raw_v2.csv" ~ "NA", # only has year month day
     raw_filename == "VCR14232_2.csv" ~ "MM/DD/YY",
@@ -807,8 +807,7 @@ tidy_v3 <- tidy_v2h %>%
   dplyr::relocate(sp_code, .after = subsite_level3) %>%
   dplyr::relocate(scientific_name, .after = sp_code) %>%
   dplyr::relocate(species, .after = scientific_name) %>%
-  dplyr::relocate(coarse_grouping, .after = species) %>%
-  dplyr::relocate(count.num, .after = transect_area.m2) %>%
+  dplyr::relocate(count.num, .after = species) %>%
   dplyr::relocate(cover.percent, .after = count.num) %>%
   dplyr::relocate(density.num_m, .after = cover.percent) %>%
   dplyr::relocate(density.num_m2, .after = density.num_m) %>%
@@ -820,7 +819,8 @@ tidy_v3 <- tidy_v2h %>%
   dplyr::relocate(length.cm, .after = excretion_egestion.ug_m3) %>%  
   dplyr::relocate(length.mm, .after = length.cm) %>%  
   dplyr::relocate(length.um, .after = length.mm) %>%  
-  dplyr::relocate(transect_area.m, .after = length.um) %>%  
+  dplyr::relocate(sfdrymass.g_m2, .after = length.um) %>%  
+  dplyr::relocate(transect_area.m, .after = sfdrymass.g_m2) %>%  
   dplyr::relocate(transect_area.m2, .after = transect_area.m) %>% 
   dplyr::relocate(wetmass.g, .after = transect_area.m2) %>%  
   dplyr::relocate(wetmass.g_m2, .after = wetmass.g) %>%
