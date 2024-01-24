@@ -202,7 +202,7 @@ harmonized_clean = rbind(data_original,coastalca_ready, sbc_ready)
 
 # write it back to the google drive
 # Export locally
-tidy_filename <- "harmonized_consumer_clean.csv"
+tidy_filename <- "harmonized_consumer_ready_for_excretion.csv"
 
 write.csv(harmonized_clean, file = file.path("tier1", tidy_filename), na = '.', row.names = F)
 
