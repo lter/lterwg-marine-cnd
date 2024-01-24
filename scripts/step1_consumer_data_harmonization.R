@@ -774,6 +774,8 @@ if (species_update_flag == 1){
     dplyr::arrange(project, scientific_name) %>%
     # Remove rows that have NA values for both scientific_name and sp_code
     dplyr::filter(!(is.na(scientific_name) & is.na(sp_code)))
+  
+  tidy_v2g <- tidy_v2e
 } else if (species_update_flag == 0){
   # Just in case, to make sure the species column is accurate,
   # join with the latest version of the harmonized consumer species table
