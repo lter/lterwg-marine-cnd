@@ -60,8 +60,7 @@ raw_PIE_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.co
                             "LTE-TIDE-NektonFlumeIndividual_v6_3.csv"))
 
 raw_CCE_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/19INhcRd1xBKgDVd1G5W1B3QI4mlBr587")) %>%
-  dplyr::filter(name %in% c("CCE_PROPOOS_net_data_individual_categories_line80_90_12_08_2023.csv",
-                            "sumofallbiomass.csv"))
+  dplyr::filter(name %in% c("cce_prpoos_all_stations_1_24_2024.csv"))
 
 raw_NGA_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1j8QGQR6_vD1SQnFwVnaAy0W-1c_owCRv")) %>%
   dplyr::filter(name %in% c("nga_combined_clean.csv"))
@@ -140,13 +139,10 @@ for (i in 1:length(raw_files)){
     dplyr::filter(!is.na(standardized_column_name) & nchar(standardized_column_name) != 0)
   
   # Special cases for reading in certain csv files 
-  if (raw_file_name == "sumofallbiomass.csv") {
-    raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", "consumer", raw_file_name), na.strings = ".", skip = 2, check.names = F)
-  } 
-  else if (raw_file_name == "CCE_PROPOOS_net_data_individual_categories_line80_90_12_08_2023.csv") {
+  if (raw_file_name == "LTE-TIDE-NektonFlumeDensity_v5_1.csv") {
     raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", "consumer", raw_file_name), na.strings = ".", check.names = F)
   } 
-  else if (raw_file_name == "LTE-TIDE-NektonFlumeDensity_v5_1.csv") {
+  else if (raw_file_name == "cce_prpoos_all_stations_1_24_2024.csv") {
     raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", "consumer", raw_file_name), na.strings = ".", check.names = F)
   } 
   else if (raw_file_name == "LTE-TIDE-NektonFlumeIndividual_v6_3.csv") {
@@ -237,34 +233,6 @@ MLPA_fixed <- full_join(MLPA_p1, MLPA_p2)
 # Replace the old, wide dataframe with the new, long version
 df_list[["MLPA_benthic_site_means.csv"]] <- MLPA_fixed
 
-# CCE_PROPOOS_net_data_individual_categories_line80_90_12_08_2023.csv -----------------------
-
-CCE_PROPOOS_p1 <- df_list[["CCE_PROPOOS_net_data_individual_categories_line80_90_12_08_2023.csv"]] %>%
-  # Select all relevant columns
-  dplyr::select(project, habitat, raw_filename, row_num, site, date, dplyr::starts_with("wide_dens")) %>%
-  # Pivot all "wide_dens" columns to long format
-  tidyr::pivot_longer(cols = dplyr::starts_with("wide_dens"), names_to = "scientific_name", values_to = "density.num_m2") %>%
-  # Extract the scientific name
-  dplyr::mutate(scientific_name = stringr::str_extract(scientific_name, "(?<=wide_dens_)[a-z]+_*[a-z]*(?=.num_m2)")) %>%
-  # Replace the underscore in the scientific name with a space
-  dplyr::mutate(scientific_name = stringr::str_replace(scientific_name, "_", " "))
-
-CCE_PROPOOS_p2 <- df_list[["CCE_PROPOOS_net_data_individual_categories_line80_90_12_08_2023.csv"]] %>%
-  # Select all relevant columns
-  dplyr::select(project, habitat, raw_filename, row_num, site, date, dplyr::starts_with("wide_dry_biomass")) %>%
-  # Pivot all "wide_dry_biomass" columns to long format
-  tidyr::pivot_longer(cols = dplyr::starts_with("wide_dry_biomass"), names_to = "scientific_name", values_to = "drymass.mgC_m2") %>%
-  # Extract the scientific name
-  dplyr::mutate(scientific_name = stringr::str_extract(scientific_name, "(?<=wide_dry_biomass_)[a-z]+_*[a-z]*(?=.mgC_m2)")) %>%
-  # Replace the underscore in the scientific name with a space
-  dplyr::mutate(scientific_name = stringr::str_replace(scientific_name, "_", " "))
-
-# Full join both parts 
-CCE_PROPOOS_fixed <- full_join(CCE_PROPOOS_p1, CCE_PROPOOS_p2)
-
-# Replace the old, wide dataframe with the new, long version
-df_list[["CCE_PROPOOS_net_data_individual_categories_line80_90_12_08_2023.csv"]] <- CCE_PROPOOS_fixed
-
 # Unlist the list we generated from above
 tidy_v0 <- df_list %>%
   purrr::list_rbind(x = .)
@@ -292,7 +260,7 @@ tidy_v0 %>%
 tidy_v1a <- tidy_v0 %>%
   dplyr::mutate(date_format = dplyr::case_when(
     raw_filename == "Annual_All_Species_Biomass_at_transect_20230814.csv" ~ "YYYY-MM-DD",
-    raw_filename == "CCE_PROPOOS_net_data_individual_categories_line80_90_12_08_2023.csv" ~ "MM/DD/YYYY",
+    raw_filename == "cce_prpoos_all_stations_1_24_2024.csv" ~ "MM/DD/YYYY",
     raw_filename == "IV_EC_talitrid_population.csv" ~ "MM/DD/YYYY",
     raw_filename == "LTE-TIDE-NektonFlumeDensity_v5_1.csv" ~ "YYYY-MM-DD",
     raw_filename == "LTE-TIDE-NektonFlumeIndividual_v6_3.csv" ~ "YYYY-MM-DD",
@@ -301,7 +269,6 @@ tidy_v1a <- tidy_v0 %>%
     raw_filename == "MLPA_benthic_site_means.csv" ~ "NA", # only has year
     raw_filename == "MLPA_fish_biomass_density_transect_raw_v2.csv" ~ "NA", # only has year month day
     raw_filename == "VCR14232_2.csv" ~ "MM/DD/YY",
-    raw_filename == "sumofallbiomass.csv" ~ "YYYY-MM-DD",
     raw_filename == "nga_combined_clean.csv" ~ "YYYY-MM-DDTHH:MM:SS-0800",
     # raw_filename == "" ~ "",
     T ~ "UNKNOWN"))
@@ -462,6 +429,10 @@ tidy_v2b <- tidy_v2a %>%
   dplyr::mutate(scientific_name = stringr::str_replace(scientific_name, " \\(cf\\)| sp. [:digit:]*|small | others$", "")) %>%
   # Remove any instance of trailing space or trailing space + a number
   dplyr::mutate(scientific_name = stringr::str_replace(scientific_name, "[:blank:]$|[:blank:][:digit:]?$", "")) %>%
+  # Remove any instance of leading space
+  dplyr::mutate(scientific_name = stringr::str_replace(scientific_name, "^[:blank:]", "")) %>%
+  # Remove " like" or " larvae"
+  dplyr::mutate(scientific_name = stringr::str_replace(scientific_name, " larvae$| like$| others$", "")) %>%
   # Doing more custom fixes in scientific_name:
   dplyr::mutate(scientific_name = dplyr::case_when(
     scientific_name == "No megalorchestia" ~ "Megalorchestia",
@@ -508,6 +479,9 @@ tidy_v2b <- tidy_v2a %>%
     scientific_name == "crustose coralline algae" ~ "Corallinales",
     scientific_name == "Encrusting Bryozoa" ~ "Bryozoa",
     scientific_name == "ostracods" ~ "Ostracoda",
+    scientific_name == "eggs" ~ NA,
+    scientific_name == "multiples" ~ NA,
+    scientific_name == "others" ~ NA,
     T ~ scientific_name
   )) 
 
