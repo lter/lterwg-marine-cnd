@@ -107,7 +107,11 @@ result_full_dm <- left_join(result_full, dm_coeff, by = "class")
 glimpse(result_full_dm)
 
 fce_all_dm <- result_full_dm |> 
-  mutate(drymass_g = weight_g*dm_coeff)
+  mutate(dm_g_ind = weight_g*dm_coeff,
+         density = catchnumber/distance) |> 
+  rename(count = catchnumber)
+
+glimpse(fce_all_dm)
 
 ### calculate n supply
 
@@ -198,16 +202,16 @@ glimpse(temp)
 
 cons1 <- fce_all_dm
 
-cons_n1 <- left_join(cons_n1, temp, by = "hydroyear")
-glimpse(cons_n1)
-unique(cons_n1$avgtemp.y)
+cons1 <- left_join(cons1, temp, by = "hydroyear")
+glimpse(cons1)
+unique(cons1$avgtemp.y)
 
-cons_n1 <- cons_n1 |> 
+cons1 <- cons1 |> 
   rename(avgtemp = avgtemp.y)
-cons_n1$avgtemp[is.na(cons_n1$avgtemp)] <- 23.6
-unique(cons_n1$avgtemp)
+cons1$avgtemp[is.na(cons1$avgtemp)] <- 23.6
+unique(cons1$avgtemp)
 
-cons_n1 <- cons1 %>% 
+cons1 <- cons1 %>% 
   mutate(N_vert_coef = if_else(phylum == "Chordata", 0.7804, 0),
          N_diet_coef = if_else(diet_cat == "algae_detritus", -0.0389,
                                if_else(diet_cat == "invert", -0.2013,
@@ -219,9 +223,9 @@ cons_n1 <- cons1 %>%
          Nexc_log10 = 1.461 + 0.6840*(log10(drymass_g)) + 0.0246*avgtemp + N_diet_coef + N_vert_coef,
          Nexc_log10 = if_else(Nexc_log10 > 0, Nexc_log10, 0))
 
-glimpse(cons_n1)
+glimpse(cons1)
 
-n_cpue1 <- cons_n1 |> 
+n_cpue1 <- cons1 |> 
   group_by(common_name, hydroyear) |> 
   mutate(sum_n = sum(Nexc_log10),
          sum_dist = sum(distance),
@@ -286,7 +290,7 @@ cons2 <- fce_all_dm |>
   select(-avgtemp) |> 
   mutate(avgtemp = 53.6)
 
-cons_n2 <- cons2 %>% 
+cons2 <- cons2 %>% 
   mutate(N_vert_coef = if_else(phylum == "Chordata", 0.7804, 0),
          N_diet_coef = if_else(diet_cat == "algae_detritus", -0.0389,
                                if_else(diet_cat == "invert", -0.2013,
@@ -298,9 +302,9 @@ cons_n2 <- cons2 %>%
          Nexc_log10 = 1.461 + 0.6840*(log10(drymass_g)) + 0.0246*avgtemp + N_diet_coef + N_vert_coef,
          Nexc_log10 = if_else(Nexc_log10 > 0, Nexc_log10, 0))
 
-glimpse(cons_n2)
+glimpse(cons2)
 
-n_cpue2 <- cons_n2 |> 
+n_cpue2 <- cons2 |> 
   group_by(common_name, hydroyear) |> 
   mutate(sum_n = sum(Nexc_log10),
          sum_dist = sum(distance),
@@ -332,7 +336,7 @@ ggplot(n_cpue_trophic2, aes(fill = diet_cat, x=hydroyear, y = as.numeric(n_supp_
         panel.grid.minor = element_blank(),legend.position = "top") +
   ggtitle("Calculate w/ Annual Average Temperature (53.6 C)")
 
-# ggsave(filename='plots/fce_mean_annual_nsupply_01242024_annualavgtemp_inflated.png',
+# ggsave(filename='plots/fce_mean_annual_nsupply_01242024_annualavgtemp_tempinflated.png',
 #        plot = last_plot(),
 #        scale = 2.5,
 #        width = 7,
@@ -351,7 +355,87 @@ ggplot(n_cpue_trophic2, aes(fill = diet_cat, x=hydroyear, y = as.numeric(n_supp_
         panel.grid.minor = element_blank(),legend.position = "top") +
   ggtitle("Calculate w/ Annual Average Temperature (53.6 C)")
 
-# ggsave(filename='plots/fce_percent_annual_nsupply_01242024_annualavgtemp_inflated.png',
+# ggsave(filename='plots/fce_percent_annual_nsupply_01242024_annualavgtemp_tempinflated.png',
+#        plot = last_plot(),
+#        scale = 2.5,
+#        width = 7,
+#        height = 5,
+#        units = c("cm"),
+#        dpi = 300)
+
+# inflate biomass, not temperature
+### calculate n supply
+
+cons3 <- fce_all_dm |> 
+  mutate(drymass_g = drymass_g*0.44+drymass_g,
+         avgtemp = 23.6)
+
+cons3 <- cons3 %>% 
+  mutate(N_vert_coef = if_else(phylum == "Chordata", 0.7804, 0),
+         N_diet_coef = if_else(diet_cat == "algae_detritus", -0.0389,
+                               if_else(diet_cat == "invert", -0.2013,
+                                       if_else(diet_cat == "fish", -0.0537,
+                                               if_else(diet_cat == "fish_invert", -0.1732, 
+                                                       if_else(diet_cat == "algae_invert", 0,
+                                                               NA))))),
+         Nexc_log10 = 1.461 + 0.6840*(log10(drymass_g)) + 0.0246*avgtemp + N_diet_coef + N_vert_coef,
+         Nexc_log10 = 1.461 + 0.6840*(log10(drymass_g)) + 0.0246*avgtemp + N_diet_coef + N_vert_coef,
+         Nexc_log10 = if_else(Nexc_log10 > 0, Nexc_log10, 0))
+
+glimpse(cons3)
+
+n_cpue3 <- cons3 |> 
+  group_by(common_name, hydroyear) |> 
+  mutate(sum_n = sum(Nexc_log10),
+         sum_dist = sum(distance),
+         n_cpue_100 = (sum_n/sum_dist)*100,
+         n_cpue_m = (n_cpue_100/100))
+
+n_cpue_trophic3 <- n_cpue3 |> 
+  group_by(hydroyear, diet_cat) |> 
+  summarise(n_supp_m = sum(n_cpue_m)) |> 
+  filter(complete.cases(diet_cat,
+                        hydroyear)) |> 
+  filter(hydroyear != "2021-2019" & hydroyear != "2021-2021" & hydroyear != "2021-2020")
+
+glimpse(n_cpue_trophic3)
+
+n_cpue_total3 <- n_cpue_trophic3 |> 
+  group_by(hydroyear) |> 
+  summarise(n_supp_m = sum(n_supp_m))
+
+### produce nitrogen figures
+ggplot(n_cpue_trophic3, aes(fill = diet_cat, x=hydroyear, y = as.numeric(n_supp_m))) + 
+  geom_bar(position = "stack", stat = "identity") +
+  labs(x = "Hydrologic Year", 
+       y = "Mean Annual Nitrogen Supply Rate (log10(μg/m/h))") +
+  theme(panel.grid.major = element_blank(),
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"),
+        axis.text.x = element_text(angle = 45, hjust = 1., vjust = 1.1),axis.text = element_text(color="black"),
+        panel.grid.minor = element_blank(),legend.position = "top") +
+  ggtitle("Calculate w/ Global Average Temperature (23.6 C)")
+
+# ggsave(filename='plots/fce_mean_annual_nsupply_01242024_globalavgtemp_biomassinflated.png',
+#        plot = last_plot(),
+#        scale = 2.5,
+#        width = 7,
+#        height = 5,
+#        units = c("cm"),
+#        dpi = 300)
+
+ggplot(n_cpue_trophic3, aes(fill = diet_cat, x=hydroyear, y = as.numeric(n_supp_m))) + 
+  geom_bar(position = "fill", stat = "identity") +
+  labs(x = "Hydrologic Year", 
+       y = "Percent Annual Nitrogen Supply Rate (log10(μg/m/h))") +
+  theme(panel.grid.major = element_blank(),
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"),
+        axis.text.x = element_text(angle = 45, hjust = 1., vjust = 1.1),axis.text = element_text(color="black"),
+        panel.grid.minor = element_blank(),legend.position = "top") +
+  ggtitle("Calculate w/ Global Average Temperature (23.6 C)")
+
+# ggsave(filename='plots/fce_percent_annual_nsupply_01242024_globalavgtemp.png',
 #        plot = last_plot(),
 #        scale = 2.5,
 #        width = 7,
@@ -360,8 +444,123 @@ ggplot(n_cpue_trophic2, aes(fill = diet_cat, x=hydroyear, y = as.numeric(n_supp_
 #        dpi = 300)
 
 
-### modeling excerise - mmmmmm
+# deflate biomass, not temperature
+### calculate n supply
 
-cons3 <- fce_all_dm |> 
-  mutate(drymass_g)
+cons4 <- fce_all_dm |> 
+  mutate(drymass_g = drymass_g-(drymass_g*0.44),
+         avgtemp = 23.6)
 
+cons4 <- cons4 %>% 
+  mutate(N_vert_coef = if_else(phylum == "Chordata", 0.7804, 0),
+         N_diet_coef = if_else(diet_cat == "algae_detritus", -0.0389,
+                               if_else(diet_cat == "invert", -0.2013,
+                                       if_else(diet_cat == "fish", -0.0537,
+                                               if_else(diet_cat == "fish_invert", -0.1732, 
+                                                       if_else(diet_cat == "algae_invert", 0,
+                                                               NA))))),
+         Nexc_log10 = 1.461 + 0.6840*(log10(drymass_g)) + 0.0246*avgtemp + N_diet_coef + N_vert_coef,
+         Nexc_log10 = 1.461 + 0.6840*(log10(drymass_g)) + 0.0246*avgtemp + N_diet_coef + N_vert_coef,
+         Nexc_log10 = if_else(Nexc_log10 > 0, Nexc_log10, 0))
+
+glimpse(cons4)
+
+n_cpue4 <- cons4 |> 
+  group_by(common_name, hydroyear) |> 
+  mutate(sum_n = sum(Nexc_log10),
+         sum_dist = sum(distance),
+         n_cpue_100 = (sum_n/sum_dist)*100,
+         n_cpue_m = (n_cpue_100/100))
+
+n_cpue_trophic4 <- n_cpue4 |> 
+  group_by(hydroyear, diet_cat) |> 
+  summarise(n_supp_m = sum(n_cpue_m)) |> 
+  filter(complete.cases(diet_cat,
+                        hydroyear)) |> 
+  filter(hydroyear != "2021-2019" & hydroyear != "2021-2021" & hydroyear != "2021-2020")
+
+glimpse(n_cpue_trophic4)
+
+n_cpue_total4 <- n_cpue_trophic4 |> 
+  group_by(hydroyear) |> 
+  summarise(n_supp_m = sum(n_supp_m))
+
+### produce nitrogen figures
+ggplot(n_cpue_trophic4, aes(fill = diet_cat, x=hydroyear, y = as.numeric(n_supp_m))) + 
+  geom_bar(position = "stack", stat = "identity") +
+  labs(x = "Hydrologic Year", 
+       y = "Mean Annual Nitrogen Supply Rate (log10(μg/m/h))") +
+  theme(panel.grid.major = element_blank(),
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"),
+        axis.text.x = element_text(angle = 45, hjust = 1., vjust = 1.1),axis.text = element_text(color="black"),
+        panel.grid.minor = element_blank(),legend.position = "top") +
+  ggtitle("Calculate w/ Global Average Temperature (23.6 C)")
+
+# ggsave(filename='plots/fce_mean_annual_nsupply_01242024_globalavgtemp_biomassdeflated.png',
+#        plot = last_plot(),
+#        scale = 2.5,
+#        width = 7,
+#        height = 5,
+#        units = c("cm"),
+#        dpi = 300)
+
+# deflate temp, not biomass
+### calculate n supply
+
+cons5 <- fce_all_dm |> 
+  mutate(avgtemp= 3.6)
+
+cons5 <- cons5 %>% 
+  mutate(N_vert_coef = if_else(phylum == "Chordata", 0.7804, 0),
+         N_diet_coef = if_else(diet_cat == "algae_detritus", -0.0389,
+                               if_else(diet_cat == "invert", -0.2013,
+                                       if_else(diet_cat == "fish", -0.0537,
+                                               if_else(diet_cat == "fish_invert", -0.1732, 
+                                                       if_else(diet_cat == "algae_invert", 0,
+                                                               NA))))),
+         Nexc_log10 = 1.461 + 0.6840*(log10(drymass_g)) + 0.0246*avgtemp + N_diet_coef + N_vert_coef,
+         Nexc_log10 = 1.461 + 0.6840*(log10(drymass_g)) + 0.0246*avgtemp + N_diet_coef + N_vert_coef,
+         Nexc_log10 = if_else(Nexc_log10 > 0, Nexc_log10, 0))
+
+glimpse(cons5)
+
+n_cpue5 <- cons5 |> 
+  group_by(common_name, hydroyear) |> 
+  mutate(sum_n = sum(Nexc_log10),
+         sum_dist = sum(distance),
+         n_cpue_100 = (sum_n/sum_dist)*100,
+         n_cpue_m = (n_cpue_100/100))
+
+n_cpue_trophic5 <- n_cpue5 |> 
+  group_by(hydroyear, diet_cat) |> 
+  summarise(n_supp_m = sum(n_cpue_m)) |> 
+  filter(complete.cases(diet_cat,
+                        hydroyear)) |> 
+  filter(hydroyear != "2021-2019" & hydroyear != "2021-2021" & hydroyear != "2021-2020")
+
+glimpse(n_cpue_trophic5)
+
+n_cpue_total5 <- n_cpue_trophic5 |> 
+  group_by(hydroyear) |> 
+  summarise(n_supp_m = sum(n_supp_m))
+
+### produce nitrogen figures
+ggplot(n_cpue_trophic5, aes(fill = diet_cat, x=hydroyear, y = as.numeric(n_supp_m))) + 
+  geom_bar(position = "stack", stat = "identity") +
+  labs(x = "Hydrologic Year", 
+       y = "Mean Annual Nitrogen Supply Rate (log10(μg/m/h))") +
+  theme(panel.grid.major = element_blank(),
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"),
+        axis.text.x = element_text(angle = 45, hjust = 1., vjust = 1.1),axis.text = element_text(color="black"),
+        panel.grid.minor = element_blank(),legend.position = "top") +
+  ggtitle("Calculate w/ Global Average Temperature (3.6 C)")
+
+ggsave(filename='plots/fce_mean_annual_nsupply_01242024_globalavgtemp_tempdeflated.png',
+       plot = last_plot(),
+       scale = 2.5,
+       width = 7,
+       height = 5,
+       units = c("cm"),
+       dpi = 300)
