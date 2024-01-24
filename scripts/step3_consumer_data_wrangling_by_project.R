@@ -1,7 +1,7 @@
 ## ------------------------------------------ ##
 #       Marine CND -- Data wrangling after the Harmonization is done
 ## ------------------------------------------ ##
-# Script author(s): Li kui
+# Script author(s): Li Kui
 
 # Sites: SBC, CCE, Coastal CA, FCE, MCR, NGA, PIE, VCR, 
 
@@ -63,7 +63,7 @@ rm(list = ls())
 
 #### read data
 # read in the harmonized data and start the wrangling, by project
-dt <- read.csv(file.path("tier1", "harmonized_consumer.csv"),na=c(""),stringsAsFactors = F,na=".") 
+dt <- read.csv(file.path("tier1", "harmonized_consumer.csv"),stringsAsFactors = F,na.strings =".") 
 
 species_list <- readxl::read_excel(path = file.path("tier1", "CNDWG_harmonized_consumer_species.xlsx"),na=".")
 
@@ -83,7 +83,7 @@ pisco_site <- readxl::read_excel(path = file.path("other", "master_site_table.xl
 
 # filter out the site we need
 pisco_site1 <- pisco_site %>% 
-  dplyr::select(site,Include_Exclude)
+  dplyr::select(site,Include_Exclude, mlpa_region)
 
 #test to see if the sites are matched, yes, they are mached and we can start the filtering
 # peace<-dt %>%
@@ -96,14 +96,23 @@ pisco_site1 <- pisco_site %>%
 site_choose <- pisco_site1 %>% 
   dplyr::filter(Include_Exclude=="Include") %>%
   dplyr::select(site) %>%
-  mutate(project="CoastalCA", keep="y")
+  mutate(project="CoastalCA", keep="y") 
 
 # filter to keep the site we need
-dt_coastalca <- dt %>% 
+coastalca_dt <- dt %>% 
   filter(project=="CoastalCA") %>%
   left_join(site_choose, by=c("site","project")) %>%
   filter(!(project=="CoastalCA"&is.na(keep))) %>%
-  dplyr::select(-keep)
+  dplyr::select(-keep) %>%
+  # remove the benthic survey because no biomass in the benthic survey
+  filter(!(project=="CoastalCA"&raw_filename=="MLPA_benthic_site_means.csv")) 
+
+# calculate the biomass density for coastal CA
+coastalca_dt1 <_ coastalca_dt %>%
+  dplyr:: select(-measurement_unit) %>%
+  pivot_wider(names_from = measurement_type, values_from = measurement_value) %>%
+  mutate(biomass_density=biomass/area) %>%
+  dplyr:: select(-biomass,-area) 
 
 #### COASTAL CA end
 
@@ -119,6 +128,8 @@ sbc_dt <- dt %>%
   dplyr::filter(project=="SBC") %>%
   dplyr::filter(sp_code %in% sbc_species$sp_code|is.na(sp_code))
 
-
+sbc_dt1 <- sbc_dt %>%
+  dplyr:: select(-measurement_unit) %>%
+  pivot_wider(names_from = measurement_type, values_from = measurement_value)
 
 #### SBC end

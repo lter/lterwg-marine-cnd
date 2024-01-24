@@ -14,7 +14,7 @@ librarian::shelf(readr, tidyverse, googledrive, readxl,
                  ggplot2)
 
 # cons <- read_csv("data/harmonized_consumer_20240122.csv")
-glimpse(cons)
+# glimpse(cons)
 
 ###########################################################################
 # FIGURE ONE: BIOMASS -----------------------------------------------------
@@ -340,6 +340,8 @@ ggplot(pie, aes(fill = diet_cat, x=year,
 cons <- read_csv("data/VCR14232_2.csv") |> 
   rename(common_name = speciesName)
 
+# mean(cons$Temperature, na.rm = TRUE)
+
 diet <- read_csv("data/diet_tax.csv") |> 
   filter(project == "VCR")
 
@@ -464,6 +466,132 @@ ggsave(filename='plots/vcr_all_percent_biomass_01222024.png',
        height = 5,
        units = c("cm"),
        dpi = 300)
+
+# MCR calcs & figures -----------------------------------------------------
+
+mcr <- read_csv("data/MCR_LTER_Annual_Fish_Survey_20230615.csv")
+glimpse(mcr)
+area <- data_frame(Swath = c(1, 5),
+                   area = c(50, 250))
+
+diet <- read_csv("data/diet_tax.csv") |> 
+  filter(project == "MCR")
+
+conv <- read_csv("data/dm_conversions_cndwg.csv")
+
+mcr_area <- left_join(mcr, area, by = "Swath") |> 
+  janitor::clean_names()
+
+glimpse(mcr_area)
+
+mcr_area_clean <- mcr_area |> 
+  select(year, date, taxonomy, location, site, habitat, transect, total_length, family,
+         count, biomass, area)
+glimpse(mcr_area_clean)
+
+rm(mcr, mcr_area, area)
+
+all_combinations <- expand.grid(taxonomy = unique(mcr_area_clean$taxonomy),
+                                site = unique(mcr_area_clean$site),
+                                habitat = unique(mcr_area_clean$habitat),
+                                transect = unique(mcr_area_clean$transect),
+                                total_length = unique(mcr_area_clean$total_length))
+
+result <- merge(all_combinations, mcr_area_clean, 
+                by = c("taxonomy", "site", "habitat",
+                       "transect", "total_length"), all.x = TRUE)
+
+glimpse(result)
+
+na_count_result <- which(is.na(result$count))
+result$count[is.na(result$count)] <- 0
+na_count_result_zero <- which(is.na(result$count)) #NAs for catch changed to zeros
+
+na_biomass_result <- which(is.na(result$biomass))
+result$biomass[is.na(result$biomass)] <- 0
+na_biomass_result_zero <- which(is.na(result$biomass)) #Nas replaced with zeros
+
+na_area_result <- which(is.na(result$area))
+result$area[is.na(result$area)] <- 0
+na_area_result_zero <- which(is.na(result$area)) #Nas replaced with zeros
+
+glimpse(result)
+
+result_ind <- result |> 
+  mutate(ind_bm = biomass/count)
+
+result_ind$ind_bm[is.na(result_ind$ind_bm)] <- 0
+na_resultind_zero <- which(is.na(result_ind$ind_bm)) #Nas replaced with zeros
+
+glimpse(result_ind)
+
+result_ind_rename <- result_ind |> 
+  rename(scientific_name = taxonomy)
+
+mcr_dm <- left_join(result_ind_rename, diet, by = "scientific_name") 
+
+# join with dm and then multiply ind_bm * dm
+
+
+mcr_cpue <- result |> 
+  group_by(year, taxonomy) |>
+  # mutate(weight_g = weight*1000) |> 
+  summarise(sumwt = sum(biomass),
+            sumdist = sum(area),
+            bm_cpue_m2 = (sumwt/sumdist)) |> 
+  rename(scientific_name = taxonomy)
+
+mcr_join <- left_join(mcr_cpue, diet, by = "scientific_name")
+# glimpse(vcr_join)  
+# unique(vcr_join$year)
+
+mcr <- mcr_join |> 
+  group_by(year, diet_cat) |> 
+  summarise(bm = sum(bm_cpue_m2)) |> 
+  filter(complete.cases(diet_cat))
+
+glimpse(mcr)
+
+ggplot(mcr, aes(fill = diet_cat, x=year, y = as.numeric(bm))) + 
+  geom_bar(position = "stack", stat = "identity") +
+  labs(x = "Year", 
+       y = "Mean Annual Biomass (g/m2)") +
+  theme(panel.grid.major = element_blank(),
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"),
+        axis.text.x = element_text(angle = 45, hjust = 1., vjust = 1.1),axis.text = element_text(color="black"),
+        panel.grid.minor = element_blank(),legend.position = "top")
+
+# ggsave(filename='plots/vcr_all_meanannual_biomass_01222024.png',
+#        plot = last_plot(),
+#        scale = 2.5,
+#        width = 7,
+#        height = 5,
+#        units = c("cm"),
+#        dpi = 300)
+
+ggplot(mcr, aes(fill = diet_cat, x=year, 
+                y = as.numeric(bm))) + 
+  geom_bar(position = "fill", stat = "identity") +
+  labs(x = "Hydrologic Year", 
+       y = "Mean Annual Biomass (% of total)") +
+  theme(panel.grid.major = element_blank(), 
+        # panel.grid.minor = element_blank(),
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"),
+        # plot.title = element_text(hjust = 0.5, size=14, face="bold", color = "black"),
+        # axis.text = element_text(size=12,face="bold", color = "black"),
+        # axis.title = element_text(size=12,face="bold", color = "black"), 
+        axis.text.x = element_text(angle = 45, hjust = 1., vjust = 1.1),axis.text = element_text(color="black"),
+        panel.grid.minor = element_blank(),legend.position = "top") 
+
+# ggsave(filename='plots/vcr_all_percent_biomass_01222024.png',
+#        plot = last_plot(),
+#        scale = 2.5,
+#        width = 7,
+#        height = 5,
+#        units = c("cm"),
+#        dpi = 300)
 
 
 ###########################################################################
