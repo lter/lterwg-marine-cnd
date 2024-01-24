@@ -8,3 +8,4 @@ data/other/BioTIMEQuery_24_06_2021.csv
 tier0/
 tidy/
 *.csv
+*.xlsx

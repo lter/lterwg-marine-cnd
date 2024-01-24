@@ -187,6 +187,100 @@ sbc_ready<- sbc_dt1 %>%
  
 #### SBC ocean end
 
+### MCR
+### MCR Start
+
+mcr <- dt %>%
+  filter(project == "MCR")
+
+mcr_d1 <- mcr %>%
+  pivot_wider(names_from = c(measurement_type,measurement_unit), values_from = measurement_value)
+
+#subsite_level1 = Habitat (BR, FO, FR)
+#subsite_level2 = Transect
+#subsite_level3 = Swath 
+#note the wetmass_g is a total biomass for all species of that size class. You need to divide wetmass_g by count_num to get individual biomass
+#biomass calculations are based off the length of each fish 
+
+#selecting the columns we are interested in
+mcr_d2 <- mcr_d1 %>% dplyr::select(year, site, subsite_level1, subsite_level2, subsite_level3 ,scientific_name, count_num, length_mm, wetmass_g)
+
+expand_MCR_biomass_new_col <- mcr_d2%>% dplyr::mutate(ind_bio = wetmass_g/count_num) ### obtain the individual biomass by creating a new column using total biomass/count 
+
+View(expand_MCR_biomass_new_col)
+
+
+#some fish do not have biomass estimates, need to remove those. Fish without biomass are denoted by negative numbers
+#one row has an error in the swath measurement, needs to be removed 
+
+MCR_biomass_d3 <- expand_MCR_biomass_new_col %>%
+  filter(subsite_level3 != 2) %>%
+  filter(wetmass_g > 0)
+
+#need to zero fill our data. Need to divide into two swath sizes (1 = 50 m2, 5 = 250m2). Different swaths sizes look for different fish species
+
+#swath 50m
+MCR_biomass_swath1 <- MCR_biomass_d3 %>%
+  filter(subsite_level3 == 1)
+
+MCR_sw1_possiblecombos <- MCR_biomass_swath1 %>%
+  distinct(year, site, scientific_name, subsite_level1, subsite_level2, subsite_level3) %>%
+  tidyr::expand(year, site, scientific_name, subsite_level1, subsite_level2, subsite_level3)
+
+MCR_sw1_NAs <- left_join(MCR_sw1_possiblecombos, MCR_biomass_swath1)
+
+View(MCR_sw1_NAs)
+
+#replace NAs with zeros
+
+na_count_num_filled_s1 <- which(is.na(MCR_sw1_NAs$count_num))
+MCR_sw1_NAs$count_num[is.na(MCR_sw1_NAs$count_num)]<-0 ###fill in zeros for count_num
+
+na_length_mm_filled_s1 <- which(is.na(MCR_sw1_NAs$length_mm))
+MCR_sw1_NAs$length_mm[is.na(MCR_sw1_NAs$length_mm)] <- 0 ###fill in zeros for length
+
+na_Biomass_filled_s1 <- which(is.na(MCR_sw1_NAs$wetmass_g))
+MCR_sw1_NAs$wetmass_g[is.na(MCR_sw1_NAs$wetmass_g)] <- 0 ###fill in zeros for biomass 
+
+na_ind_bio_filled_s1 <- which(is.na(MCR_sw1_NAs$ind_bio))
+MCR_sw1_NAs$ind_bio[is.na(MCR_sw1_NAs$ind_bio)]<-0 ###fill in zeros for individual biomass
+
+
+#swath 250m2
+MCR_biomass_swath5 <- MCR_biomass_d3 %>%
+  filter(subsite_level3 == 5)
+
+MCR_sw5_possiblecombos <- MCR_biomass_swath5 %>%
+  distinct(year, site, scientific_name, subsite_level1, subsite_level2, subsite_level3) %>%
+  tidyr::expand(year, site, scientific_name, subsite_level1, subsite_level2, subsite_level3)
+
+MCR_sw5_NAs <- left_join(MCR_sw5_possiblecombos, MCR_biomass_swath5)
+
+View(MCR_sw5_NAs)
+
+#replace NAs with zeros
+
+na_count_num_filled_s5 <- which(is.na(MCR_sw5_NAs$count_num))
+MCR_sw5_NAs$count_num[is.na(MCR_sw5_NAs$count_num)]<-0 ###fill in zeros for count_num
+
+na_length_mm_filled_s5 <- which(is.na(MCR_sw5_NAs$length_mm))
+MCR_sw5_NAs$length_mm[is.na(MCR_sw5_NAs$length_mm)] <- 0 ###fill in zeros for length
+
+na_Biomass_filled_s5 <- which(is.na(MCR_sw5_NAs$wetmass_g))
+MCR_sw5_NAs$wetmass_g[is.na(MCR_sw5_NAs$wetmass_g)] <- 0 ###fill in zeros for biomass 
+
+na_ind_bio_filled_s5 <- which(is.na(MCR_sw5_NAs$ind_bio))
+MCR_sw5_NAs$ind_bio[is.na(MCR_sw5_NAs$ind_bio)]<-0 ###fill in zeros for individual biomass
+
+#this includes both swaths and is zero filled 
+mcr_biomass_final <- rbind(MCR_sw1_NAs, MCR_sw5_NAs)
+
+#now we are going to attach the species list, which includes the diet information 
+
+mcr_diet <- species_list %>%
+  filter(project == "MCR")
+
+mcr_diet_cat <- merge(mcr_biomass_final, mcr_diet, by= "scientific_name")
 
 
 
