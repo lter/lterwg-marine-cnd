@@ -66,7 +66,8 @@ rm(list = ls())
 
 #### read data
 # read in the harmonized data and start the wrangling, by project
-dt <- read.csv(file.path("tier1", "harmonized_consumer.csv"),stringsAsFactors = F,na.strings =".") 
+dt <- read.csv(file.path("tier1", "harmonized_consumer.csv"),stringsAsFactors = F,na.strings =".") %>%
+  mutate(measurement_type=gsub("_", "", measurement_type))
 
 env <- read.csv(file.path("tier1", "harmonized_environment.csv"),stringsAsFactors = F,na.strings =".") 
 
@@ -81,14 +82,8 @@ species_list <- readxl::read_excel(path = file.path("tier1", "CNDWG_harmonized_c
 pisco_site_id <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/1/folders/1vT-u9EFsssA8t9_y1A163BTr6ENGBelC")) %>%
   dplyr::filter(name %in% c("master_site_table.xlsx"))
 
-sbc_temp <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1ycKkpiURLVclobAdCmZx2s_ewcaFAV9Y")) %>%
-  dplyr::filter(name %in% c("Bottom_temp_all_years_20230724.csv"))
-
 googledrive::with_drive_quiet(
   googledrive::drive_download(file = pisco_site_id$id, overwrite = T, path = file.path("other", pisco_site_id$name)) )
-
-googledrive::with_drive_quiet(
-  googledrive::drive_download(file = sbc_temp$id, overwrite = T, path = file.path("other", sbc_temp$name)) )
 
 pisco_site <- readxl::read_excel(path = file.path("other", "master_site_table.xlsx")) 
 
@@ -132,16 +127,16 @@ coastalca_dt <- dt %>%
   filter(!(project=="CoastalCA"&is.na(keep))) %>%
   dplyr::select(-keep) %>%
   # remove the benthic survey because no biomass in the benthic survey
-  filter(!(project=="CoastalCA"&raw_filename=="MLPA_benthic_site_means.csv")) 
-
+  filter(!(project=="CoastalCA"&raw_filename=="MLPA_benthic_site_means.csv"))
 
 #convert wetmass into dry mass
 # calculate the biomass density for coastal CA
 coastalca_dt1 <- coastalca_dt %>%
+  mutate(measurement_type=gsub("_", "", measurement_type)) %>%
   pivot_wider(names_from = c(measurement_type, measurement_unit),values_from = measurement_value) %>%
-  mutate(`drymass_g/m2`=(`wetmass_kg/transect`*0.29/`transect_area_m2`)*1000, #convert from kg to g
+  mutate(`drymass_g/m2`=(`wetmass_kg/transect`*0.29/`transectarea_m2`)*1000, #convert from kg to g
          `dmperind_g/ind` = `wetmass_kg/transect`*0.29*1000/`count_num`,
-         `density_num/m2` = `count_num`/`transect_area_m2`,
+         `density_num/m2` = `count_num`/`transectarea_m2`,
          `temp_c` = sbc_temp_ave$MEAN) 
 
 coastalca_dt2 <-coastalca_dt1 %>%
@@ -150,7 +145,7 @@ coastalca_dt2 <-coastalca_dt1 %>%
                values_to = "measurement_value")
 
 coastalca_ready <- coastalca_dt2 %>%
-  separate(measurement_type, into = c("measurement_type", "measurement_unit"), sep = "_", remove = FALSE) 
+  separate(measurement_type, into = c("measurement_type", "measurement_unit"),sep = "_", remove = FALSE) 
   
 # peace<-coastalca_ready %>%  
 #   distinct(measurement_type,measurement_unit)
@@ -173,6 +168,8 @@ sbc_dt <- dt %>%
 
 sbc_dt1 <- sbc_dt %>%
   pivot_wider(names_from = c(measurement_type,measurement_unit), values_from = measurement_value) %>%
+  #if there is a shell-free drymass we used it ,otherwise, we use dry mass
+  mutate(`drymass_g/m2` = ifelse(!is.na(`sfdrymass_g/m2`),`sfdrymass_g/m2`,`drymass_g/m2`)) %>%
   mutate(`dmperindv_g/ind`=`drymass_g/m2`/`density_num/m2`,
          temp_c = sbc_temp_ave$MEAN)  #using the ones from coastal CA chunk
 
@@ -180,22 +177,168 @@ sbc_ready<- sbc_dt1 %>%
     pivot_longer(cols = `density_num/m2`:temp_c, 
                  names_to = "measurement_type",
                  values_to = "measurement_value") %>%
-   separate(measurement_type, into = c("measurement_type", "measurement_unit"), sep = "_", remove = FALSE) 
+   separate(measurement_type, into = c("measurement_type", "measurement_unit"), sep = "_",remove = FALSE) 
  
 #### SBC ocean end
 
+### MCR
+### MCR Start
+
+mcr <- dt %>%
+  filter(project == "MCR")
+
+mcr_d1 <- mcr %>%
+  pivot_wider(names_from = c(measurement_type,measurement_unit), values_from = measurement_value)
+
+#subsite_level1 = Habitat (BR, FO, FR)
+#subsite_level2 = Transect
+#subsite_level3 = Swath 
+#note the wetmass_g is a total biomass for all species of that size class. You need to divide wetmass_g by count_num to get individual biomass
+#biomass calculations are based off the length of each fish 
+
+#selecting the columns we are interested in
+mcr_d2 <- mcr_d1 %>% dplyr::select(year, site, subsite_level1, subsite_level2, subsite_level3 ,scientific_name, count_num, length_mm, wetmass_g)
+
+expand_MCR_biomass_new_col <- mcr_d2%>% dplyr::mutate(ind_bio = wetmass_g/count_num) ### obtain the individual biomass by creating a new column using total biomass/count 
+
+#View(expand_MCR_biomass_new_col)
+
+#some fish do not have biomass estimates, need to remove those. Fish without biomass are denoted by negative numbers
+#one row has an error in the swath measurement, needs to be removed 
+
+MCR_biomass_d3 <- expand_MCR_biomass_new_col %>%
+  filter(subsite_level3 != 2) %>%
+  filter(wetmass_g > 0)
+
+#need to zero fill our data. Need to divide into two swath sizes (1 = 50 m2, 5 = 250m2). Different swaths sizes look for different fish species
+
+#swath 50m
+MCR_biomass_swath1 <- MCR_biomass_d3 %>%
+  filter(subsite_level3 == 1)
+
+MCR_sw1_possiblecombos <- MCR_biomass_swath1 %>%
+  distinct(year, site, scientific_name, subsite_level1, subsite_level2, subsite_level3) %>%
+  tidyr::expand(year, site, scientific_name, subsite_level1, subsite_level2, subsite_level3)
+
+MCR_sw1_NAs <- left_join(MCR_sw1_possiblecombos, MCR_biomass_swath1)
+
+#View(MCR_sw1_NAs)
+
+#replace NAs with zeros
+
+na_count_num_filled_s1 <- which(is.na(MCR_sw1_NAs$count_num))
+MCR_sw1_NAs$count_num[is.na(MCR_sw1_NAs$count_num)]<-0 ###fill in zeros for count_num
+
+na_length_mm_filled_s1 <- which(is.na(MCR_sw1_NAs$length_mm))
+MCR_sw1_NAs$length_mm[is.na(MCR_sw1_NAs$length_mm)] <- 0 ###fill in zeros for length
+
+na_Biomass_filled_s1 <- which(is.na(MCR_sw1_NAs$wetmass_g))
+MCR_sw1_NAs$wetmass_g[is.na(MCR_sw1_NAs$wetmass_g)] <- 0 ###fill in zeros for biomass 
+
+na_ind_bio_filled_s1 <- which(is.na(MCR_sw1_NAs$ind_bio))
+MCR_sw1_NAs$ind_bio[is.na(MCR_sw1_NAs$ind_bio)]<-0 ###fill in zeros for individual biomass
 
 
+#swath 250m2
+MCR_biomass_swath5 <- MCR_biomass_d3 %>%
+  filter(subsite_level3 == 5)
+
+MCR_sw5_possiblecombos <- MCR_biomass_swath5 %>%
+  distinct(year, site, scientific_name, subsite_level1, subsite_level2, subsite_level3) %>%
+  tidyr::expand(year, site, scientific_name, subsite_level1, subsite_level2, subsite_level3)
+
+MCR_sw5_NAs <- left_join(MCR_sw5_possiblecombos, MCR_biomass_swath5)
+
+#View(MCR_sw5_NAs)
+
+#replace NAs with zeros
+
+na_count_num_filled_s5 <- which(is.na(MCR_sw5_NAs$count_num))
+MCR_sw5_NAs$count_num[is.na(MCR_sw5_NAs$count_num)]<-0 ###fill in zeros for count_num
+
+na_length_mm_filled_s5 <- which(is.na(MCR_sw5_NAs$length_mm))
+MCR_sw5_NAs$length_mm[is.na(MCR_sw5_NAs$length_mm)] <- 0 ###fill in zeros for length
+
+na_Biomass_filled_s5 <- which(is.na(MCR_sw5_NAs$wetmass_g))
+MCR_sw5_NAs$wetmass_g[is.na(MCR_sw5_NAs$wetmass_g)] <- 0 ###fill in zeros for biomass 
+
+na_ind_bio_filled_s5 <- which(is.na(MCR_sw5_NAs$ind_bio))
+MCR_sw5_NAs$ind_bio[is.na(MCR_sw5_NAs$ind_bio)]<-0 ###fill in zeros for individual biomass
+
+#this includes both swaths and is zero filled 
+mcr_biomass_final <- rbind(MCR_sw1_NAs, MCR_sw5_NAs)
+
+#now we are going to attach the species list, which includes the diet information 
+
+mcr_diet <- species_list %>%
+  filter(project == "MCR")
+
+mcr_diet_cat <- merge(mcr_biomass_final, mcr_diet, by= "scientific_name")
+
+# dm conversion download from google drive
+
+dm_con_sr <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/1/folders/1LYffjtQdLcNYkStrf_FukihQ6tPKlw1a")) %>%
+  dplyr::filter(name %in% c("dm_conversions_cndwg.xlsx"))
+
+googledrive::with_drive_quiet(
+  googledrive::drive_download(file = dm_con_sr$id, overwrite = T, path = file.path("other", dm_con_sr$name)) )
+
+dm_conv1 <- readxl::read_excel(path = file.path("other", "dm_conversions_cndwg.xlsx")) 
+##
+
+dm_conv <- dm_conv1 |> #read_csv("other/dm_conversions_cndwg.csv") |> 
+  select(-level) |> #removes level for simplicity
+  filter(kingdom == "Animalia",
+         dm_wm_mean < 1) #only want animals and no coefficients greater than 1 (thats wrong)
+
+dm_coeff <- dm_conv |> 
+  group_by(class) |> 
+  summarise(dm_coeff= mean(as.numeric(dm_wm_mean), na.rm = T),.groups = "drop") |>
+  ungroup()
+
+mcr_dm_coeff <- left_join(mcr_diet_cat, dm_coeff, by = "class")
+#glimpse(mcr_dm_coeff)
+na_coeff_result <- which(is.na(mcr_dm_coeff$dm_coeff)) #yay
+
+mcr_all_dm <- mcr_dm_coeff |> 
+  mutate(`dmperind_g/m2` = ind_bio*dm_coeff,
+         subsite_level3 = as.numeric(subsite_level3),
+         `transectarea_m2` = subsite_level3*50,
+         `density_num/m2` = count_num/transectarea_m2,
+         temp_c = 26.5)
+
+mcr_all_dm1 <- mcr_all_dm |> 
+  mutate(habitat="ocean",raw_filename="MCR_LTER_Annual_Fish_Survey_20230615.csv", row_num = paste0(raw_filename, "_", 1:nrow(mcr_all_dm)),
+         month=NA,day=NA,date=NA) |>
+  dplyr::select(project,habitat,raw_filename,row_num,year,month,day,date,site,subsite_level1,subsite_level2,subsite_level3,sp_code,scientific_name,species,
+                count_num,length_mm,wetmass_g,`dmperind_g/m2`,`transectarea_m2`,`density_num/m2`,temp_c) 
+ 
+mcr_ready <-mcr_all_dm1 %>%
+  pivot_longer(cols = count_num:temp_c, 
+               names_to = "measurement_type",
+               values_to = "measurement_value")%>%
+  separate(measurement_type, into = c("measurement_type", "measurement_unit"),sep = "_", remove = FALSE) 
+
+#### MCR end
+
+
+#### CCE 
+
+
+
+
+#### CCE end
 
 
 #### Concat all the data together again
 
 # pick out the ones that don't need to be edited
 data_original <- dt %>%
-  dplyr::filter(project=="SBC"&habitat=="beach") 
+  dplyr::filter((project=="SBC"&habitat=="beach") |
+                  project=="FCE")
   
 # concat data together
-harmonized_clean = rbind(data_original,coastalca_ready, sbc_ready)
+harmonized_clean = rbind(data_original,coastalca_ready, sbc_ready,mcr_ready)
 
 #### concat end
 
