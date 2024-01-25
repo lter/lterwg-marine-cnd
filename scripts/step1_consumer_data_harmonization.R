@@ -731,7 +731,44 @@ PIE_CoastalCA_codes <- PIE_sp_codes %>%
     !stringr::str_detect(species, " ") ~ NA,
     T ~ species
   )) %>%
-  dplyr::mutate(dplyr::across(.cols = dplyr::everything(), .fns = ~dplyr::na_if(., y = "NA"))) 
+  dplyr::mutate(dplyr::across(.cols = dplyr::everything(), .fns = ~dplyr::na_if(., y = "NA"))) %>%
+  # Quick fix, remember to revisit
+  dplyr::mutate(scientific_name = dplyr::case_when(
+    scientific_name == "Cancridae " ~ "Cancridae",
+    T ~ scientific_name
+  )) %>%
+  dplyr::mutate(kingdom = dplyr::case_when(
+    scientific_name == "Cancridae" ~ "Animalia",
+    T ~ kingdom
+  )) %>%
+  dplyr::mutate(phylum = dplyr::case_when(
+    scientific_name == "Cancridae" ~ "Arthropoda",
+    T ~ phylum
+  )) %>%
+  dplyr::mutate(class = dplyr::case_when(
+    scientific_name == "Cancridae" ~ "Malacostraca",
+    T ~ class
+  )) %>%
+  dplyr::mutate(order = dplyr::case_when(
+    scientific_name == "Cancridae" ~ "Decapoda",
+    T ~ order
+  )) %>%
+  dplyr::mutate(family = dplyr::case_when(
+    scientific_name == "Cancridae" ~ "Cancridae",
+    T ~ family
+  )) %>%
+  dplyr::mutate(genus = dplyr::case_when(
+    scientific_name == "Cancridae" ~ NA,
+    T ~ genus
+  )) %>%  
+  dplyr::mutate(species = dplyr::case_when(
+    scientific_name == "Cancridae" ~ NA,
+    T ~ species
+  )) %>%  
+  dplyr::mutate(species = dplyr::case_when(
+    scientific_name == "Menidia menidia" ~ "Menidia menidia",
+    T ~ species
+  )) 
 
 # Now join with the table for PIE species codes 
 tidy_v2e <- tidy_v2d %>%
@@ -753,15 +790,7 @@ tidy_v2e <- tidy_v2d %>%
                 genus = dplyr::coalesce(genus.x, genus.y),
                 species = dplyr::coalesce(species.x, species.y)) %>%
   # Drop the duplicate columns that resulted from joining
-  dplyr::select(-contains(".x"), -contains(".y"))  %>%
-  dplyr::mutate(scientific_name = dplyr::case_when(
-    scientific_name == "Cancridae " ~ "Cancridae",
-    T ~ scientific_name
-  )) %>%
-  dplyr::mutate(species = dplyr::case_when(
-    species == "Cancridae " ~ NA,
-    T ~ species
-  )) 
+  dplyr::select(-contains(".x"), -contains(".y")) 
 
 # Check structure
 dplyr::glimpse(tidy_v2e)
