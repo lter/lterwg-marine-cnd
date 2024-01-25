@@ -155,16 +155,18 @@ coastalca_dt2 <- coastalca_dt1 %>%
   mutate(`drymass_g/m2`=(`wetmass_kg/transect`*0.29/`transectarea_m2`)*1000, #convert from kg to g
          `dmperind_g/ind` = ifelse(count_num>0,`wetmass_kg/transect`*0.29*1000/`count_num`,0), 
          `density_num/m2` = `count_num`/`transectarea_m2`,
-         `temp_c` = sbc_temp_ave$MEAN) 
+         `temp_c` = sbc_temp_ave$MEAN) %>%
+   mutate(row_num = paste0(raw_filename, "_", 1:nrow(.))) #adding the row_num back
+ 
 
 coastalca_dt3 <-coastalca_dt2 %>%
-  pivot_longer(cols = count_num:temp_c, 
+  pivot_longer(cols = transectarea_m2:temp_c, 
                names_to = "measurement_type",
                values_to = "measurement_value")
 
 coastalca_ready <- coastalca_dt3 %>%
   separate(measurement_type, into = c("measurement_type", "measurement_unit"),sep = "_", remove = FALSE) 
-  
+
 #### COASTAL CA end
 
 
@@ -192,7 +194,9 @@ sbc_ready<- sbc_dt1 %>%
     pivot_longer(cols = `density_num/m2`:temp_c, 
                  names_to = "measurement_type",
                  values_to = "measurement_value") %>%
-   separate(measurement_type, into = c("measurement_type", "measurement_unit"), sep = "_",remove = FALSE) 
+   separate(measurement_type, into = c("measurement_type", "measurement_unit"), sep = "_",remove = FALSE)
+  
+sbc_ready <-filter(sbc_ready,measurement_type!="sfdrymass") #drop the sfdrymass_g/m2 value
  
 #### SBC ocean end
 
@@ -232,46 +236,25 @@ MCR_biomass_d3 <- expand_MCR_biomass_new_col %>%
 MCR_biomass_swath1 <- MCR_biomass_d3 %>%
   filter(subsite_level3 == 1)
 
-#need to combine the species columns for zero filling 
-join_MCR_s1 <- MCR_biomass_swath1 %>%
-  mutate(sp_combined = paste0(scientific_name, "_", species, "_", sp_code)) %>%
-  select(-c(scientific_name, species, sp_code, row_num))
 
 #zero fill 
-MCR_sw1_zero <- join_MCR_s1 %>%
-  complete(sp_combined,
+MCR_sw1_final <- MCR_biomass_swath1 %>%
+  complete(nesting(scientific_name, species, sp_code),
            nesting(project, habitat, raw_filename, year, month, day, date, site, subsite_level1, subsite_level2, subsite_level3),
            fill = list(count_num=0, length_mm= NA, wetmass_g=0, ind_bio = 0))
-
-#get original columns back
-MCR_sw1_final <- MCR_sw1_zero %>%
-  separate(sp_combined, into = c("scientific_name", "species", "sp_code"), sep = "_",remove = TRUE)
-
-#turn NA characters into actual NA
-MCR_sw1_final[MCR_sw1_final == "NA"] <- NA
 
 
 #swath 250m2
 MCR_biomass_swath5 <- MCR_biomass_d3 %>%
   filter(subsite_level3 == 5)
 
-#need to combine the species columns for zero filling 
-join_MCR_s5 <- MCR_biomass_swath5 %>%
-  mutate(sp_combined = paste0(scientific_name, "_", species, "_", sp_code)) %>%
-  select(-c(scientific_name, species, sp_code, row_num))
 
 #zero fill 
-MCR_sw5_zero <- join_MCR_s5 %>%
-  complete(sp_combined,
+MCR_sw5_final <- MCR_biomass_swath5 %>%
+  complete(nesting(scientific_name, species, sp_code),
            nesting(project, habitat, raw_filename, year, month, day, date, site, subsite_level1, subsite_level2, subsite_level3),
            fill = list(count_num=0, length_mm= NA, wetmass_g=0, ind_bio = 0))
 
-#get original columns back
-MCR_sw5_final <- MCR_sw5_zero %>%
-  separate(sp_combined, into = c("scientific_name", "species", "sp_code"), sep = "_",remove = TRUE)
-
-#turn NA characters into actual NA
-MCR_sw5_final[MCR_sw5_final == "NA"] <- NA
 
 #this includes both swaths and is zero filled 
 mcr_biomass_final <- rbind(MCR_sw1_final, MCR_sw5_final)
@@ -316,8 +299,7 @@ mcr_all_dm <- mcr_dm_coeff |>
          temp_c = 26.5)
 
 mcr_all_dm1 <- mcr_all_dm |> 
-  mutate(habitat="ocean",raw_filename="MCR_LTER_Annual_Fish_Survey_20230615.csv", row_num = paste0(raw_filename, "_", 1:nrow(mcr_all_dm)),
-         month=NA,day=NA,date=NA) |>
+  mutate(row_num = paste0(raw_filename, "_", 1:nrow(mcr_all_dm))) |>
   dplyr::select(project,habitat,raw_filename,row_num,year,month,day,date,site,subsite_level1,subsite_level2,subsite_level3,sp_code,scientific_name,species,
                 count_num,length_mm,wetmass_g,`dmperind_g/m2`,`transectarea_m2`,`density_num/m2`,temp_c) 
  
@@ -373,6 +355,10 @@ data_original <- dt %>%
   
 # concat data together
 harmonized_clean = rbind(data_original,coastalca_ready, sbc_ready,mcr_ready,cce_ready)
+
+# check to see the measurement type and unit are the same
+peace <- harmonized_clean %>%
+  distinct(project,habitat,measurement_type,measurement_unit)
 
 #### concat end
 
