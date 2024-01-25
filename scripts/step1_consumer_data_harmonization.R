@@ -493,6 +493,18 @@ tidy_v2b <- tidy_v2a %>%
     scientific_name == "Mullets" ~ "Mugilidae",
     scientific_name == "No fish observed" ~ NA,
     T ~ scientific_name
+  )) %>%
+  dplyr::mutate(family = dplyr::case_when(
+    scientific_name == "Balistidae" ~ "Balistidae",
+    T ~ family
+  )) %>%
+  dplyr::mutate(family = dplyr::case_when(
+    scientific_name == "Blenniidae" ~ "Blenniidae",
+    T ~ family
+  )) %>%
+  dplyr::mutate(family = dplyr::case_when(
+    scientific_name == "Caracanthus maculatus" ~ "Caracanthidae",
+    T ~ family
   )) 
 
 # Check unique scientific names
@@ -694,7 +706,7 @@ if (species_update_flag == 1){
       species_fix == "Sebastes chrysomelas/carnatus young of year" ~ "Sebastes chrysomelas; Sebastes carnatus",
       species_fix == "Sebastes serranoides,flavidus,melanops" ~ "Sebastes serranoides; Sebastes flavidus; Sebastes melanops",
       species_fix == "Sebastes carnatus, caurinus" ~ "Sebastes carnatus; Sebastes caurinus",
-      species_fix == "Unidentified killifish/topminnow" ~ "Cyprinodontiformes",
+      species_fix == "Unidentified killifish/topminnow" ~ NA,
       T ~ species_fix
     )) %>%
     # Drop the inferior species column (some strings had numbers in them or had "(cf)")
