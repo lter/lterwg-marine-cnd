@@ -293,7 +293,8 @@ dm_conv <- dm_conv1 |> #read_csv("other/dm_conversions_cndwg.csv") |>
 
 dm_coeff <- dm_conv |> 
   group_by(class) |> 
-  summarise(dm_coeff= mean(dm_wm_mean))
+  summarise(dm_coeff= mean(as.numeric(dm_wm_mean), na.rm = T),.groups = "drop") |>
+  ungroup()
 
 mcr_dm_coeff <- left_join(mcr_diet_cat, dm_coeff, by = "class")
 #glimpse(mcr_dm_coeff)
