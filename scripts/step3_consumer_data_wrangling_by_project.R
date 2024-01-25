@@ -282,7 +282,25 @@ mcr_diet <- species_list %>%
 
 mcr_diet_cat <- merge(mcr_biomass_final, mcr_diet, by= "scientific_name")
 
+dm_conv <- read_csv("data/dm_conversions_cndwg.csv") |> 
+  select(-level) |> #removes level for simplicity
+  filter(kingdom == "Animalia",
+         dm_wm_mean < 1) #only want animals and no coefficients greater than 1 (thats wrong)
 
+dm_coeff <- dm_conv |> 
+  group_by(class) |> 
+  summarise(dm_coeff= mean(dm_wm_mean))
+
+mcr_dm_coeff <- left_join(mcr_diet_cat, dm_coeff, by = "class")
+glimpse(mcr_dm_coeff)
+na_coeff_result <- which(is.na(mcr_dm_coeff$dm_coeff)) #yay
+
+mcr_all_dm <- mcr_dm_coeff |> 
+  mutate(dmperind = ind_bio*dm_coeff,
+         subsite_level3 = as.numeric(subsite_level3),
+         transect_area = subsite_level3*50,
+         density = count_num/transect_area,
+         temp = 26.5)
 
 
 #### Concat all the data together again
