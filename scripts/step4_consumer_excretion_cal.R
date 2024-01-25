@@ -64,7 +64,7 @@ rm(list = ls())
 #### read data
 # read in the harmonized data and start the wrangling, by project
 dt <- read.csv(file.path("tier1", "harmonized_consumer_ready_for_excretion.csv"),stringsAsFactors = F,na.strings =".") 
-
+#dt <- harmonized_clean
 species_list <- readxl::read_excel(path = file.path("tier1", "CNDWG_harmonized_consumer_species.xlsx"),na=".")
 
 #### read data end 
@@ -76,7 +76,7 @@ species_list <- readxl::read_excel(path = file.path("tier1", "CNDWG_harmonized_c
 
 dt1 <-dt %>%
   #use pisco data as an example
-  filter(project=="CoastalCA") %>%
+  #filter(project=="CoastalCA") %>%
   filter(measurement_type %in% c("dmperind","density","temp")) 
 
 #check the unit that match with the measurement, good to go
@@ -91,7 +91,7 @@ dt2 <- dt1 %>%
 dt3 <-dt2 %>%
   left_join(species_list,by=c("project","sp_code","scientific_name","species")) 
 
-
+###########################
 #using bradley's code below for excretion calculation
 cons <- dt3
 
@@ -122,13 +122,13 @@ cons_np_ratio <- cons %>%
   #N:P ratio
   mutate(NtoPexc_molar = 58.526 + 13.681*(log10(dmperind)),
          NtoPexc_molar = if_else(NtoPexc_molar > 0, NtoPexc_molar, 0),
-         `npind_ug/hr` = NtoPexc_molar)
+         `npind_unitless` = NtoPexc_molar)
 
 ##################### end of bradley's code #####################
 ##### Data clean up #######
 
 dt_final <- cons_np_ratio %>% 
-  dplyr::select(-c(common_name,kingdom,phylum,class,order,family,genus,taxa_group,N_vert_coef,N_diet_coef,Nexc_log10,P_vert_coef,P_diet_coef,Pexc_log10,NtoPexc_molar)) %>%
+  dplyr::select(-c(common_name,kingdom,phylum,class,order,family,genus,taxa_group,N_vert_coef,N_diet_coef,Nexc_log10,P_vert_coef,P_diet_coef,Pexc_log10,NtoPexc_molar,diet_cat)) %>%
   pivot_longer(cols = -c(project,habitat,raw_filename,row_num,year,month,day,date,site,subsite_level1,subsite_level2,subsite_level3,sp_code,scientific_name,species), 
              names_to = "measurement_type",
              values_to = "measurement_value") %>%
