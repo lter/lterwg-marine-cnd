@@ -482,6 +482,14 @@ tidy_v2b <- tidy_v2a %>%
     scientific_name == "eggs" ~ NA,
     scientific_name == "multiples" ~ NA,
     scientific_name == "others" ~ NA,
+    scientific_name == "Sunfishes" ~ "Centrarchidae",
+    scientific_name == "killifish/topminnow" ~ "Fundulus pulvereus",
+    scientific_name == "silverside species" ~ "Atheriniformes",
+    scientific_name == "Needlefishes" ~ "Belonidae",
+    scientific_name == "mojarra species" ~ "Gerreidae",
+    scientific_name == "goby" ~ "Gobiidae",
+    scientific_name == "Mullets" ~ "Mugilidae",
+    scientific_name == "No fish observed" ~ NA,
     T ~ scientific_name
   )) 
 
@@ -572,7 +580,7 @@ some_common_names_fix_v2 <- some_common_names_fix %>%
   )) %>%
   dplyr::mutate(order_fix = dplyr::case_when(
     common_name == "Silversides" ~ "Atheriniformes",
-    common_name == "Goby" ~ "Gobioidei",
+    common_name == "Goby" ~ "Gobiidae",
     T ~ order_fix
   )) %>%
   dplyr::mutate(class_fix = dplyr::case_when(
