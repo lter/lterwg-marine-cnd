@@ -363,7 +363,7 @@ data_original <- dt %>%
                   project=="FCE")
   
 # concat data together
-harmonized_clean = rbind(data_original,coastalca_ready, sbc_ready,mcr_ready,mcr_ready,cce_ready)
+harmonized_clean = rbind(data_original,coastalca_ready, sbc_ready,mcr_ready,cce_ready)
 
 #### concat end
 
