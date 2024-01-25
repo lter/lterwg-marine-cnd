@@ -85,7 +85,7 @@ pisco_site_id <- googledrive::drive_ls(googledrive::as_id("https://drive.google.
 googledrive::with_drive_quiet(
   googledrive::drive_download(file = pisco_site_id$id, overwrite = T, path = file.path("other", pisco_site_id$name)) )
 
-pisco_site <- readxl::read_excel(path = file.path("other", "master_site_table.xlsx")) 
+pisco_site <- readxl::read_excel(path = file.path("other", "master_site_table.xlsx"),na="N/A") 
 
 
 #read in the temperature data table to calculate the temperature for both pisco and SBC
@@ -139,12 +139,21 @@ coastalca_dt1 <- coastalca_dt %>%
          site=mlpa_region) %>%
   dplyr::select(- c(Include_Exclude, mlpa_region, site_status))
 
+
+
 #convert wetmass into dry mass
 # calculate the biomass density for coastal CA
 coastalca_dt2 <- coastalca_dt1 %>%
   pivot_wider(names_from = c(measurement_type, measurement_unit),values_from = measurement_value) %>%
+  dplyr::select(-row_num) %>%
+  #zero fill the pisco data
+  complete(nesting(sp_code,scientific_name,species),
+           nesting(project,habitat,raw_filename,year,month,day,date,
+                                                          site, subsite_level1, subsite_level2, subsite_level3,transectarea_m2),
+         fill = list(count_num=0, length_cm=NA,`wetmass_kg/transect` = 0)) %>%
+  filter(sp_code!="NO_ORG") %>% #REMOVE THE SPECIES THAT ARE NOT ORGANISM
   mutate(`drymass_g/m2`=(`wetmass_kg/transect`*0.29/`transectarea_m2`)*1000, #convert from kg to g
-         `dmperind_g/ind` = `wetmass_kg/transect`*0.29*1000/`count_num`,
+         `dmperind_g/ind` = ifelse(count_num>0,`wetmass_kg/transect`*0.29*1000/`count_num`,0), 
          `density_num/m2` = `count_num`/`transectarea_m2`,
          `temp_c` = sbc_temp_ave$MEAN) 
 
@@ -176,7 +185,7 @@ sbc_dt1 <- sbc_dt %>%
   pivot_wider(names_from = c(measurement_type,measurement_unit), values_from = measurement_value) %>%
   #if there is a shell-free drymass we used it ,otherwise, we use dry mass
   mutate(`drymass_g/m2` = ifelse(!is.na(`sfdrymass_g/m2`),`sfdrymass_g/m2`,`drymass_g/m2`)) %>%
-  mutate(`dmperind_g/ind`=`drymass_g/m2`/`density_num/m2`,
+  mutate(`dmperind_g/ind`=ifelse(`density_num/m2`>0,`drymass_g/m2`/`density_num/m2`,0),
          temp_c = sbc_temp_ave$MEAN)  #using the ones from coastal CA chunk
 
 sbc_ready<- sbc_dt1 %>%
@@ -342,7 +351,7 @@ cce_mean_temp <- mean(cce_temp$temp, na.rm = T)
 cce <- dt %>%
   dplyr::filter(project=="CCE") %>%
   pivot_wider(names_from = c(measurement_type,measurement_unit), values_from = measurement_value) %>%
-  mutate(`dmperind_g/ind`=`drymass_g/m2`/`density_num/m2`,
+  mutate(`dmperind_g/ind`=ifelse(`density_num/m2`>0,`drymass_g/m2`/`density_num/m2`,0),
          temp_c = cce_mean_temp)  #using the ones from coastal CA chunk
 
 cce_ready<- cce %>%
@@ -363,7 +372,7 @@ data_original <- dt %>%
                   project=="FCE")
   
 # concat data together
-harmonized_clean = rbind(data_original,coastalca_ready, sbc_ready,mcr_ready,mcr_ready,cce_ready)
+harmonized_clean = rbind(data_original,coastalca_ready, sbc_ready,mcr_ready,cce_ready)
 
 #### concat end
 
