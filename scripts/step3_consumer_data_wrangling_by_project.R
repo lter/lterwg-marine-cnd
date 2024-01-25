@@ -197,9 +197,10 @@ mcr_d1 <- mcr %>%
 #biomass calculations are based off the length of each fish 
 
 #selecting the columns we are interested in
-mcr_d2 <- mcr_d1 %>% dplyr::select(year, site, subsite_level1, subsite_level2, subsite_level3 ,scientific_name, count_num, length_mm, wetmass_g)
+#keep all columns for now, might want to select later on
+#mcr_d2 <- mcr_d1 %>% dplyr::select(project, year, site, subsite_level1, subsite_level2, subsite_level3 ,scientific_name, count_num, length_mm, wetmass_g)
 
-expand_MCR_biomass_new_col <- mcr_d2%>% dplyr::mutate(ind_bio = wetmass_g/count_num) ### obtain the individual biomass by creating a new column using total biomass/count 
+expand_MCR_biomass_new_col <- mcr_d1%>% dplyr::mutate(ind_bio = wetmass_g/count_num) ### obtain the individual biomass by creating a new column using total biomass/count 
 
 #View(expand_MCR_biomass_new_col)
 
@@ -212,68 +213,60 @@ MCR_biomass_d3 <- expand_MCR_biomass_new_col %>%
 
 #need to zero fill our data. Need to divide into two swath sizes (1 = 50 m2, 5 = 250m2). Different swaths sizes look for different fish species
 
-#swath 50m
+#subsite swath 50m
 MCR_biomass_swath1 <- MCR_biomass_d3 %>%
   filter(subsite_level3 == 1)
 
-MCR_sw1_possiblecombos <- MCR_biomass_swath1 %>%
-  distinct(year, site, scientific_name, subsite_level1, subsite_level2, subsite_level3) %>%
-  tidyr::expand(year, site, scientific_name, subsite_level1, subsite_level2, subsite_level3)
+#need to combine the species columns for zero filling 
+join_MCR_s1 <- MCR_biomass_swath1 %>%
+  mutate(sp_combined = paste0(scientific_name, "_", species, "_", sp_code)) %>%
+  select(-c(scientific_name, species, sp_code, row_num))
 
-MCR_sw1_NAs <- left_join(MCR_sw1_possiblecombos, MCR_biomass_swath1)
+#zero fill 
+MCR_sw1_zero <- join_MCR_s1 %>%
+  complete(sp_combined,
+           nesting(project, habitat, raw_filename, year, month, day, date, site, subsite_level1, subsite_level2, subsite_level3),
+           fill = list(count_num=0, length_mm= NA, wetmass_g=0, ind_bio = 0))
 
-#View(MCR_sw1_NAs)
+#get original columns back
+MCR_sw1_final <- MCR_sw1_zero %>%
+  separate(sp_combined, into = c("scientific_name", "species", "sp_code"), sep = "_",remove = TRUE)
 
-#replace NAs with zeros
-
-na_count_num_filled_s1 <- which(is.na(MCR_sw1_NAs$count_num))
-MCR_sw1_NAs$count_num[is.na(MCR_sw1_NAs$count_num)]<-0 ###fill in zeros for count_num
-
-na_length_mm_filled_s1 <- which(is.na(MCR_sw1_NAs$length_mm))
-MCR_sw1_NAs$length_mm[is.na(MCR_sw1_NAs$length_mm)] <- 0 ###fill in zeros for length
-
-na_Biomass_filled_s1 <- which(is.na(MCR_sw1_NAs$wetmass_g))
-MCR_sw1_NAs$wetmass_g[is.na(MCR_sw1_NAs$wetmass_g)] <- 0 ###fill in zeros for biomass 
-
-na_ind_bio_filled_s1 <- which(is.na(MCR_sw1_NAs$ind_bio))
-MCR_sw1_NAs$ind_bio[is.na(MCR_sw1_NAs$ind_bio)]<-0 ###fill in zeros for individual biomass
+#turn NA characters into actual NA
+MCR_sw1_final[MCR_sw1_final == "NA"] <- NA
 
 
 #swath 250m2
 MCR_biomass_swath5 <- MCR_biomass_d3 %>%
   filter(subsite_level3 == 5)
 
-MCR_sw5_possiblecombos <- MCR_biomass_swath5 %>%
-  distinct(year, site, scientific_name, subsite_level1, subsite_level2, subsite_level3) %>%
-  tidyr::expand(year, site, scientific_name, subsite_level1, subsite_level2, subsite_level3)
+#need to combine the species columns for zero filling 
+join_MCR_s5 <- MCR_biomass_swath5 %>%
+  mutate(sp_combined = paste0(scientific_name, "_", species, "_", sp_code)) %>%
+  select(-c(scientific_name, species, sp_code, row_num))
 
-MCR_sw5_NAs <- left_join(MCR_sw5_possiblecombos, MCR_biomass_swath5)
+#zero fill 
+MCR_sw5_zero <- join_MCR_s5 %>%
+  complete(sp_combined,
+           nesting(project, habitat, raw_filename, year, month, day, date, site, subsite_level1, subsite_level2, subsite_level3),
+           fill = list(count_num=0, length_mm= NA, wetmass_g=0, ind_bio = 0))
 
-#View(MCR_sw5_NAs)
+#get original columns back
+MCR_sw5_final <- MCR_sw5_zero %>%
+  separate(sp_combined, into = c("scientific_name", "species", "sp_code"), sep = "_",remove = TRUE)
 
-#replace NAs with zeros
-
-na_count_num_filled_s5 <- which(is.na(MCR_sw5_NAs$count_num))
-MCR_sw5_NAs$count_num[is.na(MCR_sw5_NAs$count_num)]<-0 ###fill in zeros for count_num
-
-na_length_mm_filled_s5 <- which(is.na(MCR_sw5_NAs$length_mm))
-MCR_sw5_NAs$length_mm[is.na(MCR_sw5_NAs$length_mm)] <- 0 ###fill in zeros for length
-
-na_Biomass_filled_s5 <- which(is.na(MCR_sw5_NAs$wetmass_g))
-MCR_sw5_NAs$wetmass_g[is.na(MCR_sw5_NAs$wetmass_g)] <- 0 ###fill in zeros for biomass 
-
-na_ind_bio_filled_s5 <- which(is.na(MCR_sw5_NAs$ind_bio))
-MCR_sw5_NAs$ind_bio[is.na(MCR_sw5_NAs$ind_bio)]<-0 ###fill in zeros for individual biomass
+#turn NA characters into actual NA
+MCR_sw5_final[MCR_sw5_final == "NA"] <- NA
 
 #this includes both swaths and is zero filled 
-mcr_biomass_final <- rbind(MCR_sw1_NAs, MCR_sw5_NAs)
+mcr_biomass_final <- rbind(MCR_sw1_final, MCR_sw5_final)
 
 #now we are going to attach the species list, which includes the diet information 
 
 mcr_diet <- species_list %>%
   filter(project == "MCR")
 
-mcr_diet_cat <- merge(mcr_biomass_final, mcr_diet, by= "scientific_name")
+mcr_diet_cat <- merge(mcr_biomass_final, mcr_diet, by= c("scientific_name", "species", "sp_code", "project"))
 
 # dm conversion download from google drive
 
