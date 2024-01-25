@@ -333,7 +333,7 @@ tidy_v1c <- tidy_v1b %>%
   dplyr::rename(date = date_actual) %>%
   # Replace NA strings with actual NA values
   dplyr::mutate(dplyr::across(.cols = c(year, month, day), .fns = ~dplyr::na_if(., y = "NA"))) %>%
-  # Filter out the weird row with year as "(100840) rows" -this is the last line of MCR_Fish_Biomass
+  # Filter out the weird row with year as "(100840) rows" -this is the last line of MCR_LTER_Annual_Fish_Survey_20230615
   dplyr::filter(year != "(100840 rows)")
 
 # Check overall dates
@@ -807,11 +807,9 @@ tidy_v3 <- tidy_v2h %>%
   dplyr::relocate(sp_code, .after = subsite_level3) %>%
   dplyr::relocate(scientific_name, .after = sp_code) %>%
   dplyr::relocate(species, .after = scientific_name) %>%
-  dplyr::relocate(count.ind, .after = species) %>%
-  dplyr::relocate(count.num, .after = count.ind) %>%
+  dplyr::relocate(count.num, .after = species) %>%
   dplyr::relocate(cover.percent, .after = count.num) %>%
-  dplyr::relocate(density.ind_m, .after = cover.percent) %>%
-  dplyr::relocate(density.num_m, .after = density.ind_m) %>%
+  dplyr::relocate(density.num_m, .after = cover.percent) %>%
   dplyr::relocate(density.num_m2, .after = density.num_m) %>%
   dplyr::relocate(density.num_m3, .after = density.num_m2) %>%
   dplyr::relocate(dmperind.g_ind, .after = density.num_m3) %>%
@@ -824,13 +822,13 @@ tidy_v3 <- tidy_v2h %>%
   dplyr::relocate(length.um, .after = length.mm) %>%  
   dplyr::relocate(sfdrymass.g_m2, .after = length.um) %>%  
   dplyr::relocate(temp.c, .after = sfdrymass.g_m2) %>%  
-  dplyr::relocate(transect_area.m, .after = temp.c) %>%  
-  dplyr::relocate(transect_area.m2, .after = transect_area.m) %>% 
-  dplyr::relocate(wetmass.g, .after = transect_area.m2) %>%  
+  dplyr::relocate(transectarea.m, .after = temp.c) %>%  
+  dplyr::relocate(transectarea.m2, .after = transectarea.m) %>% 
+  dplyr::relocate(wetmass.g, .after = transectarea.m2) %>%  
   dplyr::relocate(wetmass.g_m2, .after = wetmass.g) %>%
   dplyr::relocate(wetmass.kg_transect, .after = wetmass.g_m2) %>%  
   dplyr::relocate(wetmass.mg_m3, .after = wetmass.kg_transect) %>%  
-  dplyr::mutate(dplyr::across(.cols = c(year:day, count.ind:wetmass.mg_m3), .fns = as.numeric))
+  dplyr::mutate(dplyr::across(.cols = c(year:day, count.num:wetmass.mg_m3), .fns = as.numeric))
 
 # Check structure
 dplyr::glimpse(tidy_v3)
@@ -841,7 +839,7 @@ dplyr::glimpse(tidy_v3)
 
 tidy_v4 <- tidy_v3 %>%
   # Pivot the measurement columns to long format
-  tidyr::pivot_longer(cols = count.ind:wetmass.mg_m3,
+  tidyr::pivot_longer(cols = count.num:wetmass.mg_m3,
                names_to = "measurement_type",
                values_to = "measurement_value") %>%
   # Create a measurement_unit column from measurement_type
