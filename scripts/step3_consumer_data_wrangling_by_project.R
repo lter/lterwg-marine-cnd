@@ -283,7 +283,7 @@ dm_con_sr <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/
 googledrive::with_drive_quiet(
   googledrive::drive_download(file = dm_con_sr$id, overwrite = T, path = file.path("other", dm_con_sr$name)) )
 
-dm_conv1 <- readxl::read_excel(path = file.path("other", "dm_conversions_cndwg.xlsx")) 
+dm_conv1 <- readxl::read_excel(path = file.path("other", "dm_conversions_cndwg.xlsx"),na="NA") 
 ##
 
 dm_conv <- dm_conv1 |> #read_csv("other/dm_conversions_cndwg.csv") |> 
@@ -324,7 +324,33 @@ mcr_ready <-mcr_all_dm1 %>%
 
 #### CCE 
 
+# read in the temperature data for merging later. 
 
+cce_temp_id <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/19INhcRd1xBKgDVd1G5W1B3QI4mlBr587")) %>%
+  dplyr::filter(name %in% c("cce_temperature_raw.csv"))
+
+googledrive::with_drive_quiet(
+  googledrive::drive_download(file = cce_temp_id$id, overwrite = T, path = file.path("other", cce_temp_id$name)) )
+
+cce_temp <- read.csv(file.path("other", "cce_temperature_raw.csv"),stringsAsFactors = F)
+
+# cce_temp1 <- cce_temp %>%
+#   rename(site=Line,subsite_level1=Station,yyyymm=Cruise,temp=temperature_degC) 
+            
+cce_mean_temp <- mean(cce_temp$temp, na.rm = T)
+         
+# calculate the dmperind dry biomass 
+cce <- dt %>%
+  dplyr::filter(project=="CCE") %>%
+  pivot_wider(names_from = c(measurement_type,measurement_unit), values_from = measurement_value) %>%
+  mutate(`dmperind_g/ind`=`drymass_g/m2`/`density_num/m2`,
+         temp_c = cce_mean_temp)  #using the ones from coastal CA chunk
+
+cce_ready<- cce %>%
+  pivot_longer(cols = `density_num/m2`:temp_c, 
+               names_to = "measurement_type",
+               values_to = "measurement_value") %>%
+  separate(measurement_type, into = c("measurement_type", "measurement_unit"), sep = "_",remove = FALSE) 
 
 
 #### CCE end
@@ -338,7 +364,7 @@ data_original <- dt %>%
                   project=="FCE")
   
 # concat data together
-harmonized_clean = rbind(data_original,coastalca_ready, sbc_ready,mcr_ready)
+harmonized_clean = rbind(data_original,coastalca_ready, sbc_ready,mcr_ready,mcr_ready,cce_ready)
 
 #### concat end
 
