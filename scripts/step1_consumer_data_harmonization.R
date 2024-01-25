@@ -40,7 +40,7 @@ dir.create(path = file.path("tier0", "raw_data", "consumer"), showWarnings = F)
 # For example, here I'm pulling all the SBC consumer data from Google Drive
 raw_SBC_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1ycKkpiURLVclobAdCmZx2s_ewcaFAV9Y")) %>%
   dplyr::filter(name %in% c("Annual_All_Species_Biomass_at_transect_20230814.csv",
-                            "IV_EC_talitrid_population_v2.csv"))
+                            "IV_EC_talitrid_population_v3.csv"))
 
 raw_FCE_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1BSQSXEbjgkSBJVN0p9CxhjVmfiv82U1t")) %>%
   dplyr::filter(name %in% c("map_revised01242024.csv"))
@@ -60,7 +60,7 @@ raw_PIE_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.co
                             "LTE-TIDE-NektonFlumeIndividual_v6_3.csv"))
 
 raw_CCE_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/19INhcRd1xBKgDVd1G5W1B3QI4mlBr587")) %>%
-  dplyr::filter(name %in% c("cce_prpoos_all_stations_1_24_2024.csv"))
+  dplyr::filter(name %in% c("cce_wdrymass.csv"))
 
 raw_NGA_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1j8QGQR6_vD1SQnFwVnaAy0W-1c_owCRv")) %>%
   dplyr::filter(name %in% c("nga_combined_clean.csv"))
@@ -142,7 +142,7 @@ for (i in 1:length(raw_files)){
   if (raw_file_name == "LTE-TIDE-NektonFlumeDensity_v5_1.csv") {
     raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", "consumer", raw_file_name), na.strings = ".", check.names = F)
   } 
-  else if (raw_file_name == "cce_prpoos_all_stations_1_24_2024.csv") {
+  else if (raw_file_name == "cce_wdrymass.csv") {
     raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", "consumer", raw_file_name), na.strings = ".", check.names = F)
   } 
   else if (raw_file_name == "LTE-TIDE-NektonFlumeIndividual_v6_3.csv") {
@@ -260,14 +260,14 @@ tidy_v0 %>%
 tidy_v1a <- tidy_v0 %>%
   dplyr::mutate(date_format = dplyr::case_when(
     raw_filename == "Annual_All_Species_Biomass_at_transect_20230814.csv" ~ "YYYY-MM-DD",
-    raw_filename == "IV_EC_talitrid_population_v2.csv" ~ "NA", # only has year and month
+    raw_filename == "IV_EC_talitrid_population_v3.csv" ~ "NA", # only has year and month
     raw_filename == "LTE-TIDE-NektonFlumeDensity_v5_1.csv" ~ "YYYY-MM-DD",
     raw_filename == "LTE-TIDE-NektonFlumeIndividual_v6_3.csv" ~ "YYYY-MM-DD",
     raw_filename == "MCR_LTER_Annual_Fish_Survey_20230615.csv" ~ "YYYY-MM-DD",
     raw_filename == "MLPA_benthic_site_means.csv" ~ "NA", # only has year
     raw_filename == "MLPA_fish_biomass_density_transect_raw_v2.csv" ~ "NA", # only has year month day
     raw_filename == "VCR14232_2.csv" ~ "MM/DD/YY",
-    raw_filename == "cce_prpoos_all_stations_1_24_2024.csv" ~ "MM/DD/YYYY",
+    raw_filename == "cce_wdrymass.csv" ~ "MM/DD/YYYY",
     raw_filename == "map_revised01242024.csv" ~ "NA", # only has year and month
     raw_filename == "nga_combined_clean.csv" ~ "YYYY-MM-DDTHH:MM:SS-0800",
     # raw_filename == "" ~ "",
@@ -372,9 +372,9 @@ tidy_v2a <- tidy_v1c %>%
   dplyr::mutate(dplyr::across(.cols = c(-year, -month, -day, -date, -sp_code), .fns = ~dplyr::na_if(., y = ""))) %>%
   # Replace NA strings with actual NA values
   dplyr::mutate(dplyr::across(.cols = c(-year, -month, -day, -date, -sp_code), .fns = ~dplyr::na_if(., y = "NA"))) %>%
-  # Replace any mention of -1 (missing value indicator in MCR_Fish_Biomass_v3.csv) with actual NA values
+  # Replace any mention of -1 (missing value indicator in MCR_LTER_Annual_Fish_Survey_20230615.csv) with actual NA values
   dplyr::mutate(wetmass.g = dplyr::case_when(
-    raw_filename == "MCR_Fish_Biomass_v3.csv" & wetmass.g == -1 ~ NA,
+    raw_filename == "MCR_LTER_Annual_Fish_Survey_20230615.csv" & wetmass.g == -1 ~ NA,
     T ~ wetmass.g
   )) %>%
   # If the species is just "spp " or "spp" or "spp." or "partial" or "No fish observed" then we can set it as NA 
