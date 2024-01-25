@@ -87,6 +87,8 @@ googledrive::with_drive_quiet(
 
 pisco_site <- readxl::read_excel(path = file.path("other", "master_site_table.xlsx")) 
 
+
+#read in the temperature data table to calculate the temperature for both pisco and SBC
 sbc_temp <- env %>%
   filter(project=="SBC") %>%
   filter(measurement_type=="temperature") %>%
@@ -105,7 +107,7 @@ sbc_temp_ave <- sbc_temp_summer %>%
 
 # filter out the site we need
 pisco_site1 <- pisco_site %>% 
-  dplyr::select(site,Include_Exclude, mlpa_region)
+  dplyr::select(site,Include_Exclude, mlpa_region,site_status)
 
 #test to see if the sites are matched, yes, they are matched and we can start the filtering
 # peace<-dt %>%
@@ -115,41 +117,45 @@ pisco_site1 <- pisco_site %>%
 #   full_join(pisco_site1, by="site")
 
 # we want to remove the sites that were not consistently survey in the history and keep the ones that has the long term surveys
-site_choose <- pisco_site1 %>% 
+pisco_site_choose <- pisco_site1 %>% 
   dplyr::filter(Include_Exclude=="Include") %>%
-  dplyr::select(site) %>%
   mutate(project="CoastalCA", keep="y") 
 
 # filter to keep the site we need
 coastalca_dt <- dt %>% 
   filter(project=="CoastalCA") %>%
-  left_join(site_choose, by=c("site","project")) %>%
+  left_join(pisco_site_choose, by=c("site","project")) %>%
   filter(!(project=="CoastalCA"&is.na(keep))) %>%
   dplyr::select(-keep) %>%
   # remove the benthic survey because no biomass in the benthic survey
   filter(!(project=="CoastalCA"&raw_filename=="MLPA_benthic_site_means.csv"))
 
+# Jenn C want to keep the region and MPA status and remove the outer/inner and top_mid_bot category, remove the top canopy because the survey was inconsistent
+coastalca_dt1 <- coastalca_dt %>%
+  filter(subsite_level3!="CAN") %>% # no record directly from the top canopy
+  mutate(subsite_level3 = subsite_level2,
+         subsite_level2 = site,
+         subsite_level1 = site_status,
+         site=mlpa_region) %>%
+  dplyr::select(- c(Include_Exclude, mlpa_region, site_status))
+
 #convert wetmass into dry mass
 # calculate the biomass density for coastal CA
-coastalca_dt1 <- coastalca_dt %>%
-  mutate(measurement_type=gsub("_", "", measurement_type)) %>%
+coastalca_dt2 <- coastalca_dt1 %>%
   pivot_wider(names_from = c(measurement_type, measurement_unit),values_from = measurement_value) %>%
   mutate(`drymass_g/m2`=(`wetmass_kg/transect`*0.29/`transectarea_m2`)*1000, #convert from kg to g
          `dmperind_g/ind` = `wetmass_kg/transect`*0.29*1000/`count_num`,
          `density_num/m2` = `count_num`/`transectarea_m2`,
          `temp_c` = sbc_temp_ave$MEAN) 
 
-coastalca_dt2 <-coastalca_dt1 %>%
+coastalca_dt3 <-coastalca_dt2 %>%
   pivot_longer(cols = count_num:temp_c, 
                names_to = "measurement_type",
                values_to = "measurement_value")
 
-coastalca_ready <- coastalca_dt2 %>%
+coastalca_ready <- coastalca_dt3 %>%
   separate(measurement_type, into = c("measurement_type", "measurement_unit"),sep = "_", remove = FALSE) 
   
-# peace<-coastalca_ready %>%  
-#   distinct(measurement_type,measurement_unit)
-
 #### COASTAL CA end
 
 
