@@ -170,7 +170,7 @@ sbc_dt1 <- sbc_dt %>%
   pivot_wider(names_from = c(measurement_type,measurement_unit), values_from = measurement_value) %>%
   #if there is a shell-free drymass we used it ,otherwise, we use dry mass
   mutate(`drymass_g/m2` = ifelse(!is.na(`sfdrymass_g/m2`),`sfdrymass_g/m2`,`drymass_g/m2`)) %>%
-  mutate(`dmperindv_g/ind`=`drymass_g/m2`/`density_num/m2`,
+  mutate(`dmperind_g/ind`=`drymass_g/m2`/`density_num/m2`,
          temp_c = sbc_temp_ave$MEAN)  #using the ones from coastal CA chunk
 
 sbc_ready<- sbc_dt1 %>%
