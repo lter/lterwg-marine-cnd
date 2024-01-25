@@ -433,6 +433,8 @@ tidy_v2b <- tidy_v2a %>%
   dplyr::mutate(scientific_name = stringr::str_replace(scientific_name, "^[:blank:]", "")) %>%
   # Remove " like" or " larvae"
   dplyr::mutate(scientific_name = stringr::str_replace(scientific_name, " larvae$| like$| others$", "")) %>%
+  # Remove any instance of trailing space again
+  dplyr::mutate(scientific_name = stringr::str_replace(scientific_name, "[:blank:]$", "")) %>%
   # Doing more custom fixes in scientific_name:
   dplyr::mutate(scientific_name = dplyr::case_when(
     scientific_name == "No megalorchestia" ~ "Megalorchestia",
@@ -483,7 +485,7 @@ tidy_v2b <- tidy_v2a %>%
     scientific_name == "multiples" ~ NA,
     scientific_name == "others" ~ NA,
     scientific_name == "Sunfishes" ~ "Centrarchidae",
-    scientific_name == "killifish/topminnow" ~ "Fundulus pulvereus",
+    scientific_name == "killifish/topminnow" ~ "Cyprinodontiformes",
     scientific_name == "silverside species" ~ "Atheriniformes",
     scientific_name == "Needlefishes" ~ "Belonidae",
     scientific_name == "mojarra species" ~ "Gerreidae",
@@ -576,11 +578,11 @@ some_common_names_fix_v2 <- some_common_names_fix %>%
     common_name == "Pufferfish" ~ "Tetraodontidae",
     common_name == "Filefish" ~ "Monacanthidae",
     common_name == "American Anchovy" ~ "Engraulidae",
+    common_name == "Goby" ~ "Gobiidae",
     T ~ family_fix
   )) %>%
   dplyr::mutate(order_fix = dplyr::case_when(
     common_name == "Silversides" ~ "Atheriniformes",
-    common_name == "Goby" ~ "Gobiidae",
     T ~ order_fix
   )) %>%
   dplyr::mutate(class_fix = dplyr::case_when(
@@ -600,7 +602,11 @@ tidy_v2c <- left_join(tidy_v2b, some_common_names_fix_v2, by = "common_name") %>
   # Drop the rest of the columns from the taxon table
   dplyr::select(-dplyr::contains("_fix")) %>%
   # Combine info from across many taxon columns into scientific_name
-  dplyr::mutate(scientific_name = dplyr::coalesce(scientific_name, species, genus, family, order, class, phylum)) 
+  dplyr::mutate(scientific_name = dplyr::coalesce(scientific_name, species, genus, family, order, class, phylum)) %>%
+  dplyr::mutate(family = dplyr::case_when(
+    family == "Craniata" ~ NA,
+    T ~ family
+  ))
 
 # Check unique scientific names
 unique(tidy_v2c$scientific_name)
@@ -688,6 +694,7 @@ if (species_update_flag == 1){
       species_fix == "Sebastes chrysomelas/carnatus young of year" ~ "Sebastes chrysomelas; Sebastes carnatus",
       species_fix == "Sebastes serranoides,flavidus,melanops" ~ "Sebastes serranoides; Sebastes flavidus; Sebastes melanops",
       species_fix == "Sebastes carnatus, caurinus" ~ "Sebastes carnatus; Sebastes caurinus",
+      species_fix == "Unidentified killifish/topminnow" ~ "Cyprinodontiformes",
       T ~ species_fix
     )) %>%
     # Drop the inferior species column (some strings had numbers in them or had "(cf)")
@@ -719,7 +726,12 @@ if (species_update_flag == 1){
 
 # Combine PIE and CoastalCA species codes
 PIE_CoastalCA_codes <- PIE_sp_codes %>%
-  dplyr::bind_rows(CoastalCA_sp_codes)
+  dplyr::bind_rows(CoastalCA_sp_codes) %>%
+  dplyr::mutate(species = dplyr::case_when(
+    !stringr::str_detect(species, " ") ~ NA,
+    T ~ species
+  )) %>%
+  dplyr::mutate(dplyr::across(.cols = dplyr::everything(), .fns = ~dplyr::na_if(., y = "NA"))) 
 
 # Now join with the table for PIE species codes 
 tidy_v2e <- tidy_v2d %>%
@@ -741,7 +753,15 @@ tidy_v2e <- tidy_v2d %>%
                 genus = dplyr::coalesce(genus.x, genus.y),
                 species = dplyr::coalesce(species.x, species.y)) %>%
   # Drop the duplicate columns that resulted from joining
-  dplyr::select(-contains(".x"), -contains(".y"))
+  dplyr::select(-contains(".x"), -contains(".y"))  %>%
+  dplyr::mutate(scientific_name = dplyr::case_when(
+    scientific_name == "Cancridae " ~ "Cancridae",
+    T ~ scientific_name
+  )) %>%
+  dplyr::mutate(species = dplyr::case_when(
+    species == "Cancridae " ~ NA,
+    T ~ species
+  )) 
 
 # Check structure
 dplyr::glimpse(tidy_v2e)
@@ -823,8 +843,7 @@ tidy_v3 <- tidy_v2h %>%
   dplyr::relocate(dmperind.g_ind, .after = density.num_m3) %>%
   dplyr::relocate(drymass.g_m, .after = dmperind.g_ind) %>% 
   dplyr::relocate(drymass.g_m2, .after = drymass.g_m) %>%  
-  dplyr::relocate(drymass.mgC_m2, .after = drymass.g_m2) %>%  
-  dplyr::relocate(excretion_egestion.ug_m3, .after = drymass.mgC_m2) %>%  
+  dplyr::relocate(excretion_egestion.ug_m3, .after = drymass.g_m2) %>%  
   dplyr::relocate(length.cm, .after = excretion_egestion.ug_m3) %>%  
   dplyr::relocate(length.mm, .after = length.cm) %>%  
   dplyr::relocate(length.um, .after = length.mm) %>%  
