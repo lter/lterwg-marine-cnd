@@ -348,8 +348,7 @@ cce_mean_temp <- mean(cce_temp$temp, na.rm = T)
 # calculate the dmperind dry biomass 
 cce <- dt %>%
   dplyr::filter(project=="CCE") %>%
-  # there was NA in the scientific name which should be other type. might delete this once the harmonized script fixed. 
-  mutate(scientific_name = ifelse(is.na(scientific_name), "other", scientific_name)) %>%
+  filter(!(is.na(scientific_name)|scientific_name=="others")) %>% # there was a species named "others" in the data that don't have scientific name, Dante suggests we removed it from the list 
   pivot_wider(names_from = c(measurement_type,measurement_unit), values_from = measurement_value) %>%
   mutate(`dmperind_g/ind`=ifelse(`density_num/m2`>0,`drymass_g/m2`/`density_num/m2`,0),
          temp_c = cce_mean_temp) 

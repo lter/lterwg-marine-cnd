@@ -105,10 +105,6 @@ peace3<-df3 %>%
   filter(is.na(diet_cat)) %>%
   distinct(project,habitat,sp_code,scientific_name,species,diet_cat)
 
-#cce data seems to have issue, temporary fix for it
-df3 <- df3 %>%
-  mutate(diet_cat = if_else(project == "CCE"&is.na(diet_cat), "algae_detritus", diet_cat))
-
 ###########################
 #using bradley's code below for excretion calculation
 cons <- df3
