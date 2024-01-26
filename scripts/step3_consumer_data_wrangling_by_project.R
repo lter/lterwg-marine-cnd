@@ -146,11 +146,14 @@ coastalca_dt1 <- coastalca_dt %>%
 coastalca_dt2 <- coastalca_dt1 %>%
   pivot_wider(names_from = c(measurement_type, measurement_unit),values_from = measurement_value) %>%
   dplyr::select(-row_num) %>%
-  #zero fill the pisco data
+  #zero fill the pisco data, because every year the specie might get added, so we only zero fill in a given year. 
+  mutate(year=as.character(year)) %>%
+  group_by(year) %>%
   complete(nesting(sp_code,scientific_name,species),
-           nesting(project,habitat,raw_filename,year,month,day,date,
+           nesting(project,habitat,raw_filename,month,day,date,
                                                           site, subsite_level1, subsite_level2, subsite_level3,transectarea_m2),
          fill = list(count_num=0, length_cm=NA,`wetmass_kg/transect` = 0)) %>%
+  ungroup() %>%
   filter(sp_code!="NO_ORG") %>% #REMOVE THE SPECIES THAT ARE NOT ORGANISM
   mutate(`drymass_g/m2`=(`wetmass_kg/transect`*0.29/`transectarea_m2`)*1000, #convert from kg to g
          `dmperind_g/ind` = ifelse(count_num>0,`wetmass_kg/transect`*0.29*1000/`count_num`,0), 
@@ -296,12 +299,13 @@ mcr_all_dm <- mcr_dm_coeff |>
          subsite_level3 = as.numeric(subsite_level3),
          `transectarea_m2` = subsite_level3*50,
          `density_num/m2` = count_num/transectarea_m2,
+        `wetmass_g/m2` = wetmass_g/`transectarea_m2`,
          temp_c = 26.5)
 
 mcr_all_dm1 <- mcr_all_dm |> 
   mutate(row_num = paste0(raw_filename, "_", 1:nrow(mcr_all_dm))) |>
   dplyr::select(project,habitat,raw_filename,row_num,year,month,day,date,site,subsite_level1,subsite_level2,subsite_level3,sp_code,scientific_name,species,
-                count_num,length_mm,wetmass_g,`dmperind_g/m2`,`transectarea_m2`,`density_num/m2`,temp_c) 
+                count_num,length_mm,`wetmass_g/m2`,`dmperind_g/m2`,`transectarea_m2`,`density_num/m2`,temp_c) 
  
 mcr_ready <-mcr_all_dm1 %>%
   pivot_longer(cols = count_num:temp_c, 
