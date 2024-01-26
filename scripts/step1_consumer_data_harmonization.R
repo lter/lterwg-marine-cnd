@@ -73,15 +73,15 @@ data_key_id <- googledrive::drive_ls(googledrive::as_id("https://drive.google.co
   dplyr::filter(name %in% c("CND_Data_Key_spatial.xlsx"))
 
 # Identify PIE and CoastalCA species code tables
-sp_codes_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/1LYffjtQdLcNYkStrf_FukihQ6tPKlw1a")) %>%
-  dplyr::filter(name %in% c("PIE_speciescode_table.xlsx", "CoastalCA_speciescode_table.csv"))
+sp_codes_id <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/1LYffjtQdLcNYkStrf_FukihQ6tPKlw1a")) %>%
+  dplyr::filter(name %in% c("PIE_CoastalCA_codes.csv"))
 
 # Identify the latest harmonized species table
 harm_sp_codes_id <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH")) %>%
   dplyr::filter(name %in% c("harmonized_consumer_species.csv"))
 
 # Combine file IDs
-other_ids <- rbind(data_key_id, sp_codes_ids, harm_sp_codes_id)
+other_ids <- rbind(data_key_id, sp_codes_id, harm_sp_codes_id)
 
 # For each raw data file, download it into the consumer folder
 for(k in 1:nrow(raw_ids)){
@@ -359,8 +359,7 @@ rm(list = setdiff(ls(), c("tidy_v1c", "species_update_flag")))
 ## -------------------------------------------- ##
 
 # Read in the tables for PIE and CoastalCA species codes (for later)
-PIE_sp_codes <- readxl::read_excel(path = file.path("tier0", "PIE_speciescode_table.xlsx")) 
-CoastalCA_sp_codes <- read.csv(file = file.path("tier0", "CoastalCA_speciescode_table.csv"))
+PIE_CoastalCA_codes <- read.csv(file = file.path("tier0", "PIE_CoastalCA_codes.csv"))
 harm_sp_codes <- read.csv(file = file.path("tier0", "harmonized_consumer_species.csv"), na.strings = ".") %>%
   dplyr::select(project, sp_code, common_name, scientific_name, species) 
 
@@ -417,6 +416,11 @@ tidy_v2b <- tidy_v2a %>%
                                        replacement = " ",
                                        x = scientific_name)) %>%
   # Fixing names in scientific_name:
+  # "No fish observed" had "Craniata" as the family so it needs to be removed
+  dplyr::mutate(family = dplyr::case_when(
+    project == "MCR" & scientific_name == "No fish observed" & family == "Craniata" ~ NA,
+    T ~ family
+  )) %>%
   # Remove any instance of "unidentified " + a number  
   dplyr::mutate(scientific_name = stringr::str_replace(scientific_name, "unidentified [:digit:]*", "")) %>%
   # Remove any instance of "Unidentified " or "Unidentifiable " or " unidentified" 
@@ -494,18 +498,111 @@ tidy_v2b <- tidy_v2a %>%
     scientific_name == "No fish observed" ~ NA,
     T ~ scientific_name
   )) %>%
-  dplyr::mutate(family = dplyr::case_when(
-    scientific_name == "Balistidae" ~ "Balistidae",
-    T ~ family
+  dplyr::mutate(kingdom = case_when(
+    project == "MCR" & scientific_name == "Cetoscarus ocellatus" ~ "Animalia",
+    project == "MCR" & scientific_name == "Chlorurus spilurus" ~ "Animalia",
+    project == "MCR" & scientific_name == "Halichoeres claudia" ~ "Animalia",
+    project == "MCR" & scientific_name == "Monotaxis" ~ "Animalia",
+    project == "MCR" & scientific_name == "Nectamia fusc" ~ "Animalia",
+    project == "MCR" & scientific_name == "Ostorhinchus angustatus" ~ "Animalia",
+    project == "MCR" & scientific_name == "Ostorhinchus nigrofasciatus" ~ "Animalia",
+    project == "MCR" & scientific_name == "Pomachromis fuscidorsalis" ~ "Animalia",
+    project == "MCR" & scientific_name == "" ~ "Animalia",
+    project == "MCR" & scientific_name == "" ~ "Animalia",
+    project == "MCR" & scientific_name == "" ~ "Animalia",
+    
+    T ~ kingdom
+    
+  )) %>%
+  dplyr::mutate(phylum = case_when(
+    project == "MCR" & scientific_name == "Cetoscarus ocellatus" ~ "Chordata",
+    project == "MCR" & scientific_name == "Chlorurus spilurus" ~ "Chordata",
+    project == "MCR" & scientific_name == "Halichoeres claudia" ~ "Chordata",
+    project == "MCR" & scientific_name == "Monotaxis" ~ "Chordata",
+    project == "MCR" & scientific_name == "Nectamia fusc" ~ "Chordata",
+    project == "MCR" & scientific_name == "Ostorhinchus angustatus" ~ "Chordata",
+    project == "MCR" & scientific_name == "Ostorhinchus nigrofasciatus" ~ "Chordata",
+    project == "MCR" & scientific_name == "Pomachromis fuscidorsalis" ~ "Chordata",
+    project == "MCR" & scientific_name == "" ~ "Chordata",
+    project == "MCR" & scientific_name == "" ~ "Chordata",
+    project == "MCR" & scientific_name == "" ~ "Chordata",
+    
+    
+    T ~ phylum
+    
+  )) %>%
+  dplyr::mutate(class = case_when(
+    project == "MCR" & scientific_name == "Cetoscarus ocellatus" ~ "Actinopterygii",
+    project == "MCR" & scientific_name == "Chlorurus spilurus" ~ "Actinopterygii",
+    project == "MCR" & scientific_name == "Halichoeres claudia" ~ "Actinopterygii",
+    project == "MCR" & scientific_name == "Monotaxis" ~ "Actinopterygii",
+    project == "MCR" & scientific_name == "Nectamia fusc" ~ "Actinopterygii",
+    project == "MCR" & scientific_name == "Ostorhinchus angustatus" ~ "Teleostei",
+    project == "MCR" & scientific_name == "Ostorhinchus nigrofasciatus" ~ "Actinopterygii",
+    project == "MCR" & scientific_name == "Pomachromis fuscidorsalis" ~ "Actinopterygii",
+    project == "MCR" & scientific_name == "" ~ "Actinopterygii",
+    project == "MCR" & scientific_name == "" ~ "Actinopterygii",
+    
+    T ~ class
+    
+  )) %>%
+  dplyr::mutate(order = case_when(
+    project == "MCR" & scientific_name == "Cetoscarus ocellatus" ~ "Labriformes",
+    project == "MCR" & scientific_name == "Chlorurus spilurus" ~ "Labriformes",
+    project == "MCR" & scientific_name == "Halichoeres claudia" ~ "Labriformes",
+    project == "MCR" & scientific_name == "Monotaxis" ~ "Spariformes",
+    project == "MCR" & scientific_name == "Nectamia fusc" ~ "Kurtiformes",
+    project == "MCR" & scientific_name == "Ostorhinchus angustatus" ~ "Kurtiformes",
+    project == "MCR" & scientific_name == "Ostorhinchus nigrofasciatus" ~ "Kurtiformes",
+    project == "MCR" & scientific_name == "Pomachromis fuscidorsalis" ~ NA,
+    project == "MCR" & scientific_name == "" ~ "Labriformes",
+    project == "MCR" & scientific_name == "" ~ "Labriformes",
+    project == "MCR" & scientific_name == "" ~ "Labriformes",
+    
+    T ~ order
+    
   )) %>%
   dplyr::mutate(family = dplyr::case_when(
-    scientific_name == "Blenniidae" ~ "Blenniidae",
+    project == "MCR" & scientific_name == "Balistidae" ~ "Balistidae",
+    project == "MCR" & scientific_name == "Blenniidae" ~ "Blenniidae",
+    project == "MCR" & scientific_name == "Caracanthus maculatus" ~ "Caracanthidae",
+    project == "MCR" & scientific_name == "Caracanthus unipinna" ~ "Caracanthidae",
+    project == "MCR" & scientific_name == "Carangidae" ~ "Carangidae",
+    project == "MCR" & scientific_name == "Chlorurus spilurus" ~ "Scaridae",
+    project == "MCR" & scientific_name == "Gunnellichthys monostigma" ~ "Microdesmidae",
+    project == "MCR" & scientific_name == "Halichoeres claudia" ~ "Labridae",
+    project == "MCR" & scientific_name == "Holocentridae" ~ "Holocentridae",
+    project == "MCR" & scientific_name == "Labridae" ~ "Labridae",
+    project == "MCR" & scientific_name == "Monotaxis" ~ "Lethrinidae",
+    project == "MCR" & scientific_name == "Nectamia fusc" ~ "Apogonidae",
+    project == "MCR" & scientific_name == "Nemateleotris magnifica" ~ "Microdesmidae",
+    project == "MCR" & scientific_name == "Ostorhinchus angustatus" ~ "Apogonidae",
+    project == "MCR" & scientific_name == "Ostorhinchus nigrofasciatus" ~ "Apogonidae",
+    project == "MCR" & scientific_name == "Pomachromis fuscidorsalis" ~ "Pomacentridae",
+    project == "MCR" & scientific_name == "" ~ "",
+    project == "MCR" & scientific_name == "" ~ "",
+    project == "MCR" & scientific_name == "" ~ "",
+    
+    
     T ~ family
   )) %>%
-  dplyr::mutate(family = dplyr::case_when(
-    scientific_name == "Caracanthus maculatus" ~ "Caracanthidae",
-    T ~ family
+  dplyr::mutate(genus = case_when(
+    project == "MCR" & scientific_name == "Cetoscarus ocellatus" ~ "Cetoscarus",
+    project == "MCR" & scientific_name == "Chlorurus spilurus" ~ "Chlorurus",
+    project == "MCR" & scientific_name == "Halichoeres claudia" ~ "Halichoeres",
+    project == "MCR" & scientific_name == "Monotaxis" ~ "Monotaxis",
+    project == "MCR" & scientific_name == "Nectamia fusc" ~ "Nectamia",
+    project == "MCR" & scientific_name == "Ostorhinchus angustatus" ~ "Ostorhinchus",
+    project == "MCR" & scientific_name == "Ostorhinchus nigrofasciatus" ~ "Ostorhinchus",
+    project == "MCR" & scientific_name == "Pomachromis fuscidorsalis" ~ "Pomachromis",
+    project == "MCR" & scientific_name == "" ~ "",
+    project == "MCR" & scientific_name == "" ~ "",
+    
+    
+    T ~ genus
+    
   )) 
+
 
 # Check unique scientific names
 unique(tidy_v2b$scientific_name)
@@ -614,11 +711,7 @@ tidy_v2c <- left_join(tidy_v2b, some_common_names_fix_v2, by = "common_name") %>
   # Drop the rest of the columns from the taxon table
   dplyr::select(-dplyr::contains("_fix")) %>%
   # Combine info from across many taxon columns into scientific_name
-  dplyr::mutate(scientific_name = dplyr::coalesce(scientific_name, species, genus, family, order, class, phylum)) %>%
-  dplyr::mutate(family = dplyr::case_when(
-    family == "Craniata" ~ NA,
-    T ~ family
-  ))
+  dplyr::mutate(scientific_name = dplyr::coalesce(scientific_name, species, genus, family, order, class, phylum)) 
 
 # Check unique scientific names
 unique(tidy_v2c$scientific_name)
@@ -735,52 +828,6 @@ if (species_update_flag == 1){
 } else if (species_update_flag == 0){
     tidy_v2d <- tidy_v2c
 }
-
-# Combine PIE and CoastalCA species codes
-PIE_CoastalCA_codes <- PIE_sp_codes %>%
-  dplyr::bind_rows(CoastalCA_sp_codes) %>%
-  dplyr::mutate(species = dplyr::case_when(
-    !stringr::str_detect(species, " ") ~ NA,
-    T ~ species
-  )) %>%
-  dplyr::mutate(dplyr::across(.cols = dplyr::everything(), .fns = ~dplyr::na_if(., y = "NA"))) %>%
-  # Quick fix, remember to revisit
-  dplyr::mutate(scientific_name = dplyr::case_when(
-    scientific_name == "Cancridae " ~ "Cancridae",
-    T ~ scientific_name
-  )) %>%
-  dplyr::mutate(kingdom = dplyr::case_when(
-    scientific_name == "Cancridae" ~ "Animalia",
-    T ~ kingdom
-  )) %>%
-  dplyr::mutate(phylum = dplyr::case_when(
-    scientific_name == "Cancridae" ~ "Arthropoda",
-    T ~ phylum
-  )) %>%
-  dplyr::mutate(class = dplyr::case_when(
-    scientific_name == "Cancridae" ~ "Malacostraca",
-    T ~ class
-  )) %>%
-  dplyr::mutate(order = dplyr::case_when(
-    scientific_name == "Cancridae" ~ "Decapoda",
-    T ~ order
-  )) %>%
-  dplyr::mutate(family = dplyr::case_when(
-    scientific_name == "Cancridae" ~ "Cancridae",
-    T ~ family
-  )) %>%
-  dplyr::mutate(genus = dplyr::case_when(
-    scientific_name == "Cancridae" ~ NA,
-    T ~ genus
-  )) %>%  
-  dplyr::mutate(species = dplyr::case_when(
-    scientific_name == "Cancridae" ~ NA,
-    T ~ species
-  )) %>%  
-  dplyr::mutate(species = dplyr::case_when(
-    scientific_name == "Menidia menidia" ~ "Menidia menidia",
-    T ~ species
-  )) 
 
 # Now join with the table for PIE species codes 
 tidy_v2e <- tidy_v2d %>%
