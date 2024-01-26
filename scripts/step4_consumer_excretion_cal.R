@@ -63,8 +63,8 @@ rm(list = ls())
 
 #### read data
 # read in the harmonized data and start the wrangling, by project
-dt <- read.csv(file.path("tier1", "harmonized_consumer_ready_for_excretion.csv"),stringsAsFactors = F,na.strings =".") 
-#dt <- harmonized_clean
+df <- read.csv(file.path("tier1", "harmonized_consumer_ready_for_excretion.csv"),stringsAsFactors = F,na.strings =".") 
+#df <- harmonized_clean
 species_list <- readxl::read_excel(path = file.path("tier1", "CNDWG_harmonized_consumer_species.xlsx"),na=".")
 
 #### read data end 
@@ -74,16 +74,14 @@ species_list <- readxl::read_excel(path = file.path("tier1", "CNDWG_harmonized_c
 
 # take out the rows that are needed 
 
-dt1 <-dt %>%
-  #use pisco data as an example
-  #filter(project=="CoastalCA") %>%
+df1 <-df %>%
   filter(measurement_type %in% c("dmperind","density","temp")) 
 
 # #check the unit that match with the measurement, good to go
 # peace <- dt1 %>%
 #   distinct(project,habitat,measurement_type,measurement_unit)
 
-dt2 <- dt1 %>%
+df2 <- df1 %>%
   pivot_wider(names_from = c(measurement_type,measurement_unit), values_from = measurement_value) 
 
 # check species list before merging, need to check
@@ -99,12 +97,21 @@ spe2 <- species_list %>%
   ungroup()
 
 # merge with the species list
-dt3 <-dt2 %>%
+df3 <-df2 %>%
   left_join(spe2,by=c("project","sp_code","scientific_name","species")) 
+
+# check to see anything that don't have diet cat column
+peace3<-df3 %>%
+  filter(is.na(diet_cat)) %>%
+  distinct(project,habitat,sp_code,scientific_name,species,diet_cat)
+
+#cce data seems to have issue, temporary fix for it
+df3 <- df3 %>%
+  mutate(diet_cat = if_else(project == "CCE"&is.na(diet_cat), "algae_detritus", diet_cat))
 
 ###########################
 #using bradley's code below for excretion calculation
-cons <- dt3
+cons <- df3
 
 cons_np_ratio <- cons %>% 
   #N
@@ -135,13 +142,10 @@ cons_np_ratio <- cons %>%
   #        `npind_unitless` = NtoPexc_molar)
 
 
-# check FCE case
-# peace4 <- cons_np_ratio %>%
-#   filter(project=="FCE") 
 ##################### end of bradley's code #####################
 ##### Data clean up #######
 
-dt_final <- cons_np_ratio %>% 
+df_final <- cons_np_ratio %>% 
   dplyr::select(-c(common_name,kingdom,phylum,class,order,family,genus,taxa_group,N_vert_coef,N_diet_coef,Nexc_log10,P_vert_coef,P_diet_coef,Pexc_log10,diet_cat)) %>%
   pivot_longer(cols = -c(project,habitat,raw_filename,row_num,year,month,day,date,site,subsite_level1,subsite_level2,subsite_level3,sp_code,scientific_name,species), 
              names_to = "measurement_type1",
@@ -149,14 +153,14 @@ dt_final <- cons_np_ratio %>%
   separate(measurement_type1, into = c("measurement_type", "measurement_unit"),sep = "_", remove = T) 
 
 # check FCE case
-peace4 <- dt_final %>%
+peace4 <- df_final %>%
   filter(project=="FCE")
 
 #### export and write to the drive
 # Export locally
 tidy_filename <- "harmonized_consumer_excretion.csv"
 
-write.csv(dt_final, file = file.path("tier2", tidy_filename), na = '.', row.names = F)
+write.csv(df_final, file = file.path("tier2", tidy_filename), na = '.', row.names = F)
 
 # Export harmonized clean dataset to Drive
 googledrive::drive_upload(media= file.path("tier2",tidy_filename), overwrite = T,
