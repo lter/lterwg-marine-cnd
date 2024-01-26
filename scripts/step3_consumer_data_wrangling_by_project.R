@@ -295,7 +295,7 @@ mcr_dm_coeff <- left_join(mcr_diet_cat, dm_coeff, by = "class")
 na_coeff_result <- which(is.na(mcr_dm_coeff$dm_coeff)) #yay
 
 mcr_all_dm <- mcr_dm_coeff |> 
-  mutate(`dmperind_g/m2` = ind_bio*dm_coeff,
+  mutate(`dmperind_g/ind` = ind_bio*dm_coeff,
          subsite_level3 = as.numeric(subsite_level3),
          `transectarea_m2` = subsite_level3*50,
          `density_num/m2` = count_num/transectarea_m2,
@@ -305,7 +305,7 @@ mcr_all_dm <- mcr_dm_coeff |>
 mcr_all_dm1 <- mcr_all_dm |> 
   mutate(row_num = paste0(raw_filename, "_", 1:nrow(mcr_all_dm))) |>
   dplyr::select(project,habitat,raw_filename,row_num,year,month,day,date,site,subsite_level1,subsite_level2,subsite_level3,sp_code,scientific_name,species,
-                count_num,length_mm,`wetmass_g/m2`,`dmperind_g/m2`,`transectarea_m2`,`density_num/m2`,temp_c) 
+                count_num,length_mm,`wetmass_g/m2`,`dmperind_g/ind`,`transectarea_m2`,`density_num/m2`,temp_c) 
  
 mcr_ready <-mcr_all_dm1 %>%
   pivot_longer(cols = count_num:temp_c, 
