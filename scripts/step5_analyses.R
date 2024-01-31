@@ -160,4 +160,4 @@ fce_true_zeros <- fce_join |>
   filter(bm_tot_m != 0 | (bm_tot_m == 0 & spp_code == 13)) |> 
   select(-spp_code)#this is right! Gets rid of made-up site combinations - double checked before removing spp_code column
 # write_csv(fce_true_zeros, "../../../fce_exc_calculations_01312023.csv")
-read_csv("../../../fce_exc_calculations_01312023.csv")
+# read_csv("../../../fce_exc_calculations_01312023.csv")
