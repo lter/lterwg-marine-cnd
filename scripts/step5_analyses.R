@@ -135,5 +135,29 @@ fce_summ_clean <- fce_summ |>
 unique(fce_summ_clean$site)
 #seems like a lot of artifical zeros 
 #below shows legitimate zeros - need to recode columns and select() then join to link up with above and get rid of artifical zeros
-map <- mastermap_yrs1thru19 |> 
-  filter(SPECIESCODE == 13)
+map1 <- mastermap_yrs1thru19 |> 
+  select(HYDROYEAR, s.mo, DRAINAGE, SITE, BOUT, SPECIESCODE) |> 
+  separate(HYDROYEAR, into = c("year", "void")) |> 
+  select(-void) |> 
+  rename(
+    year = year,
+    month = s.mo,
+    site = DRAINAGE,
+    subsite_level1 = SITE,
+    subsite_level2 = BOUT,
+    spp_code = SPECIESCODE
+  ) |> 
+  mutate(year = as.integer(year),
+         month = as.integer(month),
+         subsite_level1 = as.character(subsite_level1),
+         subsite_level2 = as.character(subsite_level2)) |> 
+  filter(spp_code == 13) |> 
+  na.omit()
+
+fce_join <- left_join(fce_summ_clean, map1, by = c("year", "month", "site", "subsite_level1", "subsite_level2"))
+
+fce_true_zeros <- fce_join |> 
+  filter(bm_tot_m != 0 | (bm_tot_m == 0 & spp_code == 13)) |> 
+  select(-spp_code)#this is right! Gets rid of made-up site combinations - double checked before removing spp_code column
+write_csv(fce_true_zeros, "../../../fce_exc_calculations_01312023.csv")
+
