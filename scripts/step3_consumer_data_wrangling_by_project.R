@@ -145,13 +145,28 @@ coastalca_dt1 <- coastalca_dt %>%
 # calculate the biomass density for coastal CA
 coastalca_dt2 <- coastalca_dt1 %>%
   pivot_wider(names_from = c(measurement_type, measurement_unit),values_from = measurement_value) %>%
-  dplyr::select(-row_num) %>%
-  #zero fill the pisco data
+  dplyr::select(-row_num) 
+
+
+#zero fill the pisco data, because every year the specie might get added, so we only zero fill in a given year. 
+coastalca_dt3 <- coastalca_dt2 %>%
+  mutate(year=as.character(year), 
+         campus = ifelse(subsite_level2 %in% c("POINT_VICENTE_W",  # note that these are VRG campus sites and they have different species list compared to the UCSB and UCSC campus
+                                               "ROCKY_POINT_N",
+                                               "LONG_POINT_E",
+                                               "RIDGES_N",
+                                               "ABALONE_COVE_KELP_W",
+                                               "BUNKER_POINT"), "VRG","other")) %>%
+  group_by(year,campus) %>%
   complete(nesting(sp_code,scientific_name,species),
-           nesting(project,habitat,raw_filename,year,month,day,date,
+           nesting(project,habitat,raw_filename,month,day,date,
                                                           site, subsite_level1, subsite_level2, subsite_level3,transectarea_m2),
          fill = list(count_num=0, length_cm=NA,`wetmass_kg/transect` = 0)) %>%
-  filter(sp_code!="NO_ORG") %>% #REMOVE THE SPECIES THAT ARE NOT ORGANISM
+  ungroup() %>%
+  dplyr::select(-campus) %>% # remove the column after zero filled
+  filter(sp_code!="NO_ORG") #REMOVE THE SPECIES THAT ARE NOT ORGANISM
+
+coastalca_dt4 <- coastalca_dt3 %>%
   mutate(`drymass_g/m2`=(`wetmass_kg/transect`*0.29/`transectarea_m2`)*1000, #convert from kg to g
          `dmperind_g/ind` = ifelse(count_num>0,`wetmass_kg/transect`*0.29*1000/`count_num`,0), 
          `density_num/m2` = `count_num`/`transectarea_m2`,
@@ -159,12 +174,12 @@ coastalca_dt2 <- coastalca_dt1 %>%
    mutate(row_num = paste0(raw_filename, "_", 1:nrow(.))) #adding the row_num back
  
 
-coastalca_dt3 <-coastalca_dt2 %>%
+coastalca_dt5 <-coastalca_dt4 %>%
   pivot_longer(cols = transectarea_m2:temp_c, 
                names_to = "measurement_type",
                values_to = "measurement_value")
 
-coastalca_ready <- coastalca_dt3 %>%
+coastalca_ready <- coastalca_dt5 %>%
   separate(measurement_type, into = c("measurement_type", "measurement_unit"),sep = "_", remove = FALSE) 
 
 #### COASTAL CA end
@@ -292,16 +307,17 @@ mcr_dm_coeff <- left_join(mcr_diet_cat, dm_coeff, by = "class")
 na_coeff_result <- which(is.na(mcr_dm_coeff$dm_coeff)) #yay
 
 mcr_all_dm <- mcr_dm_coeff |> 
-  mutate(`dmperind_g/m2` = ind_bio*dm_coeff,
+  mutate(`dmperind_g/ind` = ind_bio*dm_coeff,
          subsite_level3 = as.numeric(subsite_level3),
          `transectarea_m2` = subsite_level3*50,
          `density_num/m2` = count_num/transectarea_m2,
+        `wetmass_g/m2` = wetmass_g/`transectarea_m2`,
          temp_c = 26.5)
 
 mcr_all_dm1 <- mcr_all_dm |> 
   mutate(row_num = paste0(raw_filename, "_", 1:nrow(mcr_all_dm))) |>
   dplyr::select(project,habitat,raw_filename,row_num,year,month,day,date,site,subsite_level1,subsite_level2,subsite_level3,sp_code,scientific_name,species,
-                count_num,length_mm,wetmass_g,`dmperind_g/m2`,`transectarea_m2`,`density_num/m2`,temp_c) 
+                count_num,length_mm,`wetmass_g/m2`,`dmperind_g/ind`,`transectarea_m2`,`density_num/m2`,temp_c) 
  
 mcr_ready <-mcr_all_dm1 %>%
   pivot_longer(cols = count_num:temp_c, 
@@ -332,9 +348,10 @@ cce_mean_temp <- mean(cce_temp$temp, na.rm = T)
 # calculate the dmperind dry biomass 
 cce <- dt %>%
   dplyr::filter(project=="CCE") %>%
+  filter(!(is.na(scientific_name)|scientific_name=="others")) %>% # there was a species named "others" in the data that don't have scientific name, Dante suggests we removed it from the list 
   pivot_wider(names_from = c(measurement_type,measurement_unit), values_from = measurement_value) %>%
   mutate(`dmperind_g/ind`=ifelse(`density_num/m2`>0,`drymass_g/m2`/`density_num/m2`,0),
-         temp_c = cce_mean_temp)  #using the ones from coastal CA chunk
+         temp_c = cce_mean_temp) 
 
 cce_ready<- cce %>%
   pivot_longer(cols = `density_num/m2`:temp_c, 
@@ -356,9 +373,9 @@ data_original <- dt %>%
 # concat data together
 harmonized_clean = rbind(data_original,coastalca_ready, sbc_ready,mcr_ready,cce_ready)
 
-# check to see the measurement type and unit are the same
-peace <- harmonized_clean %>%
-  distinct(project,habitat,measurement_type,measurement_unit)
+# # check to see the measurement type and unit are the same
+# peace <- harmonized_clean %>%
+#   distinct(project,habitat,measurement_type,measurement_unit)
 
 #### concat end
 
