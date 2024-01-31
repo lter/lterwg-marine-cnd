@@ -72,16 +72,20 @@ raw_ids <- rbind(raw_SBC_ids, raw_FCE_ids, raw_VCR_ids, raw_coastal_ids, raw_MCR
 data_key_id <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/1/folders/1-FDBq0jtEm3bJOfiyIkyxD0JftJ6qExe")) %>%
   dplyr::filter(name %in% c("CND_Data_Key_spatial.xlsx"))
 
-# Identify PIE and CoastalCA species code tables
+# Identify PIE and CoastalCA species code table
 sp_codes_id <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/1LYffjtQdLcNYkStrf_FukihQ6tPKlw1a")) %>%
   dplyr::filter(name %in% c("PIE_CoastalCA_codes.csv"))
+
+# Identify MCR species fix table
+sp_fix_id <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/1LYffjtQdLcNYkStrf_FukihQ6tPKlw1a")) %>%
+  dplyr::filter(name %in% c("MCR_species_fix"))
 
 # Identify the latest harmonized species table
 harm_sp_codes_id <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH")) %>%
   dplyr::filter(name %in% c("harmonized_consumer_species.csv"))
 
 # Combine file IDs
-other_ids <- rbind(data_key_id, sp_codes_id, harm_sp_codes_id)
+other_ids <- rbind(data_key_id, sp_codes_id, sp_fix_id, harm_sp_codes_id)
 
 # For each raw data file, download it into the consumer folder
 for(k in 1:nrow(raw_ids)){
@@ -360,6 +364,7 @@ rm(list = setdiff(ls(), c("tidy_v1c", "species_update_flag")))
 
 # Read in the tables for PIE and CoastalCA species codes (for later)
 PIE_CoastalCA_codes <- read.csv(file = file.path("tier0", "PIE_CoastalCA_codes.csv"))
+MCR_sp_fix <- readxl::read_excel(path = file.path("tier0", "MCR_species_fix.xlsx")) 
 harm_sp_codes <- read.csv(file = file.path("tier0", "harmonized_consumer_species.csv"), na.strings = ".") %>%
   dplyr::select(project, sp_code, common_name, scientific_name, species) 
 
@@ -389,11 +394,6 @@ tidy_v2a <- tidy_v1c %>%
   # If the row is from the MLPA csv and the species is non-empty, put genus + species as the value in species
   dplyr::mutate(species = dplyr::case_when(
     raw_filename == "MLPA_fish_biomass_density_transect_raw_v2.csv" & !is.na(species) ~ paste(genus, species),
-    T ~ species
-  )) %>%
-  # If the row is from the IV_EC csv and the species is non-empty, put genus + species as the value in species
-  dplyr::mutate(species = dplyr::case_when(
-    raw_filename == "IV_EC_talitrid_population.csv" & !is.na(species) ~ paste(genus, species),
     T ~ species
   )) %>%
   # If the species is empty and the scientific_name column contains multiple species, put the scientific name as the value in species
@@ -489,7 +489,7 @@ tidy_v2b <- tidy_v2a %>%
     scientific_name == "multiples" ~ NA,
     scientific_name == "others" ~ NA,
     scientific_name == "Sunfishes" ~ "Centrarchidae",
-    scientific_name == "killifish/topminnow" ~ "Cyprinodontiformes",
+    scientific_name == "killifish/topminnow" ~ "Fundulus",
     scientific_name == "silverside species" ~ "Atheriniformes",
     scientific_name == "Needlefishes" ~ "Belonidae",
     scientific_name == "mojarra species" ~ "Gerreidae",
@@ -497,112 +497,7 @@ tidy_v2b <- tidy_v2a %>%
     scientific_name == "Mullets" ~ "Mugilidae",
     scientific_name == "No fish observed" ~ NA,
     T ~ scientific_name
-  )) %>%
-  dplyr::mutate(kingdom = case_when(
-    project == "MCR" & scientific_name == "Cetoscarus ocellatus" ~ "Animalia",
-    project == "MCR" & scientific_name == "Chlorurus spilurus" ~ "Animalia",
-    project == "MCR" & scientific_name == "Halichoeres claudia" ~ "Animalia",
-    project == "MCR" & scientific_name == "Monotaxis" ~ "Animalia",
-    project == "MCR" & scientific_name == "Nectamia fusc" ~ "Animalia",
-    project == "MCR" & scientific_name == "Ostorhinchus angustatus" ~ "Animalia",
-    project == "MCR" & scientific_name == "Ostorhinchus nigrofasciatus" ~ "Animalia",
-    project == "MCR" & scientific_name == "Pomachromis fuscidorsalis" ~ "Animalia",
-    project == "MCR" & scientific_name == "" ~ "Animalia",
-    project == "MCR" & scientific_name == "" ~ "Animalia",
-    project == "MCR" & scientific_name == "" ~ "Animalia",
-    
-    T ~ kingdom
-    
-  )) %>%
-  dplyr::mutate(phylum = case_when(
-    project == "MCR" & scientific_name == "Cetoscarus ocellatus" ~ "Chordata",
-    project == "MCR" & scientific_name == "Chlorurus spilurus" ~ "Chordata",
-    project == "MCR" & scientific_name == "Halichoeres claudia" ~ "Chordata",
-    project == "MCR" & scientific_name == "Monotaxis" ~ "Chordata",
-    project == "MCR" & scientific_name == "Nectamia fusc" ~ "Chordata",
-    project == "MCR" & scientific_name == "Ostorhinchus angustatus" ~ "Chordata",
-    project == "MCR" & scientific_name == "Ostorhinchus nigrofasciatus" ~ "Chordata",
-    project == "MCR" & scientific_name == "Pomachromis fuscidorsalis" ~ "Chordata",
-    project == "MCR" & scientific_name == "" ~ "Chordata",
-    project == "MCR" & scientific_name == "" ~ "Chordata",
-    project == "MCR" & scientific_name == "" ~ "Chordata",
-    
-    
-    T ~ phylum
-    
-  )) %>%
-  dplyr::mutate(class = case_when(
-    project == "MCR" & scientific_name == "Cetoscarus ocellatus" ~ "Actinopterygii",
-    project == "MCR" & scientific_name == "Chlorurus spilurus" ~ "Actinopterygii",
-    project == "MCR" & scientific_name == "Halichoeres claudia" ~ "Actinopterygii",
-    project == "MCR" & scientific_name == "Monotaxis" ~ "Actinopterygii",
-    project == "MCR" & scientific_name == "Nectamia fusc" ~ "Actinopterygii",
-    project == "MCR" & scientific_name == "Ostorhinchus angustatus" ~ "Teleostei",
-    project == "MCR" & scientific_name == "Ostorhinchus nigrofasciatus" ~ "Actinopterygii",
-    project == "MCR" & scientific_name == "Pomachromis fuscidorsalis" ~ "Actinopterygii",
-    project == "MCR" & scientific_name == "" ~ "Actinopterygii",
-    project == "MCR" & scientific_name == "" ~ "Actinopterygii",
-    
-    T ~ class
-    
-  )) %>%
-  dplyr::mutate(order = case_when(
-    project == "MCR" & scientific_name == "Cetoscarus ocellatus" ~ "Labriformes",
-    project == "MCR" & scientific_name == "Chlorurus spilurus" ~ "Labriformes",
-    project == "MCR" & scientific_name == "Halichoeres claudia" ~ "Labriformes",
-    project == "MCR" & scientific_name == "Monotaxis" ~ "Spariformes",
-    project == "MCR" & scientific_name == "Nectamia fusc" ~ "Kurtiformes",
-    project == "MCR" & scientific_name == "Ostorhinchus angustatus" ~ "Kurtiformes",
-    project == "MCR" & scientific_name == "Ostorhinchus nigrofasciatus" ~ "Kurtiformes",
-    project == "MCR" & scientific_name == "Pomachromis fuscidorsalis" ~ NA,
-    project == "MCR" & scientific_name == "" ~ "Labriformes",
-    project == "MCR" & scientific_name == "" ~ "Labriformes",
-    project == "MCR" & scientific_name == "" ~ "Labriformes",
-    
-    T ~ order
-    
-  )) %>%
-  dplyr::mutate(family = dplyr::case_when(
-    project == "MCR" & scientific_name == "Balistidae" ~ "Balistidae",
-    project == "MCR" & scientific_name == "Blenniidae" ~ "Blenniidae",
-    project == "MCR" & scientific_name == "Caracanthus maculatus" ~ "Caracanthidae",
-    project == "MCR" & scientific_name == "Caracanthus unipinna" ~ "Caracanthidae",
-    project == "MCR" & scientific_name == "Carangidae" ~ "Carangidae",
-    project == "MCR" & scientific_name == "Chlorurus spilurus" ~ "Scaridae",
-    project == "MCR" & scientific_name == "Gunnellichthys monostigma" ~ "Microdesmidae",
-    project == "MCR" & scientific_name == "Halichoeres claudia" ~ "Labridae",
-    project == "MCR" & scientific_name == "Holocentridae" ~ "Holocentridae",
-    project == "MCR" & scientific_name == "Labridae" ~ "Labridae",
-    project == "MCR" & scientific_name == "Monotaxis" ~ "Lethrinidae",
-    project == "MCR" & scientific_name == "Nectamia fusc" ~ "Apogonidae",
-    project == "MCR" & scientific_name == "Nemateleotris magnifica" ~ "Microdesmidae",
-    project == "MCR" & scientific_name == "Ostorhinchus angustatus" ~ "Apogonidae",
-    project == "MCR" & scientific_name == "Ostorhinchus nigrofasciatus" ~ "Apogonidae",
-    project == "MCR" & scientific_name == "Pomachromis fuscidorsalis" ~ "Pomacentridae",
-    project == "MCR" & scientific_name == "" ~ "",
-    project == "MCR" & scientific_name == "" ~ "",
-    project == "MCR" & scientific_name == "" ~ "",
-    
-    
-    T ~ family
-  )) %>%
-  dplyr::mutate(genus = case_when(
-    project == "MCR" & scientific_name == "Cetoscarus ocellatus" ~ "Cetoscarus",
-    project == "MCR" & scientific_name == "Chlorurus spilurus" ~ "Chlorurus",
-    project == "MCR" & scientific_name == "Halichoeres claudia" ~ "Halichoeres",
-    project == "MCR" & scientific_name == "Monotaxis" ~ "Monotaxis",
-    project == "MCR" & scientific_name == "Nectamia fusc" ~ "Nectamia",
-    project == "MCR" & scientific_name == "Ostorhinchus angustatus" ~ "Ostorhinchus",
-    project == "MCR" & scientific_name == "Ostorhinchus nigrofasciatus" ~ "Ostorhinchus",
-    project == "MCR" & scientific_name == "Pomachromis fuscidorsalis" ~ "Pomachromis",
-    project == "MCR" & scientific_name == "" ~ "",
-    project == "MCR" & scientific_name == "" ~ "",
-    
-    
-    T ~ genus
-    
   )) 
-
 
 # Check unique scientific names
 unique(tidy_v2b$scientific_name)
@@ -831,9 +726,11 @@ if (species_update_flag == 1){
 
 # Now join with the table for PIE species codes 
 tidy_v2e <- tidy_v2d %>%
-  # First replace the species code "XAN " with "XAN"
+  # First get rid of the trailing space after some species codes
   dplyr::mutate(sp_code = dplyr::case_when(
     sp_code == "XAN " ~ "XAN",
+    sp_code == "FUH " ~ "FUH",
+    sp_code == "MEM " ~ "MEM",
     T ~ sp_code
   )) %>%
   # Join with the table
@@ -854,8 +751,37 @@ tidy_v2e <- tidy_v2d %>%
 # Check structure
 dplyr::glimpse(tidy_v2e)
 
+tidy_v2f <- tidy_v2e %>%
+  dplyr::left_join(MCR_sp_fix, by = c("project", "scientific_name")) %>%
+  dplyr::mutate(kingdom = dplyr::case_when(
+    project == "MCR" & !is.na(kingdom_fix) ~ kingdom_fix,
+    T ~ kingdom
+  )) %>%
+  dplyr::mutate(phylum = dplyr::case_when(
+    project == "MCR" & !is.na(phylum_fix) ~ phylum_fix,
+    T ~ phylum
+  )) %>%
+  dplyr::mutate(class = dplyr::case_when(
+    project == "MCR" & !is.na(class_fix) ~ class_fix,
+    T ~ class
+  )) %>%
+  dplyr::mutate(order = dplyr::case_when(
+    project == "MCR" & !is.na(order_fix) ~ order_fix,
+    T ~ order
+  )) %>%
+  dplyr::mutate(family = dplyr::case_when(
+    project == "MCR" & !is.na(family_fix) ~ family_fix,
+    project == "MCR" & scientific_name == "Teleostei" ~ NA,
+    T ~ family
+  )) %>%
+  dplyr::mutate(genus = dplyr::case_when(
+    project == "MCR" & !is.na(genus_fix) ~ genus_fix,
+    T ~ genus
+  )) %>%
+  dplyr::select(-contains("_fix"))
+
 if (species_update_flag == 1){
-  species_table <- tidy_v2e %>%
+  species_table <- tidy_v2f %>%
     # Select the appropriate columns to create our species table
     dplyr::select(project, sp_code, scientific_name, common_name, kingdom, phylum, class, order, family, genus, species, taxa_group) %>%
     # Get unique species
@@ -863,13 +789,13 @@ if (species_update_flag == 1){
     # Sort by project and scientific_name
     dplyr::arrange(project, scientific_name) %>%
     # Remove rows that have NA values for both scientific_name and sp_code
-    dplyr::filter(!(is.na(scientific_name) & is.na(sp_code)))
-  
-  tidy_v2g <- tidy_v2e
+    dplyr::filter(!(is.na(scientific_name) & is.na(sp_code))) 
+
+  tidy_v2h <- tidy_v2f
 } else if (species_update_flag == 0){
   # Just in case, to make sure the species column is accurate,
   # join with the latest version of the harmonized consumer species table
-  tidy_v2f <- tidy_v2e %>%
+  tidy_v2g <- tidy_v2f %>%
     dplyr::mutate(species = ifelse(is.na(species) & stringr::str_detect(scientific_name, "[:blank:]"),
                                    yes = scientific_name,
                                    no = species)) %>%
@@ -879,9 +805,9 @@ if (species_update_flag == 1){
       select(-contains(".x"),-contains(".y"))
     
   # Make sure it's character(0)
-  print(setdiff(tidy_v2f$common_name, harm_sp_codes$common_name))
+  print(setdiff(tidy_v2g$common_name, harm_sp_codes$common_name))
   
-  tidy_v2g <- tidy_v2f %>%
+  tidy_v2h <- tidy_v2g %>%
       # Join with the table
       dplyr::left_join(harm_sp_codes, by = c("project", "sp_code", "scientific_name", "common_name")) %>%
       dplyr::mutate(species.y = dplyr::case_when(
@@ -896,27 +822,27 @@ if (species_update_flag == 1){
       dplyr::rename(species = species.y)
     
   # Make sure it's character(0)
-  print(setdiff(tidy_v2g$species, harm_sp_codes$species))
-  print(setdiff(harm_sp_codes$species, tidy_v2g$species))
+  print(setdiff(tidy_v2h$species, harm_sp_codes$species))
+  print(setdiff(harm_sp_codes$species, tidy_v2h$species))
 }
 
-tidy_v2h <- tidy_v2g %>%
+tidy_v2i <- tidy_v2h %>%
   # Make sure that the first letter of scientific name is capitalized 
   dplyr::mutate(scientific_name = stringr::str_to_sentence(scientific_name)) %>%
   # Now that we have our species table, we don't need the other taxa columns in our harmonized dataset
   dplyr::select(-common_name, -kingdom, -phylum, -class, -order, -family, -genus, -taxa_group)
 
 # Clean up environment
-rm(list = setdiff(ls(), c("tidy_v2h", "species_table")))
+rm(list = setdiff(ls(), c("tidy_v2i", "species_table")))
 
 ## -------------------------------------------- ##
 #      Reordering & Changing Column Types ----
 ## -------------------------------------------- ##
 
 # Check structure
-dplyr::glimpse(tidy_v2h)
+dplyr::glimpse(tidy_v2i)
 
-tidy_v3 <- tidy_v2h %>%
+tidy_v3 <- tidy_v2i %>%
   dplyr::relocate(row_num, .after = raw_filename) %>%
   dplyr::relocate(subsite_level2, .after = subsite_level1) %>%
   dplyr::relocate(subsite_level3, .after = subsite_level2) %>%
