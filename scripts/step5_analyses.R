@@ -13,28 +13,28 @@ librarian::shelf(tidyverse, googledrive, readxl, taxize, stringr)
 ###########################################################################
 # connect to google drive -------------------------------------------------
 ###########################################################################
-
-# pull in the harmonized data
-exc_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1VakpcnFVckAYNggv_zNyfDRfkcGTjZxX")) %>%
-  dplyr::filter(name %in% c("harmonized_consumer_excretion.csv"))
-
-# Combine file IDs
-exc_ids <- rbind(exc_ids)
-
-# For each raw data file, download it into the consumer folder
-for(k in 1:nrow(exc_ids)){
-  
-  # Download file (but silence how chatty this function is)
-  googledrive::with_drive_quiet(
-    googledrive::drive_download(file = exc_ids[k, ]$id, overwrite = T,
-                                path = file.path("tier2", exc_ids[k, ]$name)) )
-  
-  # Print success message
-  message("Downloaded file ", k, " of ", nrow(exc_ids))
-}
-
-# Clear environment
-rm(list = ls())
+# ONLY NEED TO BE DONE ONCE
+# # pull in the harmonized data
+# exc_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1VakpcnFVckAYNggv_zNyfDRfkcGTjZxX")) %>%
+#   dplyr::filter(name %in% c("harmonized_consumer_excretion.csv"))
+# 
+# # Combine file IDs
+# exc_ids <- rbind(exc_ids)
+# 
+# # For each raw data file, download it into the consumer folder
+# for(k in 1:nrow(exc_ids)){
+#   
+#   # Download file (but silence how chatty this function is)
+#   googledrive::with_drive_quiet(
+#     googledrive::drive_download(file = exc_ids[k, ]$id, overwrite = T,
+#                                 path = file.path("tier2", exc_ids[k, ]$name)) )
+#   
+#   # Print success message
+#   message("Downloaded file ", k, " of ", nrow(exc_ids))
+# }
+# 
+# # Clear environment
+# rm(list = ls())
 
 ###########################################################################
 # load harmonized excretion data ------------------------------------------
@@ -160,4 +160,4 @@ fce_true_zeros <- fce_join |>
   filter(bm_tot_m != 0 | (bm_tot_m == 0 & spp_code == 13)) |> 
   select(-spp_code)#this is right! Gets rid of made-up site combinations - double checked before removing spp_code column
 # write_csv(fce_true_zeros, "../../../fce_exc_calculations_01312023.csv")
-
+read_csv("../../../fce_exc_calculations_01312023.csv")
