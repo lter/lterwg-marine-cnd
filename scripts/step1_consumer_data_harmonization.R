@@ -494,7 +494,7 @@ tidy_v2b <- tidy_v2a %>%
     scientific_name == "Needlefishes" ~ "Belonidae",
     scientific_name == "mojarra species" ~ "Gerreidae",
     scientific_name == "goby" ~ "Gobiidae",
-    scientific_name == "Mullets" ~ "Mugilidae",
+    scientific_name == "Mullets" ~ "Mugil",
     scientific_name == "No fish observed" ~ NA,
     T ~ scientific_name
   )) 
