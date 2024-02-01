@@ -724,7 +724,7 @@ if (species_update_flag == 1){
     tidy_v2d <- tidy_v2c
 }
 
-# Now join with the table for PIE species codes 
+# Now join with the table for PIE and CoastalCA species codes 
 tidy_v2e <- tidy_v2d %>%
   # First get rid of the trailing space after some species codes
   dplyr::mutate(sp_code = dplyr::case_when(
@@ -751,8 +751,12 @@ tidy_v2e <- tidy_v2d %>%
 # Check structure
 dplyr::glimpse(tidy_v2e)
 
+# Some of the taxonomic info for MCR was missing and/or slightly off so we need to correct it
+# For example, "Balistidae" has "Tetraodontiformes" as the family name
 tidy_v2f <- tidy_v2e %>%
+  # Join with the table of fixed MCR taxonomic info
   dplyr::left_join(MCR_sp_fix, by = c("project", "scientific_name")) %>%
+  # Replace the entries with the corrected ones
   dplyr::mutate(kingdom = dplyr::case_when(
     project == "MCR" & !is.na(kingdom_fix) ~ kingdom_fix,
     T ~ kingdom
@@ -778,6 +782,7 @@ tidy_v2f <- tidy_v2e %>%
     project == "MCR" & !is.na(genus_fix) ~ genus_fix,
     T ~ genus
   )) %>%
+  # Drop the joined columns now that we're done fixing 
   dplyr::select(-contains("_fix"))
 
 if (species_update_flag == 1){
