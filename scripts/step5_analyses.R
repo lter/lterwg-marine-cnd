@@ -9,13 +9,13 @@
 
 # install.packages("librarian")
 librarian::shelf(tidyverse, googledrive, readxl, taxize, stringr)
-
+dir.create(path = file.path("tier2"), showWarnings = F)
 ###########################################################################
 # connect to google drive -------------------------------------------------
 ###########################################################################
 # ONLY NEED TO BE DONE ONCE
 # # pull in the harmonized data
-# exc_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1VakpcnFVckAYNggv_zNyfDRfkcGTjZxX")) %>%
+# exc_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/1/folders/1VakpcnFVckAYNggv_zNyfDRfkcGTjZxX")) %>%
 #   dplyr::filter(name %in% c("harmonized_consumer_excretion.csv"))
 # 
 # # Combine file IDs
@@ -23,12 +23,12 @@ librarian::shelf(tidyverse, googledrive, readxl, taxize, stringr)
 # 
 # # For each raw data file, download it into the consumer folder
 # for(k in 1:nrow(exc_ids)){
-#   
+# 
 #   # Download file (but silence how chatty this function is)
 #   googledrive::with_drive_quiet(
 #     googledrive::drive_download(file = exc_ids[k, ]$id, overwrite = T,
 #                                 path = file.path("tier2", exc_ids[k, ]$name)) )
-#   
+# 
 #   # Print success message
 #   message("Downloaded file ", k, " of ", nrow(exc_ids))
 # }
