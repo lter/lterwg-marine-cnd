@@ -17,7 +17,7 @@
 
 # Does the species table need to be updated? 
 # Put 0 for no, 1 for yes
-species_update_flag <- 1
+species_update_flag <- 0
 
 ## ------------------------------------------ ##
 #            Housekeeping -----
@@ -709,7 +709,14 @@ if (species_update_flag == 1){
     # fill in the species column with the value in scientific_name
     dplyr::mutate(species = ifelse(is.na(species) & stringr::str_detect(scientific_name, "[:blank:]"),
                                    yes = scientific_name,
-                                   no = species))
+                                   no = species)) %>%
+    # If you query a subspecies in ITIS, it will return back only the species so we need to put the subspecies back
+    dplyr::mutate(species = dplyr::case_when(
+      scientific_name == "Chilomycterus schoepfi" ~ "Chilomycterus schoepfi", # Misspelled as "Chilomycterus schoepfii" in ITIS
+      scientific_name == "Platybelone argalus platyura" ~ "Platybelone argalus platyura",
+      scientific_name == "Sarda chiliensis chiliensis" ~ "Sarda chiliensis chiliensis",
+      T ~ species
+    ))
   
   # Check unique scientific names
   unique(tidy_v2d$scientific_name)
@@ -796,58 +803,78 @@ if (species_update_flag == 1){
     # Remove rows that have NA values for both scientific_name and sp_code
     dplyr::filter(!(is.na(scientific_name) & is.na(sp_code))) 
 
-  tidy_v2h <- tidy_v2f
+  tidy_v2g <- tidy_v2f
 } else if (species_update_flag == 0){
-  # Just in case, to make sure the species column is accurate,
-  # join with the latest version of the harmonized consumer species table
   tidy_v2g <- tidy_v2f %>%
+    # Remove the underscore from species
+    dplyr::mutate(species = gsub(pattern = "_",
+                                 replacement = " ",
+                                 x = species)) %>%
+    # Remove any instance of "Unidentified " or "Unidentifiable " or " unidentified" 
+    dplyr::mutate(species = stringr::str_replace(species, "Unidentified |Unidentifiable | unidentified$", "")) %>%
+    # If the species DOES NOT contain multiple species separated by the ; or , delimiter...
+    # Remove any instance of " sp." or " spp." or " sp" or " spp. " 
+    dplyr::mutate(species = dplyr::case_when(
+      !stringr::str_detect(species, "\\;|\\,") ~ stringr::str_replace(species, " sp.$| spp.$| sp$| spp. $", ""),
+      T ~ species)) %>%
+    # Remove any instance of " (cf)" or " sp. " + a number or "small " or " others"
+    dplyr::mutate(species = stringr::str_replace(species, " \\(cf\\)| sp. [:digit:]*|small | others$", "")) %>%
+    # Remove any instance of trailing space or trailing space + a number
+    dplyr::mutate(species = stringr::str_replace(species, "[:blank:]$|[:blank:][:digit:]?$", "")) %>%
+    # Remove any instance of leading space
+    dplyr::mutate(species = stringr::str_replace(species, "^[:blank:]", "")) %>%
+    # Remove " like" or " larvae"
+    dplyr::mutate(species = stringr::str_replace(species, " larvae$| like$| others$", "")) %>%
+    # Remove any instance of trailing space again
+    dplyr::mutate(species = stringr::str_replace(species, "[:blank:]$", "")) %>%
+    # If the species is only 1 word then set it to NA (cause it means that it's probably a genus or family or class instead)
+    dplyr::mutate(species = dplyr::case_when(
+      !stringr::str_detect(species, "[:blank:]") ~ NA,
+      T ~ species
+    )) %>%
+    # Edit some specific entries in the species column
+    dplyr::mutate(species = dplyr::case_when(
+      species == "No megalorchestia" ~ NA,
+      species == "cnidaria ctenophores" ~ NA,
+      species == "copepoda calanoida" ~ NA,
+      species == "copepoda eucalanids" ~ NA,
+      species == "copepoda harpacticoida" ~ NA,
+      species == "copepoda oithona" ~ NA,
+      species == "copepoda poecilostomatoids" ~ NA,
+      species == "Arborescent Bryozoan" ~ NA,
+      species == "crustose coralline algae" ~ NA,
+      species == "Encrusting Bryozoa" ~ NA,
+      species == "Sebastes atrovirens,carnatus,chrysomelas,caurinus" ~ "Sebastes atrovirens; Sebastes carnatus; Sebastes chrysomelas; Sebastes caurinus",
+      species == "Sebastes serranoides,flavidus" ~ "Sebastes serranoides; Sebastes flavidus",
+      species == "Sebastes chrysomelas/carnatus young of year" ~ "Sebastes chrysomelas; Sebastes carnatus",
+      species == "Sebastes serranoides,flavidus,melanops" ~ "Sebastes serranoides; Sebastes flavidus; Sebastes melanops",
+      species == "Sebastes carnatus, caurinus" ~ "Sebastes carnatus; Sebastes caurinus",
+      T ~ species
+    )) %>%
+    # Finally, if the species column is empty but the scientific_name column contains the full species name,
+    # fill in the species column with the value in scientific_name
     dplyr::mutate(species = ifelse(is.na(species) & stringr::str_detect(scientific_name, "[:blank:]"),
                                    yes = scientific_name,
-                                   no = species)) %>%
-      # Join with the table
-      dplyr::left_join(harm_sp_codes, by = c("project", "sp_code", "scientific_name", "species")) %>%
-      mutate(common_name = coalesce(common_name.x, common_name.y)) %>%
-      select(-contains(".x"),-contains(".y"))
-    
-  # Make sure it's character(0)
-  print(setdiff(tidy_v2g$common_name, harm_sp_codes$common_name))
-  
-  tidy_v2h <- tidy_v2g %>%
-      # Join with the table
-      dplyr::left_join(harm_sp_codes, by = c("project", "sp_code", "scientific_name", "common_name")) %>%
-      dplyr::mutate(species.y = dplyr::case_when(
-        species.x == "Sebastes atrovirens,carnatus,chrysomelas,caurinus" ~ "Sebastes atrovirens; Sebastes carnatus; Sebastes chrysomelas; Sebastes caurinus",
-        species.x == "Sebastes serranoides,flavidus" ~ "Sebastes serranoides; Sebastes flavidus",
-        species.x == "Sebastes chrysomelas/carnatus young of year" ~ "Sebastes chrysomelas; Sebastes carnatus",
-        species.x == "Sebastes serranoides,flavidus,melanops" ~ "Sebastes serranoides; Sebastes flavidus; Sebastes melanops",
-        species.x == "Sebastes carnatus, caurinus" ~ "Sebastes carnatus; Sebastes caurinus",
-        T ~ species.y
-      )) %>%
-      dplyr::select(-species.x) %>%
-      dplyr::rename(species = species.y)
-    
-  # Make sure it's character(0)
-  print(setdiff(tidy_v2h$species, harm_sp_codes$species))
-  print(setdiff(harm_sp_codes$species, tidy_v2h$species))
+                                   no = species))
 }
 
-tidy_v2i <- tidy_v2h %>%
+tidy_v2h <- tidy_v2g %>%
   # Make sure that the first letter of scientific name is capitalized 
   dplyr::mutate(scientific_name = stringr::str_to_sentence(scientific_name)) %>%
   # Now that we have our species table, we don't need the other taxa columns in our harmonized dataset
   dplyr::select(-common_name, -kingdom, -phylum, -class, -order, -family, -genus, -taxa_group)
 
 # Clean up environment
-rm(list = setdiff(ls(), c("tidy_v2i", "species_table")))
+rm(list = setdiff(ls(), c("tidy_v2h", "species_table")))
 
 ## -------------------------------------------- ##
 #      Reordering & Changing Column Types ----
 ## -------------------------------------------- ##
 
 # Check structure
-dplyr::glimpse(tidy_v2i)
+dplyr::glimpse(tidy_v2h)
 
-tidy_v3 <- tidy_v2i %>%
+tidy_v3 <- tidy_v2h %>%
   dplyr::relocate(row_num, .after = raw_filename) %>%
   dplyr::relocate(subsite_level2, .after = subsite_level1) %>%
   dplyr::relocate(subsite_level3, .after = subsite_level2) %>%
