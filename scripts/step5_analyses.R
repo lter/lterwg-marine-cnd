@@ -135,7 +135,8 @@ fce_summ_clean <- fce_summ |>
 unique(fce_summ_clean$site)
 #seems like a lot of artifical zeros 
 #below shows legitimate zeros - need to recode columns and select() then join to link up with above and get rid of artifical zeros
-map1 <- mastermap_yrs1thru19 |> 
+master_map <- read_csv("../mw_dissertation/MAP_database_maintanence/mastermap_yrs1thru19.csv")
+map1 <- master_map |> 
   select(HYDROYEAR, s.mo, DRAINAGE, SITE, BOUT, SPECIESCODE) |> 
   separate(HYDROYEAR, into = c("year", "void")) |> 
   select(-void) |> 
