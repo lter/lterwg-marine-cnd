@@ -9,7 +9,7 @@
 
 # install.packages("librarian")
 librarian::shelf(tidyverse, googledrive, readxl, taxize, stringr)
-dir.create(path = file.path("tier2"), showWarnings = F)
+# dir.create(path = file.path("tier2"), showWarnings = F)
 ###########################################################################
 # connect to google drive -------------------------------------------------
 ###########################################################################
@@ -42,45 +42,40 @@ dir.create(path = file.path("tier2"), showWarnings = F)
 
 # read in the harmonized data and start the wrangling, by project
 df <- read.csv(file.path("tier2", "harmonized_consumer_excretion.csv"),
-               stringsAsFactors = F,na.strings =".") 
+               stringsAsFactors = F,na.strings =".")
 glimpse(df)
 unique(df$project)
 
-#FCE is longer (#obs) because individual row = individual animal
+# check out individual projects -------------------------------------------
 
 fce <- df |> 
   filter(project == "FCE")
 glimpse(fce)
 
-#pisco shorter (#obs) because individual row = multiple individuals 
-#(i.e., biomass/abundance -> ind biomass -> ind excretion * abundance)
-
 pisco <- df |> 
   filter(project == "CoastalCA")
 glimpse(pisco)
-
-#mcr shorter (#obs) because individual row = multiple individuals 
-#(i.e., biomass/abundance -> ind biomass -> ind excretion * abundance)
 
 mcr <- df |> 
   filter(project == "MCR")
 glimpse(mcr)
 
-#sbc_reef shorter (#obs) because individual row = multiple individuals 
-#(i.e., biomass/abundance -> ind biomass -> ind excretion * abundance)
 sbc_reef <- df |> 
   filter(project == "SBC",
          habitat == "ocean")
 
-#sbc_beach shorter (#obs) because individual row = multiple individuals 
-#(i.e., biomass/abundance -> ind biomass -> ind excretion * abundance)
 sbc_beach <- df |> 
   filter(project == "SBC",
          habitat == "beach")
 
+# rm(fce, pisco, mcr, sbc_reef, sbc_beach)
+
 ###########################################################################
-# FCE Manipulation --------------------------------------------------------
+# Fix Untrue Zeros in FCE Dataset -----------------------------------------
 ###########################################################################
+
+fce <- df |> 
+  filter(project == "FCE")
 glimpse(fce)
 
 fce_wide <- fce |> 
@@ -89,7 +84,71 @@ fce_wide <- fce |>
 glimpse(fce_wide)
 summary(fce_wide)
 sum(is.infinite(fce_wide$`density_num/m`))#2 infinites - going to simply remove
-fce_wide <- fce_wide[!is.infinite(fce_wide$`density_num/m`), ]
+fce_wide_noINF <- fce_wide[!is.infinite(fce_wide$`density_num/m`), ]
+
+fce_summ <- fce_wide_noINF |> 
+  group_by(year, month, site, subsite_level1, subsite_level2) |>
+  mutate(bm_tot_m = sum(`dmperind_g/ind`*`density_num/m`))
+
+fce_summ_clean <- fce_summ |> 
+  filter(!is.na(subsite_level1)) |> #removes weird NAs in subsite_level1 -still kicking around
+  filter(!(site == "TB" & year %in% c(2004:2007))) #removes years 2004 through 2007 for TB - we werent sampling then
+
+#seems like a lot of artifical zeros 
+#below shows legitimate zeros - need to recode columns and select() then join to link up with above and get rid of artifical zeros
+master_map <- read_csv("../mw_dissertation/MAP_database_maintanence/mastermap_yrs1thru19.csv")
+map1 <- master_map |> 
+  select(HYDROYEAR, s.mo, DRAINAGE, SITE, BOUT, SPECIESCODE) |> 
+  separate(HYDROYEAR, into = c("year", "void")) |> 
+  select(-void) |> 
+  rename(
+    year = year,
+    month = s.mo,
+    site = DRAINAGE,
+    subsite_level1 = SITE,
+    subsite_level2 = BOUT,
+    spp_code = SPECIESCODE
+  ) |> 
+  mutate(year = as.integer(year),
+         month = as.integer(month),
+         subsite_level1 = as.character(subsite_level1),
+         subsite_level2 = as.character(subsite_level2)) |> 
+  filter(spp_code == 13) |> 
+  na.omit()
+
+fce_join <- left_join(fce_summ_clean, map1, by = c("year", "month", "site", "subsite_level1", "subsite_level2"))
+
+fce_true_zeros <- fce_join |> 
+  filter(bm_tot_m != 0 | (bm_tot_m == 0 & spp_code == 13)) |> 
+  select(-spp_code) #this is right - gets rid of made-up site combinations - double checked before removing spp_code column
+
+# pivot back + bind with full dataset -------------------------------------
+
+fce_long <- fce_true_zeros %>%
+  select(-bm_tot_m) |> 
+  pivot_longer(
+    cols = c(`density_num/m`, `dmperind_g/ind`, temp_c, `density_num/m2`, `nind_ug/hr`, `pind_ug/hr`),
+    names_to = c("measurement_type", "measurement_unit"), 
+    names_sep = "_",
+    values_to = "measurement_value"
+  )
+
+df_4join <- df |> 
+  filter(project != "FCE")
+
+df_clean <- bind_rows(df_4join, fce_long)
+
+# Pivot Full Dataset Wider ------------------------------------------------
+
+df_wide <- df_clean |> 
+  pivot_wider(names_from = c(measurement_type, measurement_unit),
+              values_from = measurement_value)
+
+write_csv(df_wide, "data/exc_clean_02082024.csv")
+
+###########################################################################
+# Summarizing Data --------------------------------------------------------
+################################################################
 
 fce_summ <- fce_wide |> 
   rename(
@@ -128,37 +187,3 @@ fce_summ <- fce_wide |>
     bm_ind_cv_nozeros = (bm_ind_sd_nozeros/bm_ind_mean_nozeros)*100,
     n_spp = n_distinct(scientific_name[ind_drymass_g != 0])
     ) 
-
-fce_summ_clean <- fce_summ |> 
-  filter(!is.na(subsite_level1)) |> #removes weird NAs in subsite_level1 -still kicking around
-  filter(!(site == "TB" & year %in% c(2004:2007))) #removes years 2004 through 2007 for TB - we werent sampling then
-unique(fce_summ_clean$site)
-#seems like a lot of artifical zeros 
-#below shows legitimate zeros - need to recode columns and select() then join to link up with above and get rid of artifical zeros
-master_map <- read_csv("../mw_dissertation/MAP_database_maintanence/mastermap_yrs1thru19.csv")
-map1 <- master_map |> 
-  select(HYDROYEAR, s.mo, DRAINAGE, SITE, BOUT, SPECIESCODE) |> 
-  separate(HYDROYEAR, into = c("year", "void")) |> 
-  select(-void) |> 
-  rename(
-    year = year,
-    month = s.mo,
-    site = DRAINAGE,
-    subsite_level1 = SITE,
-    subsite_level2 = BOUT,
-    spp_code = SPECIESCODE
-  ) |> 
-  mutate(year = as.integer(year),
-         month = as.integer(month),
-         subsite_level1 = as.character(subsite_level1),
-         subsite_level2 = as.character(subsite_level2)) |> 
-  filter(spp_code == 13) |> 
-  na.omit()
-
-fce_join <- left_join(fce_summ_clean, map1, by = c("year", "month", "site", "subsite_level1", "subsite_level2"))
-
-fce_true_zeros <- fce_join |> 
-  filter(bm_tot_m != 0 | (bm_tot_m == 0 & spp_code == 13)) |> 
-  select(-spp_code)#this is right! Gets rid of made-up site combinations - double checked before removing spp_code column
-# write_csv(fce_true_zeros, "../../../fce_exc_calculations_01312023.csv")
-# read_csv("../../../fce_exc_calculations_01312023.csv")
