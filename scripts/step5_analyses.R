@@ -491,10 +491,8 @@ glimpse(plotting_dat_ready)
 ## column bm_sum should just be the biomass bc total_bm_m2 is completely blank
 ## for the FCE
 
-# plotting_dat_ready$bm_sum <- rowSums(replace(plotting_dat_ready[, c("total_bm_m", "total_bm_m2")], 
-#                                 is.na(plotting_dat_ready[, c("total_bm_m", "total_bm_m2")]), 0), 
-#                         na.rm = TRUE)
-
+#tried below code to fix NAs in CCE data, but did not work... Not certain where to go from here
+## need to look at OG dataframe/talk to CCE + Li
 plotting_dat_ready <- plotting_dat_ready %>%
   mutate(total_bm_m = ifelse(is.na(total_bm_m), 0, total_bm_m),
          total_bm_m2 = ifelse(is.na(total_bm_m2), 0, total_bm_m2),
@@ -566,5 +564,192 @@ bmsupply_figure4 <- map(unique(plotting_dat_ready$projecthabitat), bmsupply_annu
 #   filename = "bm_annual_stacked_seperate_02102024.pdf",
 #   path = "plots/figure1/biomass/",
 #   plot = marrangeGrob(bmsupply_figure4, nrow = 1, ncol = 1),
+#   width = 15, height = 9
+# )
+
+# Size Structure Plots ----------------------------------------------------
+
+# BM ~ Time + Site + Strata (smoothed) ------------------------------------
+
+bmindsupply_sitelevel_2 <- function(f) {
+  plotting_dat_ready |> 
+    group_by(projecthabitat, units, sdate, year, month, color, group) |> 
+    summarise(mean_total_bm_ind = mean(bm_ind_mean_nozeros, na.rm = TRUE)) |> 
+    ungroup() |>  
+    filter(!is.na(color)) |> #removes weird NA point in PISCO dataset
+    filter(projecthabitat == f) |> #this is what we will use to map() plot across
+    ggplot(aes(x = sdate, y = mean_total_bm_ind, color = group, group = group)) +
+    geom_line(alpha = 0.6) + #makes lines more transparent
+    # geom_point() +
+    geom_smooth(aes(linetype = color, group = color), 
+                method = "loess", span = 0.9, se = TRUE, color = "black") + #separates the aesthetics of the smoothing term from the actual sites being plotted
+    theme_classic() +
+    labs(title = f,
+         x = 'Date',
+         y = 'Mean Individual Dry Mass (g)') +
+    scale_x_date(date_breaks = '1 year', date_labels = "%Y") + #adds all years to x axis for ease of interpetations
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+          # legend.position = "none",
+          panel.background = element_rect(fill = "white"),
+          axis.line = element_line("black"),
+          axis.text = element_text(face = "bold"),
+          axis.title = element_text(face = "bold"),
+          legend.position = "none")
+}
+
+bmindsupply_figure2 <- map(unique(plotting_dat_ready$projecthabitat), bmindsupply_sitelevel_2)
+
+# ggsave(
+#   filename = "ind_bm_sitelevel2_seperate_02102024.pdf",
+#   path = "plots/figure1/size structure/",
+#   plot = marrangeGrob(bmindsupply_figure2, nrow = 1, ncol = 1),
+#   width = 15, height = 9
+# )
+
+# BM ~ Time + Strata (stacked bar chart) ---------------------------------
+
+bmindsupply_annual_stacked <- function(f) {
+  plotting_dat_ready |>
+    group_by(projecthabitat, year, color) |> 
+    summarise(mean_total_bm_ind = mean(bm_ind_mean_nozeros, na.rm = TRUE)) |> 
+    ungroup() |> 
+    filter(!is.na(color)) |>  #removes weird NA from PISCO 
+    filter(projecthabitat == f) |> #this is what we will use to map() plot across
+    ggplot(aes(fill = color, x = as.factor(year), 
+               y = as.numeric(mean_total_bm_ind))) + #makes year a factor, important for showing each year on x axis
+    geom_bar(position = "stack", stat = "identity") +
+    labs(title = f, 
+         x = "Year", 
+         y = "Mean Annual Individual Dry Mass (g)") +
+    scale_x_discrete(name = "Year") + #plots each year on x axis for ease of interpretation
+    theme(panel.grid.major = element_blank(), 
+          panel.background = element_blank(), 
+          axis.line = element_line(colour = "black"),
+          axis.text.x = element_text(angle = 45, hjust = 1., vjust = 1.1),axis.text = element_text(color="black"),
+          panel.grid.minor = element_blank(),legend.position = "top")
+}
+
+bmindsupply_figure4 <- map(unique(plotting_dat_ready$projecthabitat), bmindsupply_annual_stacked)
+
+# ggsave(
+#   filename = "ind_bm_annual_stacked_seperate_02102024.pdf",
+#   path = "plots/figure1/size structure/",
+#   plot = marrangeGrob(bmindsupply_figure4, nrow = 1, ncol = 1),
+#   width = 15, height = 9
+# )
+
+###########################################################################
+# FIGURE TWO --------------------------------------------------------------
+###########################################################################
+# set up so I can go through and search and replace for each variable (i.e., 
+## start with 'nitrogen', then for 'phosphorus', just find and replace) but
+## will need to manually change columns I am summing by because not being read
+## in as such (e.g., can't search and replace "total_n")
+
+# Nitrogen Supply ~ Space + Time ------------------------------------------
+
+plotting_dat_ready |> 
+  group_by(projecthabitat, year, color, group) |> 
+  summarise(mean_total_nitrogen = mean(total_n, na.rm = TRUE),
+            sd_total_nitrogen = sd(total_n), na.rm = TRUE) |>
+  unite(ph_strata, c(projecthabitat, color), sep = "-", remove = FALSE) |> 
+  ungroup() |> 
+  filter(!is.na(color))  |> 
+  ggplot(aes(x = mean_total_nitrogen, y = sd_total_nitrogen, 
+                          color = ph_strata, group = group)) +
+  # geom_line(alpha = 0.6) + #makes lines more transparent
+  geom_point(alpha = 0.5) +
+  geom_smooth(aes(group = 1), method = "rlm", se = FALSE, color = "black") +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +
+  theme_classic() +
+  labs(title = "Nitrogen Supply ~ Space + Time",
+       x = 'Mean Annual Total Nitrogen Supply (ug/h/m_m2)',
+       y = 'SD Annual Total Nitrogen Supply (ug/h/m_m2)') +
+  facet_wrap(~projecthabitat, scales = "free") +
+  # scale_x_date(date_breaks = '1 year', date_labels = "%Y") + #adds all years to x axis for ease of interpetations
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        # legend.position = "none",
+        panel.background = element_rect(fill = "white"),
+        axis.line = element_line("black"),
+        axis.text = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"),
+        legend.position = "right")
+
+# ggsave(
+#   filename = "figure2a_nitrogen_facet.png",
+#   path = "plots/figure2/nitrogen/",
+#   width = 15, height = 9
+# )
+
+plotting_dat_ready |> 
+  group_by(projecthabitat, year, color, group) |> 
+  summarise(mean_total_nitrogen = mean(total_n, na.rm = TRUE),
+            sd_total_nitrogen = sd(total_n), na.rm = TRUE) |>
+  unite(ph_strata, c(projecthabitat, color), sep = "-", remove = FALSE) |> 
+  ungroup() |> 
+  filter(!is.na(color)) |>  #removes weird NA point in PISCO dataset
+  filter(mean_total_nitrogen <= 50000,
+         sd_total_nitrogen <= 50000) |> 
+  ggplot(aes(x = mean_total_nitrogen, y = sd_total_nitrogen, 
+                    color = ph_strata, group = group)) +
+  # geom_line(alpha = 0.6) + #makes lines more transparent
+  geom_point(alpha = 0.5)+
+  geom_smooth(aes(group = 1), method = "rlm", se = FALSE, color = "black") +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +
+  theme_classic() +
+  labs(title = "Figure 2A: Nitrogen Supply ~ Space + Time",
+       x = 'Mean Annual Total Nitrogen Supply (ug/h/m_m2)',
+       y = 'SD Annual Total Nitrogen Supply (ug/h/m_m2)') +
+  # facet_wrap(~projecthabitat, scales = "free") +
+  # scale_x_date(date_breaks = '1 year', date_labels = "%Y") + #adds all years to x axis for ease of interpetations
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        # legend.position = "none",
+        panel.background = element_rect(fill = "white"),
+        axis.line = element_line("black"),
+        axis.text = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"),
+        legend.position = "right")
+
+# ggsave(
+#   filename = "figure2a_nitrogen.png",
+#   path = "plots/figure2/nitrogen/",
+#   width = 15, height = 9
+# )
+
+# Nitrogen Supply ~ Space -------------------------------------------------
+
+plotting_dat_ready |> 
+  group_by(projecthabitat, color) |> 
+  summarise(mean_total_nitrogen = mean(total_n, na.rm = TRUE),
+            sd_total_nitrogen = sd(total_n), na.rm = TRUE) |> 
+  unite(ph_strata, c(projecthabitat, color), sep = "-", remove = FALSE) |>
+  ungroup() |> 
+  filter(!is.na(color)) |> #removes weird NA point in PISCO dataset
+  filter(mean_total_nitrogen <= 30000,
+         sd_total_nitrogen <= 30000) |> 
+  ggplot(aes(x = mean_total_nitrogen, y = sd_total_nitrogen, 
+                   color = projecthabitat, label = color, group = color)) +
+  # geom_line(alpha = 0.6) + #makes lines more transparent
+  geom_point(alpha = 0.9, size = 4) +
+  geom_text(vjust = -0.9, hjust = 0.9) +
+  geom_smooth(aes(group = 1), method = "rlm", se = FALSE, color = "black") +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +
+  theme_classic() +
+  labs(title = "Figure 2B: Nitrogen Supply ~ Space",
+       x = 'Mean Total Nitrogen Supply (ug/h/m_m2)',
+       y = 'SD Total Nitrogen Supply (ug/h/m_m2)') +
+  # facet_wrap(~projecthabitat, scales = "free") +
+  # scale_x_date(date_breaks = '1 year', date_labels = "%Y") + #adds all years to x axis for ease of interpetations
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        # legend.position = "none",
+        panel.background = element_rect(fill = "white"),
+        axis.line = element_line("black"),
+        axis.text = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"),
+        legend.position = "right")
+
+# ggsave(
+#   filename = "figure2b_nitrogen.png",
+#   path = "plots/figure2/nitrogen/",
 #   width = 15, height = 9
 # )
