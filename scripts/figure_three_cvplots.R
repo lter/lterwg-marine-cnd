@@ -233,16 +233,17 @@ plotting_dat_ready |>
   summarise(across(where(is.numeric), 
                    ~ (sd(., na.rm = TRUE) / mean(., na.rm = TRUE)) * 100, 
                    .names = "{.col}_cv")) |> 
+  filter(projecthabitat == f) |> #this is what we will use to map() plot across
   ggplot(aes(x = bm_sum_cv, y = total_n_cv,
-             color = color)) + #change label to only year for facet_wrapped plot
+             color = color, label = year)) + #change label to only year for facet_wrapped plot
   geom_point(alpha = 0.9, size = 4) +
-  # geom_text_repel() +
+  geom_text_repel() +
   geom_smooth(method = 'rlm', se = FALSE) +
   # geom_smooth(aes(group = 1), method = "rlm", se = FALSE, color = "black") +
   geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +
-  facet_wrap(~ projecthabitat) +
+  # facet_wrap(~ projecthabitat) +
   theme_classic() +
-  labs(title = "Figure 3.1: CV of Mean Annual N Supply ~ CV of Mean Annual Biomass",
+  labs(title = paste("CV of Mean Annual N Supply ~ CV of Mean Annual Biomass:", f),
        x = 'CV of Mean Annual Biomass (g/m_m2)',
        y = 'CV of Mean Annual N Supply (ug/h/m_m2)') +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
@@ -255,9 +256,9 @@ plotting_dat_ready |>
 
 cv_nitrogen_bm_figure3 <- map(unique(plotting_dat_ready$projecthabitat), nitrogen_bm_cv_figure3)
 
-# ggsave(
-#   filename = "n_bm_cv_figure3_facet_02132024.pdf",
-#   path = "plots/figure3",
-#   plot = marrangeGrob(cv_nitrogen_bm_figure3, nrow = 1, ncol = 1),
-#   width = 15, height = 9
-# )
+ggsave(
+  filename = "n_bm_cv_figure3_facet_02132024.pdf",
+  path = "plots/figure3",
+  plot = marrangeGrob(cv_nitrogen_bm_figure3, nrow = 1, ncol = 1),
+  width = 15, height = 9
+)
