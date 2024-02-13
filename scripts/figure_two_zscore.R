@@ -145,7 +145,9 @@ rm(cce, fce, mcr, pisco_central, pisco_south, sbc_beach, sbc_reef,
 # Plotting for Figure Two -------------------------------------------------
 ###########################################################################
 
-# N Supply ~ Space + Time -------------------------------------------------
+# NITROGEN PLOTS ----------------------------------------------------------
+
+# Nitrogen Supply ~ Space + Time -----------------------------------------------
 
 plotting_dat_ready |> 
   filter(!is.na(color)) |> #remove weird NAs from PISCO South (only a few)
@@ -165,7 +167,7 @@ plotting_dat_ready |>
   # geom_smooth(method = 'rlm', se = FALSE) +
   geom_smooth(aes(group = 1), method = "rlm", se = FALSE, color = "black") +
   theme_classic() +
-  labs(title = "Figure 2B: Z-Scored Nitrogen Supply ~ Space + Time",
+  labs(title = "Figure 2A: Z-Scored Nitrogen Across Space Per Year (FCE, MCR, SBC)",
        x = 'Mean Annual Nitrogen Supply (ug/h/m_m2)',
        y = 'SD Annual Nitrogen Supply (ug/h/m_m2)') +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
@@ -175,27 +177,68 @@ plotting_dat_ready |>
         axis.title = element_text(face = "bold"),
         legend.position = "right")
 
-# N Supply ~ Time --------------------------------------------------------
+# ggsave(
+#   filename = "figure2a_z_nitrogen.png",
+#   path = "plots/figure2/zscore/nitrogen/",
+#   width = 15, height = 9
+# )
+
+# Nitrogen Supply ~ Space -------------------------------------------------------
 
 plotting_dat_ready |> 
   filter(!is.na(color)) |> #remove weird NAs from PISCO South (only a few)
   # group_by(projecthabitat, color) |> #grouping by specific project and strata of interest to generate z-score calculations
   mutate(across(where(is.numeric), ~ (.-mean(.)) / sd(.), .names = "{.col}_z")) |> #z-scores all numeric data and generates new column for the zscored variable
   # ungroup() |>
-  group_by(project, projecthabitat, year) |> #keeping project for plotting
+  group_by(project, projecthabitat, color) |> #keeping project for plotting
   summarise(mean_total_nitrogen_z = mean(total_n_z), na.rm = TRUE,
             sd_total_nitrogen_z = sd(total_n_z), na.rm = TRUE) |> 
   ungroup() |> 
-  unite(p_year, c(project, year), sep = "-", remove = FALSE) |> #only needed for all together figure
+  # unite(p_year, c(project, year), sep = "-", remove = FALSE) |> #only needed for all together figure
   filter(projecthabitat %in% c("FCE-estuary", "MCR-ocean", "SBC-ocean")) |> 
   ggplot(aes(x = mean_total_nitrogen_z, y = sd_total_nitrogen_z, 
-             color = project, label = year)) + #change label to only year for facet_wrapped plot
+             color = color, label = project)) + #change label to only year for facet_wrapped plot
   geom_point(alpha = 0.9, size = 4) +
   geom_text_repel() +
   # geom_smooth(method = 'rlm', se = FALSE) +
   geom_smooth(aes(group = 1), method = "rlm", se = FALSE, color = "black") +
   theme_classic() +
-  labs(title = "Figure 2B: Z-Scored Nitrogen Supply ~ Time",
+  labs(title = "Figure 2B: Z-Scored Nitrogen Supply Over Time w/in Strata (FCE, MCR, SBC)",
+       x = 'Mean Nitrogen Supply (ug/h/m_m2)',
+       y = 'SD Nitrogen Supply (ug/h/m_m2)') +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        panel.background = element_rect(fill = "white"),
+        axis.line = element_line("black"),
+        axis.text = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"),
+        legend.position = "right")
+
+# ggsave(
+#   filename = "figure2b_z_nitrogen.png",
+#   path = "plots/figure2/zscore/nitrogen/",
+#   width = 15, height = 9
+# )
+
+# Individual Site Nitrogen Supply ~ Space + Time -------------------------------
+## data scaled at site-strata level
+nitrogen_zscore_sites <- function(f) {
+plotting_dat_ready |> 
+  filter(!is.na(color)) |> #remove weird NAs from PISCO South (only a few)
+  group_by(projecthabitat, color) |> #grouping by specific project and strata of interest to generate z-score calculations
+  mutate(across(where(is.numeric), ~ (.-mean(.)) / sd(.), .names = "{.col}_z")) |> #z-scores all numeric data and generates new column for the zscored variable
+  ungroup() |>
+  group_by(project, projecthabitat, color, year) |> #keeping project for plotting
+  summarise(mean_total_nitrogen_z = mean(total_n_z), na.rm = TRUE,
+            sd_total_nitrogen_z = sd(total_n_z), na.rm = TRUE) |> 
+  ungroup() |> 
+  filter(projecthabitat == f) |>
+  ggplot(aes(x = mean_total_nitrogen_z, y = sd_total_nitrogen_z, 
+             color = color, label = year)) + #change label to only year for facet_wrapped plot
+  geom_point(alpha = 0.9, size = 4) +
+  geom_text_repel() +
+  geom_smooth(aes(group = 1), method = "rlm", se = FALSE, color = "black") +
+  theme_classic() +
+  labs(title = paste("Z-Scored Nitrogen Supply ~ Space + Time:", f),
        x = 'Mean Annual Nitrogen Supply (ug/h/m_m2)',
        y = 'SD Annual Nitrogen Supply (ug/h/m_m2)') +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
@@ -204,7 +247,359 @@ plotting_dat_ready |>
         axis.text = element_text(face = "bold"),
         axis.title = element_text(face = "bold"),
         legend.position = "right")
+}
 
-# Individual Site N Supply ~ Space + Time ---------------------------------
+fig2_nitrogen <- map(unique(plotting_dat_ready$projecthabitat), nitrogen_zscore_sites)
 
+# ggsave(
+#   filename = "nitrogen_szcore_sites_seperate.pdf",
+#   path = "plots/figure2/zscore/nitrogen/",
+#   plot = marrangeGrob(fig2_nitrogen, nrow = 1, ncol = 1),
+#   width = 15, height = 9
+# )
 
+# PHOSPHORUS PLOTS ----------------------------------------------------------
+
+# Phosphorus Supply ~ Space + Time -------------------------------------------------
+
+plotting_dat_ready |> 
+  filter(!is.na(color)) |> #remove weird NAs from PISCO South (only a few)
+  # group_by(projecthabitat, color) |> #grouping by specific project and strata of interest to generate z-score calculations
+  mutate(across(where(is.numeric), ~ (.-mean(.)) / sd(.), .names = "{.col}_z")) |> #z-scores all numeric data and generates new column for the zscored variable
+  # ungroup() |>
+  group_by(project, projecthabitat, color, year) |> #keeping project for plotting
+  summarise(mean_total_phosphorus_z = mean(total_p_z), na.rm = TRUE,
+            sd_total_phosphorus_z = sd(total_p_z), na.rm = TRUE) |> 
+  ungroup() |> 
+  unite(p_strata, c(project, color), sep = "-", remove = FALSE) |> #only needed for all together figure
+  filter(projecthabitat %in% c("FCE-estuary", "MCR-ocean", "SBC-ocean")) |> 
+  ggplot(aes(x = mean_total_phosphorus_z, y = sd_total_phosphorus_z, 
+             color = p_strata, label = year)) + #change label to only year for facet_wrapped plot
+  geom_point(alpha = 0.9, size = 4) +
+  geom_text_repel() +
+  # geom_smooth(method = 'rlm', se = FALSE) +
+  geom_smooth(aes(group = 1), method = "rlm", se = FALSE, color = "black") +
+  theme_classic() +
+  labs(title = "Figure 2A: Z-Scored Phosphorus Across Space Per Year (FCE, MCR, SBC)",
+       x = 'Mean Annual Phosphorus Supply (ug/h/m_m2)',
+       y = 'SD Annual Phosphorus Supply (ug/h/m_m2)') +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        panel.background = element_rect(fill = "white"),
+        axis.line = element_line("black"),
+        axis.text = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"),
+        legend.position = "right")
+
+# ggsave(
+#   filename = "figure2a_z_phosphorus.png",
+#   path = "plots/figure2/zscore/phosphorus/",
+#   width = 15, height = 9
+# )
+
+# Phosphorus Supply ~ Space --------------------------------------------------------
+
+plotting_dat_ready |> 
+  filter(!is.na(color)) |> #remove weird NAs from PISCO South (only a few)
+  # group_by(projecthabitat, color) |> #grouping by specific project and strata of interest to generate z-score calculations
+  mutate(across(where(is.numeric), ~ (.-mean(.)) / sd(.), .names = "{.col}_z")) |> #z-scores all numeric data and generates new column for the zscored variable
+  # ungroup() |>
+  group_by(project, projecthabitat, color) |> #keeping project for plotting
+  summarise(mean_total_phosphorus_z = mean(total_p_z), na.rm = TRUE,
+            sd_total_phosphorus_z = sd(total_p_z), na.rm = TRUE) |> 
+  ungroup() |> 
+  # unite(p_year, c(project, year), sep = "-", remove = FALSE) |> #only needed for all together figure
+  filter(projecthabitat %in% c("FCE-estuary", "MCR-ocean", "SBC-ocean")) |> 
+  ggplot(aes(x = mean_total_phosphorus_z, y = sd_total_phosphorus_z, 
+             color = color, label = project)) + #change label to only year for facet_wrapped plot
+  geom_point(alpha = 0.9, size = 4) +
+  geom_text_repel() +
+  # geom_smooth(method = 'rlm', se = FALSE) +
+  geom_smooth(aes(group = 1), method = "rlm", se = FALSE, color = "black") +
+  theme_classic() +
+  labs(title = "Figure 2B: Z-Scored Phosphorus Supply Over Time w/in Strata (FCE, MCR, SBC)",
+       x = 'Mean Phosphorus Supply (ug/h/m_m2)',
+       y = 'SD Phosphorus Supply (ug/h/m_m2)') +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        panel.background = element_rect(fill = "white"),
+        axis.line = element_line("black"),
+        axis.text = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"),
+        legend.position = "right")
+
+# ggsave(
+#   filename = "figure2b_z_phosphorus.png",
+#   path = "plots/figure2/zscore/phosphorus/",
+#   width = 15, height = 9
+# )
+
+# Individual Site Phosphorus Supply ~ Space + Time ---------------------------------
+## data scaled at site-strata level
+phosphorus_zscore_sites <- function(f) {
+  plotting_dat_ready |> 
+    filter(!is.na(color)) |> #remove weird NAs from PISCO South (only a few)
+    group_by(projecthabitat, color) |> #grouping by specific project and strata of interest to generate z-score calculations
+    mutate(across(where(is.numeric), ~ (.-mean(.)) / sd(.), .names = "{.col}_z")) |> #z-scores all numeric data and generates new column for the zscored variable
+    ungroup() |>
+    group_by(project, projecthabitat, color, year) |> #keeping project for plotting
+    summarise(mean_total_phosphorus_z = mean(total_n_z), na.rm = TRUE,
+              sd_total_phosphorus_z = sd(total_n_z), na.rm = TRUE) |> 
+    ungroup() |> 
+    filter(projecthabitat == f) |>
+    ggplot(aes(x = mean_total_phosphorus_z, y = sd_total_phosphorus_z, 
+               color = color, label = year)) + #change label to only year for facet_wrapped plot
+    geom_point(alpha = 0.9, size = 4) +
+    geom_text_repel() +
+    geom_smooth(aes(group = 1), method = "rlm", se = FALSE, color = "black") +
+    theme_classic() +
+    labs(title = paste("Z-Scored Phosphorus Supply ~ Space + Time:", f),
+         x = 'Mean Annual Phosphorus Supply (ug/h/m_m2)',
+         y = 'SD Annual Phosphorus Supply (ug/h/m_m2)') +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+          panel.background = element_rect(fill = "white"),
+          axis.line = element_line("black"),
+          axis.text = element_text(face = "bold"),
+          axis.title = element_text(face = "bold"),
+          legend.position = "right")
+}
+
+fig2_phosphorus <- map(unique(plotting_dat_ready$projecthabitat), phosphorus_zscore_sites)
+
+# ggsave(
+#   filename = "phosphorus_szcore_sites_seperate.pdf",
+#   path = "plots/figure2/zscore/phosphorus/",
+#   plot = marrangeGrob(fig2_phosphorus, nrow = 1, ncol = 1),
+#   width = 15, height = 9
+# )
+
+# BIOMASS PLOTS -----------------------------------------------------------
+plotting_dat_ready <- plotting_dat_ready %>%
+  mutate(total_bm_m = ifelse(is.na(total_bm_m), 0, total_bm_m),
+         total_bm_m2 = ifelse(is.na(total_bm_m2), 0, total_bm_m2),
+         bm_sum = total_bm_m + total_bm_m2)
+
+# Biomass ~ Space + Time -------------------------------------------------
+
+plotting_dat_ready |> 
+  filter(!is.na(color)) |> #remove weird NAs from PISCO South (only a few)
+  # group_by(projecthabitat, color) |> #grouping by specific project and strata of interest to generate z-score calculations
+  mutate(across(where(is.numeric), ~ (.-mean(.)) / sd(.), .names = "{.col}_z")) |> #z-scores all numeric data and generates new column for the zscored variable
+  # ungroup() |>
+  group_by(project, projecthabitat, color, year) |> #keeping project for plotting
+  summarise(mean_total_biomass_z = mean(bm_sum_z), na.rm = TRUE,
+            sd_total_biomass_z = sd(bm_sum_z), na.rm = TRUE) |> 
+  ungroup() |> 
+  unite(p_strata, c(project, color), sep = "-", remove = FALSE) |> #only needed for all together figure
+  filter(projecthabitat %in% c("FCE-estuary", "MCR-ocean", "SBC-ocean")) |> 
+  ggplot(aes(x = mean_total_biomass_z, y = sd_total_biomass_z, 
+             color = p_strata, label = year)) + #change label to only year for facet_wrapped plot
+  geom_point(alpha = 0.9, size = 4) +
+  geom_text_repel() +
+  # geom_smooth(method = 'rlm', se = FALSE) +
+  geom_smooth(aes(group = 1), method = "rlm", se = FALSE, color = "black") +
+  theme_classic() +
+  labs(title = "Figure 2A: Z-Scored Biomass Across Space Per Year (FCE, MCR, SBC)",
+       x = 'Mean Annual Biomass (g/m_m2)',
+       y = 'SD Annual Biomass (g/m_m2') +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        panel.background = element_rect(fill = "white"),
+        axis.line = element_line("black"),
+        axis.text = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"),
+        legend.position = "right")
+
+# ggsave(
+#   filename = "figure2a_z_biomass.png",
+#   path = "plots/figure2/zscore/biomass/",
+#   width = 15, height = 9
+# )
+
+# Biomass ~ Space --------------------------------------------------------
+
+plotting_dat_ready |> 
+  filter(!is.na(color)) |> #remove weird NAs from PISCO South (only a few)
+  # group_by(projecthabitat, color) |> #grouping by specific project and strata of interest to generate z-score calculations
+  mutate(across(where(is.numeric), ~ (.-mean(.)) / sd(.), .names = "{.col}_z")) |> #z-scores all numeric data and generates new column for the zscored variable
+  # ungroup() |>
+  group_by(project, projecthabitat, color) |> #keeping project for plotting
+  summarise(mean_total_biomass_z = mean(bm_sum_z), na.rm = TRUE,
+            sd_total_biomass_z = sd(bm_sum_z), na.rm = TRUE) |> 
+  ungroup() |> 
+  # unite(p_year, c(project, year), sep = "-", remove = FALSE) |> #only needed for all together figure
+  filter(projecthabitat %in% c("FCE-estuary", "MCR-ocean", "SBC-ocean")) |> 
+  ggplot(aes(x = mean_total_biomass_z, y = sd_total_biomass_z, 
+             color = color, label = project)) + #change label to only year for facet_wrapped plot
+  geom_point(alpha = 0.9, size = 4) +
+  geom_text_repel() +
+  # geom_smooth(method = 'rlm', se = FALSE) +
+  geom_smooth(aes(group = 1), method = "rlm", se = FALSE, color = "black") +
+  theme_classic() +
+  labs(title = "Figure 2B: Z-Scored Biomass Over Time w/in Strata (FCE, MCR, SBC)",
+       x = 'Mean Biomass (g/m_m2)',
+       y = 'SD Biomass (g/m_m2)') +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        panel.background = element_rect(fill = "white"),
+        axis.line = element_line("black"),
+        axis.text = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"),
+        legend.position = "right")
+
+# ggsave(
+#   filename = "figure2b_z_biomass.png",
+#   path = "plots/figure2/zscore/biomass/",
+#   width = 15, height = 9
+# )
+
+# Individual Site Biomass ~ Space + Time ---------------------------------
+## data scaled at site-strata level
+biomass_zscore_sites <- function(f) {
+  plotting_dat_ready |> 
+    filter(!is.na(color)) |> #remove weird NAs from PISCO South (only a few)
+    group_by(projecthabitat, color) |> #grouping by specific project and strata of interest to generate z-score calculations
+    mutate(across(where(is.numeric), ~ (.-mean(.)) / sd(.), .names = "{.col}_z")) |> #z-scores all numeric data and generates new column for the zscored variable
+    ungroup() |>
+    group_by(project, projecthabitat, color, year) |> #keeping project for plotting
+    summarise(mean_total_biomass_z = mean(bm_sum_z), na.rm = TRUE,
+              sd_total_biomass_z = sd(bm_sum_z), na.rm = TRUE) |> 
+    ungroup() |> 
+    filter(projecthabitat == f) |>
+    ggplot(aes(x = mean_total_biomass_z, y = sd_total_biomass_z, 
+               color = color, label = year)) + #change label to only year for facet_wrapped plot
+    geom_point(alpha = 0.9, size = 4) +
+    geom_text_repel() +
+    geom_smooth(aes(group = 1), method = "rlm", se = FALSE, color = "black") +
+    theme_classic() +
+    labs(title = paste("Z-Scored Biomass ~ Space + Time:", f),
+         x = 'Mean Annual Biomass (g/m_m2)',
+         y = 'SD Annual Biomass (g/m_m2)') +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+          panel.background = element_rect(fill = "white"),
+          axis.line = element_line("black"),
+          axis.text = element_text(face = "bold"),
+          axis.title = element_text(face = "bold"),
+          legend.position = "right")
+}
+
+fig2_biomass <- map(unique(plotting_dat_ready$projecthabitat), biomass_zscore_sites)
+
+# ggsave(
+#   filename = "biomass_szcore_sites_seperate.pdf",
+#   path = "plots/figure2/zscore/biomass/",
+#   plot = marrangeGrob(fig2_biomass, nrow = 1, ncol = 1),
+#   width = 15, height = 9
+# )
+
+# SIZE STRUCTURE PLOTS ----------------------------------------------------
+
+# sizestructure ~ Space + Time -------------------------------------------------
+
+plotting_dat_ready |> 
+  filter(!is.na(color),
+         !is.na(bm_ind_mean_nozeros)) |> #remove weird NAs from PISCO South (only a few)
+  # group_by(projecthabitat, color) |> #grouping by specific project and strata of interest to generate z-score calculations
+  mutate(across(where(is.numeric), ~ (.-mean(.)) / sd(.), .names = "{.col}_z")) |> #z-scores all numeric data and generates new column for the zscored variable
+  # ungroup() |>
+  group_by(project, projecthabitat, color, year) |> #keeping project for plotting
+  summarise(mean_total_sizestructure_z = mean(bm_ind_mean_nozeros_z), na.rm = TRUE,
+            sd_total_sizestructure_z = sd(bm_ind_mean_nozeros_z), na.rm = TRUE) |> 
+  ungroup() |> 
+  unite(p_strata, c(project, color), sep = "-", remove = FALSE) |> #only needed for all together figure
+  filter(projecthabitat %in% c("FCE-estuary", "MCR-ocean", "SBC-ocean")) |> 
+  ggplot(aes(x = mean_total_sizestructure_z, y = sd_total_sizestructure_z, 
+             color = p_strata, label = year)) + #change label to only year for facet_wrapped plot
+  geom_point(alpha = 0.9, size = 4) +
+  geom_text_repel() +
+  # geom_smooth(method = 'rlm', se = FALSE) +
+  geom_smooth(aes(group = 1), method = "rlm", se = FALSE, color = "black") +
+  theme_classic() +
+  labs(title = "Figure 2A: Z-Scored Size Structure Across Space Per Year (FCE, MCR, SBC)",
+       x = 'Mean Annual Individual Dry Mass (g)',
+       y = 'SD Annual Individual Dry Mass (g)') +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        panel.background = element_rect(fill = "white"),
+        axis.line = element_line("black"),
+        axis.text = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"),
+        legend.position = "right")
+
+# ggsave(
+#   filename = "figure2a_z_sizestructure.png",
+#   path = "plots/figure2/zscore/sizestructure/",
+#   width = 15, height = 9
+# )
+
+# sizestructure ~ Space --------------------------------------------------------
+
+plotting_dat_ready |> 
+  filter(!is.na(color),
+         !is.na(bm_ind_mean_nozeros)) |> #remove weird NAs from PISCO South (only a few)
+  # group_by(projecthabitat, color) |> #grouping by specific project and strata of interest to generate z-score calculations
+  mutate(across(where(is.numeric), ~ (.-mean(.)) / sd(.), .names = "{.col}_z")) |> #z-scores all numeric data and generates new column for the zscored variable
+  # ungroup() |>
+  group_by(project, projecthabitat, color) |> #keeping project for plotting
+  summarise(mean_total_sizestructure_z = mean(bm_ind_mean_nozeros_z), na.rm = TRUE,
+            sd_total_sizestructure_z = sd(bm_ind_mean_nozeros_z), na.rm = TRUE) |> 
+  ungroup() |> 
+  # unite(p_year, c(project, year), sep = "-", remove = FALSE) |> #only needed for all together figure
+  filter(projecthabitat %in% c("FCE-estuary", "MCR-ocean", "SBC-ocean")) |> 
+  ggplot(aes(x = mean_total_sizestructure_z, y = sd_total_sizestructure_z, 
+             color = color, label = project)) + #change label to only year for facet_wrapped plot
+  geom_point(alpha = 0.9, size = 4) +
+  geom_text_repel() +
+  # geom_smooth(method = 'rlm', se = FALSE) +
+  geom_smooth(aes(group = 1), method = "rlm", se = FALSE, color = "black") +
+  theme_classic() +
+  labs(title = "Figure 2B: Z-Scored Size Structure Over Time w/in Strata (FCE, MCR, SBC)",
+       x = 'Mean Individual Dry Mass (g)',
+       y = 'SD Individual Dry Mass (g)') +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        panel.background = element_rect(fill = "white"),
+        axis.line = element_line("black"),
+        axis.text = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"),
+        legend.position = "right")
+
+# ggsave(
+#   filename = "figure2b_z_sizestructure.png",
+#   path = "plots/figure2/zscore/sizestructure/",
+#   width = 15, height = 9
+# )
+
+# Individual Site sizestructure ~ Space + Time ---------------------------------
+## data scaled at site-strata level
+sizestructure_zscore_sites <- function(f) {
+  plotting_dat_ready |> 
+    filter(!is.na(color),
+           !is.na(bm_ind_mean_nozeros)) |> #remove weird NAs from PISCO South (only a few)
+    group_by(projecthabitat, color) |> #grouping by specific project and strata of interest to generate z-score calculations
+    mutate(across(where(is.numeric), ~ (.-mean(.)) / sd(.), .names = "{.col}_z")) |> #z-scores all numeric data and generates new column for the zscored variable
+    ungroup() |>
+    group_by(project, projecthabitat, color, year) |> #keeping project for plotting
+    summarise(mean_total_sizestructure_z = mean(bm_ind_mean_nozeros_z), na.rm = TRUE,
+              sd_total_sizestructure_z = sd(bm_ind_mean_nozeros_z), na.rm = TRUE) |> 
+    ungroup() |> 
+    filter(projecthabitat == f) |>
+    ggplot(aes(x = mean_total_sizestructure_z, y = sd_total_sizestructure_z, 
+               color = color, label = year)) + #change label to only year for facet_wrapped plot
+    geom_point(alpha = 0.9, size = 4) +
+    geom_text_repel() +
+    geom_smooth(aes(group = 1), method = "rlm", se = FALSE, color = "black") +
+    theme_classic() +
+    labs(title = paste("Z-Scored Size Structure ~ Space + Time:", f),
+         x = 'Mean Annual Individual Dry Mass (g)',
+         y = 'SD Annual Individual Dry Mass (g)') +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+          panel.background = element_rect(fill = "white"),
+          axis.line = element_line("black"),
+          axis.text = element_text(face = "bold"),
+          axis.title = element_text(face = "bold"),
+          legend.position = "right")
+}
+
+fig2_sizestructure <- map(unique(plotting_dat_ready$projecthabitat), sizestructure_zscore_sites)
+
+# ggsave(
+#   filename = "sizestructure_szcore_sites_seperate.pdf",
+#   path = "plots/figure2/zscore/sizestructure/",
+#   plot = marrangeGrob(fig2_sizestructure, nrow = 1, ncol = 1),
+#   width = 15, height = 9
+# )
