@@ -1,6 +1,8 @@
 ###project: LTER Marine Consumer Nutrient Dynamic Synthesis Working Group
 ###author(s): Mack White, Li Kui, Angel Chen
-###goal(s): generate plots for figure one of ms one
+###goal(s): generate plots for figure three of ms one
+# figure sketches: https://docs.google.com/document/d/1gySJodTrvOqhDMPKxPJD8np4Y2vbTwrXwXys5CLCYHI/edit
+# figure notes: https://docs.google.com/document/d/1URPbBolZv9jcXS57kS4WzwYOvNge5aQKezemz-OoLlg/edit
 ###date(s): January 2024
 ###note(s): 
 ###### 02-10-2024: 
