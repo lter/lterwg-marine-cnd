@@ -455,7 +455,7 @@ cv_phosphorus_bm_figure3 <- map(unique(plotting_dat_ready$projecthabitat), phosp
 # ggsave(
 #   filename = "p_bm_cv_figure3_facet_02132024.pdf",
 #   path = "plots/figure3",
-#   plot = marrangeGrob(cv_nitrogen_bm_figure3, nrow = 1, ncol = 1),
+#   plot = marrangeGrob(cv_phosphorus_bm_figure3, nrow = 1, ncol = 1),
 #   width = 15, height = 9
 # )
 
