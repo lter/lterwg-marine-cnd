@@ -147,6 +147,10 @@ rm(cce, fce, mcr, pisco_central, pisco_south, sbc_beach, sbc_reef,
 # Plotting for Figure Three -------------------------------------------------
 ###########################################################################
 
+###########################################################################
+# NITROGEN PLOTS --------------------------------------------------------
+###########################################################################
+
 # nitrogen cv ~ biomass cv (subsite sites) --------------------------------
 
 plotting_dat_ready |> 
@@ -292,9 +296,166 @@ plotting_dat_ready |>
 
 cv_nitrogen_bm_figure3 <- map(unique(plotting_dat_ready$projecthabitat), nitrogen_bm_cv_figure3)
 
-ggsave(
-  filename = "n_bm_cv_figure3_facet_02132024.pdf",
-  path = "plots/figure3",
-  plot = marrangeGrob(cv_nitrogen_bm_figure3, nrow = 1, ncol = 1),
-  width = 15, height = 9
-)
+# ggsave(
+#   filename = "n_bm_cv_figure3_facet_02132024.pdf",
+#   path = "plots/figure3",
+#   plot = marrangeGrob(cv_nitrogen_bm_figure3, nrow = 1, ncol = 1),
+#   width = 15, height = 9
+# )
+
+###########################################################################
+# PHOSPHORUS PLOTS --------------------------------------------------------
+###########################################################################
+
+# phosphorus cv ~ biomass cv (subsite sites) --------------------------------
+
+plotting_dat_ready |> 
+  filter(!is.na(color),
+         projecthabitat %in% c('FCE-estuary', 'MCR-ocean', 'SBC-ocean')) |> #remove weird NAs from PISCO South (only a few)
+  mutate(total_bm_m = ifelse(is.na(total_bm_m), 0, total_bm_m),
+         total_bm_m2 = ifelse(is.na(total_bm_m2), 0, total_bm_m2),
+         bm_sum = total_bm_m + total_bm_m2) |> 
+  group_by(projecthabitat, color, year) |> #grouping by specific project and strata of interest to generate z-score calculations
+  summarise(across(where(is.numeric), 
+                   ~ (sd(., na.rm = TRUE) / mean(., na.rm = TRUE)) * 100, 
+                   .names = "{.col}_cv")) |> 
+  ggplot(aes(x = bm_sum_cv, y = total_p_cv,
+             color = projecthabitat, label = year)) + #change label to only year for facet_wrapped plot
+  geom_point(alpha = 0.9, size = 4) +
+  geom_text_repel() +
+  # geom_smooth(method = 'rlm', se = FALSE) +
+  geom_smooth(aes(group = 1), method = "rlm", se = FALSE, color = "black") +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +
+  # facet_wrap(~ projecthabitat) +
+  theme_classic() +
+  labs(title = "Figure 3.1: CV of Mean Annual P Supply ~ CV of Mean Annual Biomass",
+       x = 'CV of Mean Annual Biomass (g/m_m2)',
+       y = 'CV of Mean Annual P Supply (ug/h/m_m2)') +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        panel.background = element_rect(fill = "white"),
+        axis.line = element_line("black"),
+        axis.text = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"),
+        legend.position = "right")
+
+# ggsave(
+#   filename = "p_bm_cv_figure3_subset_02132024.png",
+#   path = "plots/figure3",
+#   width = 15, height = 9
+# )
+
+# phosphorus cv ~ biomass cv (all sites) ------------------------------------
+
+plotting_dat_ready |> 
+  filter(!is.na(color)) |> #remove weird NAs from PISCO South (only a few)
+  mutate(total_bm_m = ifelse(is.na(total_bm_m), 0, total_bm_m),
+         total_bm_m2 = ifelse(is.na(total_bm_m2), 0, total_bm_m2),
+         bm_sum = total_bm_m + total_bm_m2) |> 
+  group_by(projecthabitat, color, year) |> #grouping by specific project and strata of interest to generate z-score calculations
+  summarise(across(where(is.numeric), 
+                   ~ (sd(., na.rm = TRUE) / mean(., na.rm = TRUE)) * 100, 
+                   .names = "{.col}_cv")) |> 
+  ggplot(aes(x = bm_sum_cv, y = total_p_cv,
+             color = projecthabitat, label = year)) + #change label to only year for facet_wrapped plot
+  geom_point(alpha = 0.9, size = 4) +
+  geom_text_repel() +
+  # geom_smooth(method = 'rlm', se = FALSE) +
+  geom_smooth(aes(group = 1), method = "rlm", se = FALSE, color = "black") +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +
+  # facet_wrap(~ projecthabitat) +
+  theme_classic() +
+  labs(title = "Figure 3.1: CV of Mean Annual P Supply ~ CV of Mean Annual Biomass",
+       x = 'CV of Mean Annual Biomass (g/m_m2)',
+       y = 'CV of Mean Annual P Supply (ug/h/m_m2)') +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        panel.background = element_rect(fill = "white"),
+        axis.line = element_line("black"),
+        axis.text = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"),
+        legend.position = "right")
+
+# ggsave(
+#   filename = "p_bm_cv_figure3_allsites_02132024.png",
+#   path = "plots/figure3",
+#   width = 15, height = 9
+# )
+
+# phosphorus cv ~ biomass cv (all sites minus CCE) --------------------------
+
+plotting_dat_ready |> 
+  filter(!is.na(color),
+         project != "CCE") |> #remove weird NAs from PISCO South (only a few)
+  mutate(total_bm_m = ifelse(is.na(total_bm_m), 0, total_bm_m),
+         total_bm_m2 = ifelse(is.na(total_bm_m2), 0, total_bm_m2),
+         bm_sum = total_bm_m + total_bm_m2) |> 
+  group_by(projecthabitat, color, year) |> #grouping by specific project and strata of interest to generate z-score calculations
+  summarise(across(where(is.numeric), 
+                   ~ (sd(., na.rm = TRUE) / mean(., na.rm = TRUE)) * 100, 
+                   .names = "{.col}_cv")) |> 
+  ggplot(aes(x = bm_sum_cv, y = total_p_cv,
+             color = projecthabitat, label = year)) + #change label to only year for facet_wrapped plot
+  geom_point(alpha = 0.9, size = 4) +
+  geom_text_repel() +
+  # geom_smooth(method = 'rlm', se = FALSE) +
+  geom_smooth(aes(group = 1), method = "rlm", se = FALSE, color = "black") +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +
+  # facet_wrap(~ projecthabitat) +
+  theme_classic() +
+  labs(title = "Figure 3.1: CV of Mean Annual P Supply ~ CV of Mean Annual Biomass",
+       x = 'CV of Mean Annual Biomass (g/m_m2)',
+       y = 'CV of Mean Annual P Supply (ug/h/m_m2)') +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        panel.background = element_rect(fill = "white"),
+        axis.line = element_line("black"),
+        axis.text = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"),
+        legend.position = "right")
+
+# ggsave(
+#   filename = "p_bm_cv_figure3_allsites_minusCCE_02132024.png",
+#   path = "plots/figure3",
+#   width = 15, height = 9
+# )
+
+# phosphorus cv ~ biomass cv (individual plots) -----------------------------
+
+phosphorus_bm_cv_figure3 <- function(f) {
+  plotting_dat_ready |> 
+    filter(!is.na(color)) |> #remove weird NAs from PISCO South (only a few)
+    mutate(total_bm_m = ifelse(is.na(total_bm_m), 0, total_bm_m),
+           total_bm_m2 = ifelse(is.na(total_bm_m2), 0, total_bm_m2),
+           bm_sum = total_bm_m + total_bm_m2) |> 
+    group_by(projecthabitat, color, year) |> #grouping by specific project and strata of interest to generate z-score calculations
+    summarise(across(where(is.numeric), 
+                     ~ (sd(., na.rm = TRUE) / mean(., na.rm = TRUE)) * 100, 
+                     .names = "{.col}_cv")) |> 
+    filter(projecthabitat == f) |> #this is what we will use to map() plot across
+    ggplot(aes(x = bm_sum_cv, y = total_p_cv,
+               color = color, label = year)) + #change label to only year for facet_wrapped plot
+    geom_point(alpha = 0.9, size = 4) +
+    geom_text_repel() +
+    geom_smooth(method = 'rlm', se = FALSE) +
+    # geom_smooth(aes(group = 1), method = "rlm", se = FALSE, color = "black") +
+    geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +
+    # facet_wrap(~ projecthabitat) +
+    theme_classic() +
+    labs(title = paste("CV of Mean Annual P Supply ~ CV of Mean Annual Biomass:", f),
+         x = 'CV of Mean Annual Biomass (g/m_m2)',
+         y = 'CV of Mean Annual P Supply (ug/h/m_m2)') +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+          panel.background = element_rect(fill = "white"),
+          axis.line = element_line("black"),
+          axis.text = element_text(face = "bold"),
+          axis.title = element_text(face = "bold"),
+          legend.position = "right")
+}
+
+cv_phosphorus_bm_figure3 <- map(unique(plotting_dat_ready$projecthabitat), phosphorus_bm_cv_figure3)
+
+# ggsave(
+#   filename = "p_bm_cv_figure3_facet_02132024.pdf",
+#   path = "plots/figure3",
+#   plot = marrangeGrob(cv_nitrogen_bm_figure3, nrow = 1, ncol = 1),
+#   width = 15, height = 9
+# )
+
