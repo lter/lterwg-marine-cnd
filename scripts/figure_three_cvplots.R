@@ -187,8 +187,7 @@ plotting_dat_ready |>
 # nitrogen cv ~ biomass cv (all sites) ------------------------------------
 
 plotting_dat_ready |> 
-  filter(!is.na(color),
-         projecthabitat %in% c('FCE-estuary', 'MCR-ocean', 'SBC-ocean')) |> #remove weird NAs from PISCO South (only a few)
+  filter(!is.na(color)) |> #remove weird NAs from PISCO South (only a few)
   mutate(total_bm_m = ifelse(is.na(total_bm_m), 0, total_bm_m),
          total_bm_m2 = ifelse(is.na(total_bm_m2), 0, total_bm_m2),
          bm_sum = total_bm_m + total_bm_m2) |> 
@@ -217,6 +216,43 @@ plotting_dat_ready |>
 
 # ggsave(
 #   filename = "n_bm_cv_figure3_allsites_02132024.png",
+#   path = "plots/figure3",
+#   width = 15, height = 9
+# )
+
+# nitrogen cv ~ biomass cv (all sites minus CCE) --------------------------
+
+plotting_dat_ready |> 
+  filter(!is.na(color),
+         project != "CCE") |> #remove weird NAs from PISCO South (only a few)
+  mutate(total_bm_m = ifelse(is.na(total_bm_m), 0, total_bm_m),
+         total_bm_m2 = ifelse(is.na(total_bm_m2), 0, total_bm_m2),
+         bm_sum = total_bm_m + total_bm_m2) |> 
+  group_by(projecthabitat, color, year) |> #grouping by specific project and strata of interest to generate z-score calculations
+  summarise(across(where(is.numeric), 
+                   ~ (sd(., na.rm = TRUE) / mean(., na.rm = TRUE)) * 100, 
+                   .names = "{.col}_cv")) |> 
+  ggplot(aes(x = bm_sum_cv, y = total_n_cv,
+             color = projecthabitat, label = year)) + #change label to only year for facet_wrapped plot
+  geom_point(alpha = 0.9, size = 4) +
+  geom_text_repel() +
+  # geom_smooth(method = 'rlm', se = FALSE) +
+  geom_smooth(aes(group = 1), method = "rlm", se = FALSE, color = "black") +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +
+  # facet_wrap(~ projecthabitat) +
+  theme_classic() +
+  labs(title = "Figure 3.1: CV of Mean Annual N Supply ~ CV of Mean Annual Biomass",
+       x = 'CV of Mean Annual Biomass (g/m_m2)',
+       y = 'CV of Mean Annual N Supply (ug/h/m_m2)') +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        panel.background = element_rect(fill = "white"),
+        axis.line = element_line("black"),
+        axis.text = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"),
+        legend.position = "right")
+
+# ggsave(
+#   filename = "n_bm_cv_figure3_allsites_minusCCE_02132024.png",
 #   path = "plots/figure3",
 #   width = 15, height = 9
 # )

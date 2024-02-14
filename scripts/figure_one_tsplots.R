@@ -519,3 +519,119 @@ bmindsupply_figure4 <- map(unique(plotting_dat_ready$projecthabitat), bmindsuppl
 #   plot = marrangeGrob(bmindsupply_figure4, nrow = 1, ncol = 1),
 #   width = 15, height = 9
 # )
+
+
+###########################################################################
+# Figure One Histograms ---------------------------------------------------
+###########################################################################
+
+# log nitrogen ------------------------------------------------------------
+plotting_dat_ready |> 
+  filter(projecthabitat %in% c('FCE-estuary', 'MCR-ocean', 'SBC-ocean')) |> 
+  mutate(total_bm_m = ifelse(is.na(total_bm_m), 0, total_bm_m),
+         total_bm_m2 = ifelse(is.na(total_bm_m2), 0, total_bm_m2),
+         bm_sum = total_bm_m + total_bm_m2) |> 
+  ggplot(aes(x = (log(total_n)), fill = projecthabitat)) +
+  geom_density(alpha = 0.5) +  # Adjust alpha for fill transparency
+  # scale_fill_manual(values = c("FCE" = "red", "MCR" = "green", "SBC" = "blue")) +
+  labs(title = "Frequency of Total Nitrogen Supply ~ Site",
+       x = "Log Nitrogen Supply (ug/hr/m_m2)",
+       y = "Frequency") +
+  theme_classic() +
+  # theme(legend.title = element_blank()) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        # legend.position = "none",
+        panel.background = element_rect(fill = "white"),
+        axis.line = element_line("black"),
+        axis.text = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"))
+
+# ggsave(
+#   filename = "log_total_n_freq.png",
+#   path = "plots/figure1/histogram/",
+#   width = 15, height = 9
+# )
+
+# log phosphorus ----------------------------------------------------------
+
+plotting_dat_ready |> 
+  filter(projecthabitat %in% c('FCE-estuary', 'MCR-ocean', 'SBC-ocean')) |> 
+  mutate(total_bm_m = ifelse(is.na(total_bm_m), 0, total_bm_m),
+         total_bm_m2 = ifelse(is.na(total_bm_m2), 0, total_bm_m2),
+         bm_sum = total_bm_m + total_bm_m2) |> 
+  ggplot(aes(x = (log(total_p)), fill = projecthabitat)) +
+  geom_density(alpha = 0.5) +  # Adjust alpha for fill transparency
+  # scale_fill_manual(values = c("FCE" = "red", "MCR" = "green", "SBC" = "blue")) +
+  labs(title = "Frequency of Total Phosphorus Supply ~ Site",
+       x = "Log Phosphorus Supply (ug/hr/m_m2)",
+       y = "Frequency") +
+  theme_classic() +
+  # theme(legend.title = element_blank()) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        # legend.position = "none",
+        panel.background = element_rect(fill = "white"),
+        axis.line = element_line("black"),
+        axis.text = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"))
+
+# ggsave(
+#   filename = "log_total_p_freq.png",
+#   path = "plots/figure1/histogram/",
+#   width = 15, height = 9
+# )
+
+# log total biomass -------------------------------------------------------
+
+plotting_dat_ready |> 
+  filter(projecthabitat %in% c('FCE-estuary', 'MCR-ocean', 'SBC-ocean')) |> 
+  mutate(total_bm_m = ifelse(is.na(total_bm_m), 0, total_bm_m),
+         total_bm_m2 = ifelse(is.na(total_bm_m2), 0, total_bm_m2),
+         bm_sum = total_bm_m + total_bm_m2) |> 
+  ggplot(aes(x = (log(bm_sum)), fill = projecthabitat)) +
+  geom_density(alpha = 0.5) +  # Adjust alpha for fill transparency
+  # scale_fill_manual(values = c("FCE" = "red", "MCR" = "green", "SBC" = "blue")) +
+  labs(title = "Frequency of Total Dry Biomass ~ Site",
+       x = "Log Total Dry Biomass (g/m_m2)",
+       y = "Frequency") +
+  theme_classic() +
+  # theme(legend.title = element_blank()) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        # legend.position = "none",
+        panel.background = element_rect(fill = "white"),
+        axis.line = element_line("black"),
+        axis.text = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"))
+
+# ggsave(
+#   filename = "log_total_biomass_freq.png",
+#   path = "plots/figure1/histogram/",
+#   width = 15, height = 9
+# )
+
+# log size structure ------------------------------------------------------
+
+plotting_dat_ready |> 
+  filter(projecthabitat %in% c('FCE-estuary', 'MCR-ocean', 'SBC-ocean')) |> 
+  mutate(total_bm_m = ifelse(is.na(total_bm_m), 0, total_bm_m),
+         total_bm_m2 = ifelse(is.na(total_bm_m2), 0, total_bm_m2),
+         bm_sum = total_bm_m + total_bm_m2) |> 
+  ggplot(aes(x = log((bm_ind_mean_nozeros)), fill = projecthabitat)) +
+  geom_density(alpha = 0.5) +  # Adjust alpha for fill transparency
+  # scale_fill_manual(values = c("FCE" = "red", "MCR" = "green", "SBC" = "blue")) +
+  labs(title = "Frequency of Individual Dry Biomass ~ Site",
+       x = "Log Total Individual Dry Biomass (g)",
+       y = "Frequency") +
+  theme_classic() +
+  # theme(legend.title = element_blank()) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        # legend.position = "none",
+        panel.background = element_rect(fill = "white"),
+        axis.line = element_line("black"),
+        axis.text = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"))
+
+# ggsave(
+#   filename = "log_individual_biomass_freq.png",
+#   path = "plots/figure1/histogram/",
+#   width = 15, height = 9
+# )
