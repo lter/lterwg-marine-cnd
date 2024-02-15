@@ -3,10 +3,8 @@
 ###goal(s): generate plots for figure three of ms one
 # figure sketches: https://docs.google.com/document/d/1gySJodTrvOqhDMPKxPJD8np4Y2vbTwrXwXys5CLCYHI/edit
 # figure notes: https://docs.google.com/document/d/1URPbBolZv9jcXS57kS4WzwYOvNge5aQKezemz-OoLlg/edit
-###date(s): January 2024
+###date(s): February 2024
 ###note(s): 
-###### 02-10-2024: 
-## THIS IS VERSION WHERE DATA IS NOT Z-SCORED FOR FIGURES
 
 ###########################################################################
 # load necessary packages -------------------------------------------------
