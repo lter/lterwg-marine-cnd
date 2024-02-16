@@ -93,9 +93,10 @@ fce <- dat |>
 
 mcr <- dat |> 
   filter(projecthabitat == "MCR-ocean") |> 
-  mutate(group = subsite_level1,
+  # unite(new_groupncolor, subsite_level1, site, sep = "", remove = FALSE) |> 
+  mutate(group = site,
          color = subsite_level1,
-         units = 'm2')
+         units = 'm2') #changed group from subsite_level1 to site on Feb 16
 
 sbc_reef <- dat |> 
   filter(projecthabitat == "SBC-ocean") |> 
@@ -178,7 +179,7 @@ nsupply_sitelevel <- function(f) {
 nsupply_figure1 <- map(unique(plotting_dat_ready$projecthabitat), nsupply_sitelevel)
 
 # ggsave(
-#   filename = "nsupply_sitelevel_seperate_02102024.pdf",
+#   filename = "nsupply_sitelevel_seperate_02162024.pdf",
 #   path = "plots/figure1/nitrogen/",
 #   plot = marrangeGrob(nsupply_figure1, nrow = 1, ncol = 1),
 #   width = 15, height = 9
@@ -214,12 +215,12 @@ nsupply_sitelevel_2 <- function(f) {
 
 nsupply_figure2 <- map(unique(plotting_dat_ready$projecthabitat), nsupply_sitelevel_2)
 
-# ggsave(
-#   filename = "nsupply_sitelevel2_seperate_02102024.pdf",
-#   path = "plots/figure1/nitrogen/",
-#   plot = marrangeGrob(nsupply_figure2, nrow = 1, ncol = 1),
-#   width = 15, height = 9
-# )
+ggsave(
+  filename = "nsupply_sitelevel2_seperate_02162024_mcrsplit.pdf",
+  path = "plots/figure1/nitrogen/",
+  plot = marrangeGrob(nsupply_figure2, nrow = 1, ncol = 1),
+  width = 15, height = 9
+)
 
 # N Supply ~ Time + Strata (smoothed) -------------------------------------
 
@@ -249,12 +250,12 @@ nsupply_strata_smoothed <- function(f) {
 
 nsupply_figure3 <- map(unique(plotting_dat_ready$projecthabitat), nsupply_strata_smoothed)
 
-# ggsave(
-#   filename = "nsupply_strata_smoothed_seperate_02102024.pdf",
-#   path = "plots/figure1/nitrogen/",
-#   plot = marrangeGrob(nsupply_figure3, nrow = 1, ncol = 1),
-#   width = 15, height = 9
-# )
+ggsave(
+  filename = "nsupply_strata_smoothed_seperate_02162024.pdf",
+  path = "plots/figure1/nitrogen/",
+  plot = marrangeGrob(nsupply_figure3, nrow = 1, ncol = 1),
+  width = 15, height = 9
+)
 
 # N Supply ~ Time + Strata (stacked bar chart) ----------------------------
 
@@ -281,12 +282,12 @@ nsupply_annual_stacked <- function(f) {
 
 nsupply_figure4 <- map(unique(plotting_dat_ready$projecthabitat), nsupply_annual_stacked)
 
-# ggsave(
-#   filename = "nsupply_annual_stacked_seperate_02102024.pdf",
-#   path = "plots/figure1/nitrogen/",
-#   plot = marrangeGrob(nsupply_figure4, nrow = 1, ncol = 1),
-#   width = 15, height = 9
-# )
+ggsave(
+  filename = "nsupply_annual_stacked_seperate_02162024.pdf",
+  path = "plots/figure1/nitrogen/",
+  plot = marrangeGrob(nsupply_figure4, nrow = 1, ncol = 1),
+  width = 15, height = 9
+)
 
 # PHOSPHORUS PLOTS --------------------------------------------------------
 # Will only be plotting versions 2 and 4 of figures above, because I believe
@@ -322,12 +323,12 @@ psupply_sitelevel_2 <- function(f) {
 
 psupply_figure2 <- map(unique(plotting_dat_ready$projecthabitat), psupply_sitelevel_2)
 
-# ggsave(
-#   filename = "psupply_sitelevel2_seperate_02102024.pdf",
-#   path = "plots/figure1/phosphorus/",
-#   plot = marrangeGrob(psupply_figure2, nrow = 1, ncol = 1),
-#   width = 15, height = 9
-# )
+ggsave(
+  filename = "psupply_sitelevel2_seperate_02162024.pdf",
+  path = "plots/figure1/phosphorus/",
+  plot = marrangeGrob(psupply_figure2, nrow = 1, ncol = 1),
+  width = 15, height = 9
+)
 
 # P Supply ~ Time + Strata (stacked bar chart) ----------------------------
 
@@ -354,12 +355,12 @@ psupply_annual_stacked <- function(f) {
 
 psupply_figure4 <- map(unique(plotting_dat_ready$projecthabitat), psupply_annual_stacked)
 
-# ggsave(
-#   filename = "psupply_annual_stacked_seperate_02102024.pdf",
-#   path = "plots/figure1/phosphorus/",
-#   plot = marrangeGrob(psupply_figure4, nrow = 1, ncol = 1),
-#   width = 15, height = 9
-# )
+ggsave(
+  filename = "psupply_annual_stacked_seperate_02162024.pdf",
+  path = "plots/figure1/phosphorus/",
+  plot = marrangeGrob(psupply_figure4, nrow = 1, ncol = 1),
+  width = 15, height = 9
+)
 
 # BIOMASS PLOTS -----------------------------------------------------------
 
@@ -410,12 +411,12 @@ bmsupply_sitelevel_2 <- function(f) {
 
 bmsupply_figure2 <- map(unique(plotting_dat_ready$projecthabitat), bmsupply_sitelevel_2)
 
-# ggsave(
-#   filename = "bm_sitelevel2_seperate_02102024.pdf",
-#   path = "plots/figure1/biomass/",
-#   plot = marrangeGrob(bmsupply_figure2, nrow = 1, ncol = 1),
-#   width = 15, height = 9
-# )
+ggsave(
+  filename = "bm_sitelevel2_seperate_02162024.pdf",
+  path = "plots/figure1/biomass/",
+  plot = marrangeGrob(bmsupply_figure2, nrow = 1, ncol = 1),
+  width = 15, height = 9
+)
 
 # BM ~ Time + Strata (stacked bar chart) ---------------------------------
 
@@ -442,12 +443,12 @@ bmsupply_annual_stacked <- function(f) {
 
 bmsupply_figure4 <- map(unique(plotting_dat_ready$projecthabitat), bmsupply_annual_stacked)
 
-# ggsave(
-#   filename = "bm_annual_stacked_seperate_02102024.pdf",
-#   path = "plots/figure1/biomass/",
-#   plot = marrangeGrob(bmsupply_figure4, nrow = 1, ncol = 1),
-#   width = 15, height = 9
-# )
+ggsave(
+  filename = "bm_annual_stacked_seperate_02162024.pdf",
+  path = "plots/figure1/biomass/",
+  plot = marrangeGrob(bmsupply_figure4, nrow = 1, ncol = 1),
+  width = 15, height = 9
+)
 
 # Size Structure Plots ----------------------------------------------------
 
@@ -481,12 +482,12 @@ bmindsupply_sitelevel_2 <- function(f) {
 
 bmindsupply_figure2 <- map(unique(plotting_dat_ready$projecthabitat), bmindsupply_sitelevel_2)
 
-# ggsave(
-#   filename = "ind_bm_sitelevel2_seperate_02102024.pdf",
-#   path = "plots/figure1/size structure/",
-#   plot = marrangeGrob(bmindsupply_figure2, nrow = 1, ncol = 1),
-#   width = 15, height = 9
-# )
+ggsave(
+  filename = "ind_bm_sitelevel2_seperate_02162024.pdf",
+  path = "plots/figure1/size structure/",
+  plot = marrangeGrob(bmindsupply_figure2, nrow = 1, ncol = 1),
+  width = 15, height = 9
+)
 
 # BM ~ Time + Strata (stacked bar chart) ---------------------------------
 
@@ -513,12 +514,12 @@ bmindsupply_annual_stacked <- function(f) {
 
 bmindsupply_figure4 <- map(unique(plotting_dat_ready$projecthabitat), bmindsupply_annual_stacked)
 
-# ggsave(
-#   filename = "ind_bm_annual_stacked_seperate_02102024.pdf",
-#   path = "plots/figure1/size structure/",
-#   plot = marrangeGrob(bmindsupply_figure4, nrow = 1, ncol = 1),
-#   width = 15, height = 9
-# )
+ggsave(
+  filename = "ind_bm_annual_stacked_seperate_02162024.pdf",
+  path = "plots/figure1/size structure/",
+  plot = marrangeGrob(bmindsupply_figure4, nrow = 1, ncol = 1),
+  width = 15, height = 9
+)
 
 
 ###########################################################################
