@@ -92,7 +92,7 @@ fce <- dat |>
 
 mcr <- dat |> 
   filter(projecthabitat == "MCR-ocean") |> 
-  mutate(group = subsite_level1,
+  mutate(group = site,
          color = subsite_level1,
          units = 'm2')
 
