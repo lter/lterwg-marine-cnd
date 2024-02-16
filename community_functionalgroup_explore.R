@@ -103,27 +103,21 @@ plotting_dat_ready <- bind_rows(cce, fce, mcr, pisco_central, pisco_south, sbc_b
 rm(cce, fce, mcr, pisco_central, pisco_south, sbc_beach, sbc_reef, 
    dat, data, df, strata)
 
-# df_aggregated <- plotting_dat_ready |> 
-#   group_by(projecthabitat, year, month, site, subsite_level1, subsite_level2, subsite_level3, scientific_name) %>%
-#   summarize(density_num_m = ifelse(is.na(density_num_m), 0, density_num_m),
-#          density_num_m2 = ifelse(is.na(density_num_m2), 0, density_num_m2),
-#          dens = density_num_m + density_num_m2) |> 
-#   ungroup()
-# glimpse(df_aggregated)
-
 df_strata_spp <- plotting_dat_ready |> 
   mutate(density_num_m = ifelse(is.na(density_num_m), 0, density_num_m),
          density_num_m2 = ifelse(is.na(density_num_m2), 0, density_num_m2),
          dens = density_num_m + density_num_m2) |> 
+  # filter(dens != 0) |> #ran w/o zeros bc so zero-heavy and didn't change shannon diversity results
   group_by(projecthabitat, year, color, scientific_name) |> 
   summarize(total_dens = sum(dens, na.rm = TRUE)) |> 
   ungroup()
 
-
 # Convert aggregated data to a species matrix required by vegan's diversity function
 # Each row represents a site-year combination, and columns represent species
 # Cells contain the total density of each species for each site-year combination
-df_matrix <- pivot_wider(df_strata_spp, names_from = scientific_name, values_from = total_dens, values_fill = list(total_dens = 0))
+df_matrix <- pivot_wider(df_strata_spp, names_from = scientific_name, 
+                         values_from = total_dens, 
+                         values_fill = list(total_dens = 0))
 
 # Extract the matrix of counts, excluding year and site columns for diversity calculation
 species_matrix <- as.matrix(df_matrix[,-c(1:3)])
@@ -137,29 +131,27 @@ diversity_indices <- apply(species_matrix, 1, function(x) {
 })
 
 # Convert results to a data frame
-evenness_df <- as.data.frame(t(diversity_indices), row.names = NULL)
-colnames(evenness_df) <- c("Shannon_Diversity", "Pielous_Evenness")
+community_df <- as.data.frame(t(diversity_indices), row.names = NULL)
+colnames(community_df) <- c("Shannon_Diversity", "Pielous_Evenness")
 
 # Add year and site information back to the results
-evenness_df$projecthabitat <- df_matrix$projecthabitat
-evenness_df$year <- df_matrix$year
-evenness_df$color <- df_matrix$color
+community_df$projecthabitat <- df_matrix$projecthabitat
+community_df$year <- df_matrix$year
+community_df$color <- df_matrix$color
 
+# Species Richness --------------------------------------------------------
 
-evenness_df |>
-  filter(projecthabitat == "MCR") |> 
-  ggplot(aes(x = year, y = Pielous_Evenness, group = color, color = color)) +
-  geom_line() + # Add lines
-  geom_point() + # Add points
-  theme_minimal() + # Use a minimal theme
-  labs(title = "Species Evenness Across Sites Over Years",
-       x = "Year",
-       y = "Pielou's Evenness",
-       color = "Site") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) # Improve x-axis label readability
+spp_richness <- plotting_dat_ready |>
+  group_by(projecthabitat, color, year) |>
+  summarize(n_spp = n_distinct(scientific_name[dmperind_g_ind != 0]))
 
+# join spp evenness + richness df -----------------------------------------
 
-evenness_df |> 
+comm_df <- left_join(community_df, spp_richness, by = c("projecthabitat", "color", "year"))
+
+# Shannon Diversity ~ Space + Time (Subset) -------------------------------
+
+comm_df |> 
   mutate(year = ymd(paste0(year, "0101"))) |> 
   filter(!is.na(color),
          projecthabitat %in% c('FCE-estuary', 'MCR-ocean', 'SBC-ocean')) |> #remove weird NAs from PISCO South (only a few)
@@ -193,7 +185,7 @@ evenness_df |>
 # Shannon Diversity ~ Space + Time (all sites seperate) -------------------
 
 spp_eve_ShDiv <- function(f) { 
-evenness_df |> 
+  comm_df |> 
   mutate(year = ymd(paste0(year, "0101"))) |> 
   filter(!is.na(color)) |> #remove weird NAs from PISCO South (only a few)
   filter(projecthabitat == f) |> 
@@ -227,3 +219,78 @@ spp_eve_ShDiv_fig4 <- map(unique(plotting_dat_ready$projecthabitat), spp_eve_ShD
 #   plot = marrangeGrob(spp_eve_ShDiv_fig4, nrow = 1, ncol = 1),
 #   width = 15, height = 9
 # )
+
+###########################################################################
+# SPECIES RICHNESS PLOTS --------------------------------------------------
+###########################################################################
+
+# Species Richness ~ Space + Time (Subset) -------------------------------
+
+comm_df |> 
+  mutate(year = ymd(paste0(year, "0101"))) |> 
+  filter(!is.na(color),
+         projecthabitat %in% c('FCE-estuary', 'MCR-ocean', 'SBC-ocean')) |> #remove weird NAs from PISCO South (only a few)
+  ggplot(aes(x = year, y = n_spp,
+             color = color)) + #change label to only year for facet_wrapped plot
+  geom_line() +
+  geom_point(alpha = 0.9, size = 4) +
+  # geom_text_repel() +
+  # geom_smooth(method = 'rlm', se = FALSE) +
+  geom_smooth(method = "rlm", se = FALSE) +
+  # geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +
+  facet_wrap(~ projecthabitat, scales = 'free') +
+  theme_classic() +
+  labs(title = "Species Richness ~ Space + Time",
+       x = 'Year',
+       y = 'Speies Richness') +
+  scale_x_date(date_breaks = '1 year', date_labels = "%Y") + #adds all years to x axis for ease of interpetations
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        panel.background = element_rect(fill = "white"),
+        axis.line = element_line("black"),
+        axis.text = element_text(face = "bold"),
+        axis.title = element_text(face = "bold"),
+        legend.position = "right")
+
+# ggsave(
+#   filename = "temporal_spp_richness_fig4_subset.png",
+#   path = "plots/",
+#   width = 15, height = 9
+# )
+
+# Species Richness ~ Space + Time (all sites separate) -------------------
+
+spp_rich <- function(f) { 
+  comm_df |> 
+    mutate(year = ymd(paste0(year, "0101"))) |> 
+    filter(!is.na(color)) |> #remove weird NAs from PISCO South (only a few)
+    filter(projecthabitat == f) |> 
+    ggplot(aes(x = year, y = n_spp,
+               color = color)) + #change label to only year for facet_wrapped plot
+    geom_line() +
+    geom_point(alpha = 0.9, size = 4) +
+    # geom_text_repel() +
+    # geom_smooth(method = 'rlm', se = FALSE) +
+    geom_smooth(method = "rlm", se = FALSE) +
+    # geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +
+    # facet_wrap(~ projecthabitat, scales = 'free') +
+    theme_classic() +
+    labs(title = paste("Species Richness ~ Space + Time:", f),
+         x = 'Year',
+         y = 'Species Richness') +
+    scale_x_date(date_breaks = '1 year', date_labels = "%Y") + #adds all years to x axis for ease of interpetations
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+          panel.background = element_rect(fill = "white"),
+          axis.line = element_line("black"),
+          axis.text = element_text(face = "bold"),
+          axis.title = element_text(face = "bold"),
+          legend.position = "right")
+}
+
+spp_rich_fig4 <- map(unique(plotting_dat_ready$projecthabitat), spp_rich)
+
+ggsave(
+  filename = "temporal_spp_richness_fig4_seperate.pdf",
+  path = "plots/",
+  plot = marrangeGrob(spp_rich_fig4, nrow = 1, ncol = 1),
+  width = 15, height = 9
+)
