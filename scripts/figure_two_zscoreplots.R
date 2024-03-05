@@ -63,7 +63,7 @@ df_summarized <- df %>%
 # this allows us to determine the spatial/otherwise unit folks want their data grouped by
 strata <- read_csv("data/strata_mcr_sbc_fce.csv") |> 
   distinct() |> 
-  filter(project %in% c("MCR", "SBC", "FCE")) #as of 2/09/2024 these are only projects who have filled out
+  filter(project %in% c("MCR", "SBC", "FCE", "CCE")) #as of 2/09/2024 these are only projects who have filled out
 
 #left join with summarized dataset to ensure strata information is there for plotting
 df_summarized_strata <- left_join(df_summarized, strata, by = c("project", "habitat", "site"))

@@ -32,7 +32,7 @@ df <- data %>%
 
 strata <- read_csv("data/strata_mcr_sbc_fce.csv") |> 
   distinct() |> 
-  filter(project %in% c("MCR", "SBC", "FCE"))
+  filter(project %in% c("MCR", "SBC", "FCE", "CCE"))
 
 dat <- left_join(df, strata, by = c("project", "habitat", "site"))
 
