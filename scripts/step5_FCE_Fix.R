@@ -79,9 +79,9 @@ fce_summ_clean <- fce_summ |>
 #below shows legitimate zeros - need to recode columns and select() then join to link up with above and get rid of artifical zeros
 master_map <- read_csv("../mw_dissertation/MAP_database_maintanence/mastermap_yrs1thru19.csv")
 map1 <- master_map |> 
-  select(HYDROYEAR, s.mo, DRAINAGE, SITE, BOUT, SPECIESCODE) |> 
+  dplyr::select(HYDROYEAR, s.mo, DRAINAGE, SITE, BOUT, SPECIESCODE) |> 
   separate(HYDROYEAR, into = c("year", "void")) |> 
-  select(-void) |> 
+  dplyr::select(-void) |> 
   rename(
     year = year,
     month = s.mo,
@@ -101,7 +101,7 @@ fce_join <- left_join(fce_summ_clean, map1, by = c("year", "month", "site", "sub
 
 fce_true_zeros <- fce_join |> 
   filter(bm_tot_m != 0 | (bm_tot_m == 0 & spp_code == 13)) |> 
-  select(-spp_code) #this is right - gets rid of made-up site combinations - double checked before removing spp_code column
+  dplyr::select(-spp_code) #this is right - gets rid of made-up site combinations - double checked before removing spp_code column
 
 # pivot back + bind with full dataset -------------------------------------
 
