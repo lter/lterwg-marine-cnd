@@ -333,18 +333,16 @@ mcr_ready <-mcr_all_dm1 %>%
 # GCE end -----------------------------------------------------------------
 
 # NGA start ---------------------------------------------------------------
-### need to use dry mass conversion table from google drive - "dm_conversions_cndwg.xlsx"
+
 nga <- dt %>%
   filter(project == "NGA")
 
 nga_d1 <- nga %>%
   pivot_wider(names_from = c(measurement_type,measurement_unit), values_from = measurement_value)
 
-
 # NGA end -----------------------------------------------------------------
 
 # PIE start ---------------------------------------------------------------
-### need to use dry mass conversion table from google drive - "dm_conversions_cndwg.xlsx"
 
 pie <- dt %>%
   filter(project == "PIE")
@@ -356,7 +354,6 @@ pie_d1 <- pie %>%
 
 # VCR start ------------------------------------------------------------
 ### NA in species column with count zero represents no fishes collected @ site
-### need to use dry mass conversion table from google drive - "dm_conversions_cndwg.xlsx"
 
 vcr <- dt %>%
   filter(project == "VCR")
@@ -365,6 +362,10 @@ vcr_d1 <- vcr %>%
   pivot_wider(names_from = c(measurement_type,measurement_unit), values_from = measurement_value)
 
 # VCR end -----------------------------------------------------------------
+
+
+
+
 
 #### CCE 
 
@@ -422,4 +423,8 @@ harmonized_clean = rbind(data_original,coastalca_ready, sbc_ready,mcr_ready,cce_
 # Export locally
 tidy_filename <- "harmonized_consumer_ready_for_excretion.csv"
 
-write.csv(harmonized_clean, file = file.path("tier1", tidy_filename), na = '.', row.name
+write.csv(harmonized_clean, file = file.path("tier1", tidy_filename), na = '.', row.names = F)
+
+# Export harmonized clean dataset to Drive
+googledrive::drive_upload(media= file.path("tier1",tidy_filename), overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/1/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
