@@ -272,7 +272,7 @@ tidy_v1a <- tidy_v0 %>%
     raw_filename == "MLPA_fish_biomass_density_transect_raw_v2.csv" ~ "NA", # only has year month day
     raw_filename == "VCR14232_2.csv" ~ "MM/DD/YY",
     raw_filename == "cce_wdrymass.csv" ~ "MM/DD/YYYY",
-    raw_filename == "map_revised01242024.csv" ~ "NA", # only has year and month
+    raw_filename == "map_revised02052024.csv" ~ "NA", # only has year and month
     raw_filename == "nga_combined_clean.csv" ~ "YYYY-MM-DDTHH:MM:SS-0800",
     # raw_filename == "" ~ "",
     T ~ "UNKNOWN"))
