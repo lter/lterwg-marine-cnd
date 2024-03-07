@@ -78,7 +78,7 @@ df1 <-df %>%
   filter(measurement_type %in% c("dmperind","density","temp")) 
 
 # #check the unit that match with the measurement, good to go
-# peace <- dt1 %>%
+# peace <- df1 %>%
 #   distinct(project,habitat,measurement_type,measurement_unit)
 
 df2 <- df1 %>%

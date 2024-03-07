@@ -17,7 +17,7 @@
 
 # Does the species table need to be updated? 
 # Put 0 for no, 1 for yes
-species_update_flag <- 1
+species_update_flag <- 0
 
 ## ------------------------------------------ ##
 #            Housekeeping -----
@@ -39,7 +39,7 @@ dir.create(path = file.path("tier0", "raw_data", "consumer"), showWarnings = F)
 # Identify raw data files
 # For example, here I'm pulling all the SBC consumer data from Google Drive
 raw_SBC_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1ycKkpiURLVclobAdCmZx2s_ewcaFAV9Y")) %>%
-  dplyr::filter(name %in% c("Annual_All_Species_Biomass_at_transect_20230814.csv",
+  dplyr::filter(name %in% c("Annual_All_Species_Biomass_at_transect_20240307.csv",
                             "IV_EC_talitrid_population_v3.csv"))
 
 raw_FCE_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1BSQSXEbjgkSBJVN0p9CxhjVmfiv82U1t")) %>%
@@ -263,7 +263,7 @@ tidy_v0 %>%
 # Identify format for each file name based on **human eye/judgement**
 tidy_v1a <- tidy_v0 %>%
   dplyr::mutate(date_format = dplyr::case_when(
-    raw_filename == "Annual_All_Species_Biomass_at_transect_20230814.csv" ~ "YYYY-MM-DD",
+    raw_filename == "Annual_All_Species_Biomass_at_transect_20240307.csv" ~ "YYYY-MM-DD",
     raw_filename == "IV_EC_talitrid_population_v3.csv" ~ "NA", # only has year and month
     raw_filename == "LTE-TIDE-NektonFlumeDensity_v5_1.csv" ~ "YYYY-MM-DD",
     raw_filename == "LTE-TIDE-NektonFlumeIndividual_v6_3.csv" ~ "YYYY-MM-DD",

@@ -29,7 +29,7 @@ dir.create(path = file.path("tier0", "raw_data", "environmental"), showWarnings 
 ## -------------------------------------------- ##
 
 # Identify raw data files
-# For example, here I'm pulling all the SBC consumer data from Google Drive
+# For example, here I'm pulling all the environmental data from Google Drive
 raw_SBC_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1ycKkpiURLVclobAdCmZx2s_ewcaFAV9Y")) %>%
   dplyr::filter(name %in% c("Bottom_temp_all_years_20230724.csv",
                             "LTER_monthly_bottledata_20220930.txt"))
@@ -42,14 +42,15 @@ raw_FCE_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.co
 raw_CCE_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/19INhcRd1xBKgDVd1G5W1B3QI4mlBr587")) %>%
   dplyr::filter(name %in% c("BEUTI_monthly.csv",
                             "sdsla_monthly.csv",
-                            "mei.csv"))
+                            "mei.csv",
+                            "cce_temperature_raw.csv"))
 
 # Combine file IDs
 raw_ids <- rbind(raw_SBC_ids, raw_FCE_ids, raw_CCE_ids)
 
 # Identify and download the data key
 googledrive::drive_ls(path = googledrive::as_id("https://drive.google.com/drive/u/1/folders/1-FDBq0jtEm3bJOfiyIkyxD0JftJ6qExe")) %>%
-  dplyr::filter(name == "CND_Data_Key.xlsx") %>%
+  dplyr::filter(name == "CND_Data_Key_spatial.xlsx") %>%
   googledrive::drive_download(file = .$id, path = file.path("tier0",.$name), overwrite = T)
 
 # For each raw data file, download it into its own site folder
@@ -72,7 +73,8 @@ rm(list = ls())
 ## ------------------------------------------ ##
 
 # Read in the key
-key <- readxl::read_excel(path = file.path("tier0", "CND_Data_Key.xlsx")) 
+key <- readxl::read_excel(path = file.path("tier0", "CND_Data_Key_spatial.xlsx"),
+                          col_types = c(rep("text", 11))) 
 
 # Identify all downloaded files
 ( raw_files <- dir(path = file.path("tier0", "raw_data", "environmental")) )
@@ -95,15 +97,16 @@ for (i in 1:length(raw_files)){
     # And only columns that have a synonymized equivalent
     dplyr::filter(!is.na(standardized_column_name) & nchar(standardized_column_name) != 0)
   
+  na_indicators = unique(key_sub$na_indicator)
   # Special cases for reading in certain csv files 
   if (raw_file_name == "LTER_monthly_bottledata_20220930.txt") {
-    raw_df_v1 <- read.table(file.path("tier0", "raw_data", "environmental", raw_file_name), header = T, sep = ";", check.names = F)
+    raw_df_v1 <- read.table(file.path("tier0", "raw_data", "environmental", raw_file_name), header = T,na.strings = na_indicators, sep = ";", check.names = F)
   } 
   else if (raw_file_name == "sdsla_monthly.csv") {
-    raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", "environmental", raw_file_name), check.names = F)
+    raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", "environmental", raw_file_name), na.strings = na_indicators,check.names = F)
   } 
   else {
-    raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", "environmental", raw_file_name))
+    raw_df_v1 <- read.csv(file = file.path("tier0", "raw_data", "environmental", raw_file_name), na.strings = na_indicators)
   }
   
   raw_df_v2 <- raw_df_v1 %>%
@@ -167,7 +170,7 @@ tidy_v0 <- df_list %>%
 dplyr::glimpse(tidy_v0)
 
 # Clean up environment
-rm(list = setdiff(ls(), c("key", "tidy_v0")))
+#rm(list = setdiff(ls(), c("key", "tidy_v0")))
 ## -------------------------------------------- ##
 #               Wrangle Dates ----
 ## -------------------------------------------- ##
@@ -184,6 +187,7 @@ tidy_v0 %>%
 
 # Identify format for each file name based on **human eye/judgement**
 tidy_v1a <- tidy_v0 %>%
+  dplyr:: mutate(date=ifelse(raw_filename=="cce_temperature_raw.csv",paste0(substr(date,1,4),"-",substr(date,5,6),"-15"),date)) %>% # cce has only year month, we modify it to fit the date format
   dplyr::mutate(date_format = dplyr::case_when(
     raw_filename == "bottle_creek_temperature.csv" ~ "YYYY-MM-DD",
     raw_filename == "Bottom_temp_all_years_20230724.csv" ~ "YYYY-MM-DD",
@@ -192,7 +196,7 @@ tidy_v1a <- tidy_v0 %>%
     raw_filename == "mei.csv" ~ "YYYY-MM-DD",
     raw_filename == "mo215_elevation_corrected_water_levels.csv" ~ "YYYY-MM-DD",
     raw_filename == "sdsla_monthly.csv" ~ "YYYY-MM-DD", # only has year month day
-    # raw_filename == "" ~ "",
+    raw_filename == "cce_temperature_raw.csv" ~ "YYYYMMDD",
     T ~ "UNKNOWN"))
 
 # Check remaining date formats
@@ -268,7 +272,7 @@ tidy_v1c %>%
   dplyr::glimpse()
 
 # Clean up environment
-rm(list = setdiff(ls(), c("tidy_v1c")))
+#rm(list = setdiff(ls(), c("tidy_v1c")))
 
 ## -------------------------------------------- ##
 #      Reordering & Changing Column Types ----
@@ -285,15 +289,13 @@ tidy_v3 <- tidy_v1c %>%
   dplyr::relocate(time, .after = date) %>%
   dplyr::relocate(site, .after = time) %>%
   dplyr::relocate(subsite_level1, .after = site) %>%
-  dplyr::relocate(`nitrite_nitrate-umol_l`, .after = subsite_level1) %>%
-  dplyr::relocate(`phosphate-umol_l`, .after = `nitrite_nitrate-umol_l`) %>%
-  dplyr::relocate(`salinity-ppt`, .after = `phosphate-umol_l`) %>%
+  dplyr::relocate(`salinity-ppt`, .after = `subsite_level1`) %>%
   dplyr::relocate(`sea_level-mm`, .after = `salinity-ppt`) %>%
   dplyr::relocate(`temperature-celsius`, .after = `sea_level-mm`) %>%  
   dplyr::relocate(`total_nitrogen-umol_l`, .after = `temperature-celsius`) %>%  
   dplyr::relocate(`total_phosphorus-umol_l`, .after = `total_nitrogen-umol_l`) %>%
   dplyr::relocate(`water_level-cm`, .after = `total_phosphorus-umol_l`) %>%  
-  dplyr::mutate(dplyr::across(.cols = c(year:day, `nitrite_nitrate-umol_l`:`water_level-cm`), .fns = as.numeric))
+  dplyr::mutate(dplyr::across(.cols = c(year:day, `salinity-ppt`:`temperature-celsius`), .fns = as.numeric))
 
 # Check structure
 dplyr::glimpse(tidy_v3)
@@ -304,7 +306,7 @@ dplyr::glimpse(tidy_v3)
 
 tidy_v4 <- tidy_v3 %>%
   # Pivot the measurement columns to long format
-  tidyr::pivot_longer(cols = `nitrite_nitrate-umol_l`:`water_level-cm`,
+  tidyr::pivot_longer(cols = `salinity-ppt`:`water_level-cm`,
                       names_to = "measurement_type",
                       values_to = "measurement_value") %>%
   # Create a measurement_unit column from measurement_type

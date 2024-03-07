@@ -139,8 +139,6 @@ coastalca_dt1 <- coastalca_dt %>%
          site=mlpa_region) %>%
   dplyr::select(- c(Include_Exclude, mlpa_region, site_status))
 
-
-
 #convert wetmass into dry mass
 # calculate the biomass density for coastal CA
 coastalca_dt2 <- coastalca_dt1 %>%
