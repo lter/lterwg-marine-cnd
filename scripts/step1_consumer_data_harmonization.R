@@ -17,7 +17,7 @@
 
 # Does the species table need to be updated? 
 # Put 0 for no, 1 for yes
-species_update_flag <- 0
+species_update_flag <- 1
 
 ## ------------------------------------------ ##
 #            Housekeeping -----
@@ -865,7 +865,7 @@ tidy_v2h <- tidy_v2g %>%
   dplyr::select(-common_name, -kingdom, -phylum, -class, -order, -family, -genus, -taxa_group)
 
 # Clean up environment
-rm(list = setdiff(ls(), c("tidy_v2h", "species_table")))
+rm(list = setdiff(ls(), c("tidy_v2h", "species_table", "species_update_flag")))
 
 ## -------------------------------------------- ##
 #      Reordering & Changing Column Types ----
