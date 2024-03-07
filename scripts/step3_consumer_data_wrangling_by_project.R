@@ -37,7 +37,7 @@ consumer_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.c
   dplyr::filter(name %in% c("harmonized_consumer.csv"))
 
 env_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/1/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH")) %>%
-  dplyr::filter(name %in% c("harmonized_environment.csv"))
+  dplyr::filter(name %in% c("temperature_allsites.csv"))
 
 species_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/1/folders/1CEgNtAnk4DuPNpR3lJN9IqpjWq0cM8F4")) %>%
   dplyr::filter(name %in% c("CNDWG_harmonized_consumer_species.xlsx"))
@@ -69,7 +69,7 @@ rm(list = ls())
 dt <- read.csv(file.path("tier1", "harmonized_consumer.csv"),stringsAsFactors = F,na.strings =".") %>%
   mutate(measurement_type=gsub("_", "", measurement_type))
 
-env <- read.csv(file.path("tier1", "harmonized_environment.csv"),stringsAsFactors = F,na.strings =".") 
+env <- read.csv(file.path("tier1", "temperature_allsites.csv"),stringsAsFactors = F,na.strings =".") 
 
 species_list <- readxl::read_excel(path = file.path("tier1", "CNDWG_harmonized_consumer_species.xlsx"),na=".")
 
@@ -86,24 +86,6 @@ googledrive::with_drive_quiet(
   googledrive::drive_download(file = pisco_site_id$id, overwrite = T, path = file.path("other", pisco_site_id$name)) )
 
 pisco_site <- readxl::read_excel(path = file.path("other", "master_site_table.xlsx"),na="N/A") 
-
-
-#read in the temperature data table to calculate the temperature for both pisco and SBC
-sbc_temp <- env %>%
-  filter(project=="SBC") %>%
-  filter(measurement_type=="temperature") %>%
-  rename(temp=measurement_value)
-
-###calculate temperature from SBC data for summer-fall months (Jul - Oct)
-sbc_temp_summer<-sbc_temp %>% 
-  filter(month %in% c(7,8,9) )
-
-#take average, min, max of summer temperatures from all sites and years
-sbc_temp_ave <- sbc_temp_summer %>%
-  dplyr:: summarise(MEAN= mean(temp,  na.rm=TRUE),
-                    MAX= max(temp,  na.rm=TRUE),
-                    MIN= min(temp,  na.rm=TRUE))
-
 
 # filter out the site we need
 pisco_site1 <- pisco_site %>% 
@@ -164,11 +146,14 @@ coastalca_dt3 <- coastalca_dt2 %>%
   dplyr::select(-campus) %>% # remove the column after zero filled
   filter(sp_code!="NO_ORG") #REMOVE THE SPECIES THAT ARE NOT ORGANISM
 
+# extract temperature, PISCO use SBC temperature
+pisco_temp <- env$temp[env$project=="SBC"]
+
 coastalca_dt4 <- coastalca_dt3 %>%
   mutate(`drymass_g/m2`=(`wetmass_kg/transect`*0.29/`transectarea_m2`)*1000, #convert from kg to g
          `dmperind_g/ind` = ifelse(count_num>0,`wetmass_kg/transect`*0.29*1000/`count_num`,0), 
          `density_num/m2` = `count_num`/`transectarea_m2`,
-         `temp_c` = sbc_temp_ave$MEAN) %>%
+         `temp_c` = pisco_temp) %>%
    mutate(row_num = paste0(raw_filename, "_", 1:nrow(.))) #adding the row_num back
  
 
@@ -201,7 +186,7 @@ sbc_dt1 <- sbc_dt %>%
   #if there is a shell-free drymass we used it ,otherwise, we use dry mass
   mutate(`drymass_g/m2` = ifelse(!is.na(`sfdrymass_g/m2`),`sfdrymass_g/m2`,`drymass_g/m2`)) %>%
   mutate(`dmperind_g/ind`=ifelse(`density_num/m2`>0,`drymass_g/m2`/`density_num/m2`,0),
-         temp_c = sbc_temp_ave$MEAN)  #using the ones from coastal CA chunk
+         temp_c = pisco_temp)  #pisco uses SBC temp, so we assign the value here again. 
 
 sbc_ready<- sbc_dt1 %>%
     pivot_longer(cols = `density_num/m2`:temp_c, 
@@ -310,7 +295,7 @@ mcr_all_dm <- mcr_dm_coeff |>
          `transectarea_m2` = subsite_level3*50,
          `density_num/m2` = count_num/transectarea_m2,
         `wetmass_g/m2` = wetmass_g/`transectarea_m2`,
-         temp_c = 26.5)
+         temp_c = 26.5) # mcr assign temp here
 
 mcr_all_dm1 <- mcr_all_dm |> 
   mutate(row_num = paste0(raw_filename, "_", 1:nrow(mcr_all_dm))) |>
@@ -367,20 +352,8 @@ vcr_d1 <- vcr %>%
 
 #### CCE 
 
-# read in the temperature data for merging later. 
-
-cce_temp_id <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/19INhcRd1xBKgDVd1G5W1B3QI4mlBr587")) %>%
-  dplyr::filter(name %in% c("cce_temperature_raw.csv"))
-
-googledrive::with_drive_quiet(
-  googledrive::drive_download(file = cce_temp_id$id, overwrite = T, path = file.path("other", cce_temp_id$name)) )
-
-cce_temp <- read.csv(file.path("other", "cce_temperature_raw.csv"),stringsAsFactors = F)
-
-# cce_temp1 <- cce_temp %>%
-#   rename(site=Line,subsite_level1=Station,yyyymm=Cruise,temp=temperature_degC) 
-            
-cce_mean_temp <- mean(cce_temp$temp, na.rm = T)
+#extract temp data
+cce_mean_temp <- env$temp[env$project=="CCE"]
          
 # calculate the dmperind dry biomass 
 cce <- dt %>%

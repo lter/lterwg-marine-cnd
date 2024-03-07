@@ -85,10 +85,10 @@ df2 <- df1 %>%
   pivot_wider(names_from = c(measurement_type,measurement_unit), values_from = measurement_value) 
 
 # check species list before merging, need to check
-peace2 <- species_list %>%
-  group_by(project,sp_code,scientific_name,species) %>%
-  summarise(n=n(),.groups='drop') %>%
-  ungroup() 
+# peace2 <- species_list %>%
+#   group_by(project,sp_code,scientific_name,species) %>%
+#   summarise(n=n(),.groups='drop') %>%
+#   ungroup() 
 
 # there is duplicate, we need to select the first one, temporally solution
 spe2 <- species_list %>%
@@ -101,9 +101,9 @@ df3 <-df2 %>%
   left_join(spe2,by=c("project","sp_code","scientific_name","species")) 
 
 # check to see anything that don't have diet cat column
-peace3<-df3 %>%
-  filter(is.na(diet_cat)) %>%
-  distinct(project,habitat,sp_code,scientific_name,species,diet_cat)
+# peace3<-df3 %>%
+#   filter(is.na(diet_cat)) %>%
+#   distinct(project,habitat,sp_code,scientific_name,species,diet_cat)
 
 ###########################
 #using bradley's code below for excretion calculation
@@ -142,15 +142,15 @@ cons_np_ratio <- cons %>%
 ##### Data clean up #######
 
 df_final <- cons_np_ratio %>% 
-  dplyr::select(-c(common_name,kingdom,phylum,class,order,family,genus,taxa_group,N_vert_coef,N_diet_coef,Nexc_log10,P_vert_coef,P_diet_coef,Pexc_log10,diet_cat)) %>%
-  pivot_longer(cols = -c(project,habitat,raw_filename,row_num,year,month,day,date,site,subsite_level1,subsite_level2,subsite_level3,sp_code,scientific_name,species), 
+  dplyr::select(-c(N_vert_coef,N_diet_coef,Nexc_log10,P_vert_coef,P_diet_coef,Pexc_log10)) %>%
+  pivot_longer(cols = -c(project,habitat,raw_filename,row_num,year,month,day,date,site,subsite_level1,subsite_level2,subsite_level3,sp_code,scientific_name,species,common_name,kingdom,phylum,class,order,family,genus,taxa_group,diet_cat), 
              names_to = "measurement_type1",
              values_to = "measurement_value") %>%
   separate(measurement_type1, into = c("measurement_type", "measurement_unit"),sep = "_", remove = T) 
 
 # check FCE case
-peace4 <- df_final %>%
-  filter(project=="FCE")
+# peace4 <- df_final %>%
+#   filter(project=="FCE")
 
 #### export and write to the drive
 # Export locally

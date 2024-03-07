@@ -294,8 +294,9 @@ tidy_v3 <- tidy_v1c %>%
   dplyr::relocate(`temperature-celsius`, .after = `sea_level-mm`) %>%  
   dplyr::relocate(`total_nitrogen-umol_l`, .after = `temperature-celsius`) %>%  
   dplyr::relocate(`total_phosphorus-umol_l`, .after = `total_nitrogen-umol_l`) %>%
-  dplyr::relocate(`water_level-cm`, .after = `total_phosphorus-umol_l`) %>%  
-  dplyr::mutate(dplyr::across(.cols = c(year:day, `salinity-ppt`:`temperature-celsius`), .fns = as.numeric))
+  dplyr::relocate(`water_level-cm`, .after = `total_phosphorus-umol_l`) %>% 
+  mutate(across(c(`total_phosphorus-umol_l`,`total_nitrogen-umol_l`), ~ ifelse(.x =="BDL", 0, .x))) %>% # SBC data has second missing code as BDL
+  dplyr::mutate(dplyr::across(.cols = c(year:day, `salinity-ppt`:`water_level-cm`), .fns = as.numeric))
 
 # Check structure
 dplyr::glimpse(tidy_v3)
@@ -319,6 +320,34 @@ tidy_v4 <- tidy_v3 %>%
 # Check structure
 dplyr::glimpse(tidy_v4)
 
+
+## -------------------------------------------------------- ##
+#Calculate the single temperature data for each project ----
+## -------------------------------------------------------- ##
+
+
+#Extract temperature data to calculate the temperature for different projects
+all_temp <- tidy_v4 %>%
+  filter(measurement_type=="temperature") %>%
+  rename(temp=measurement_value)
+
+#check the temperature data
+# peace <- all_temp %>%
+#   distinct(project,raw_filename)
+
+###SBC data for summer-fall months (Jul - Oct), and one unique values for all sites
+all_temp2<-all_temp %>% 
+  filter(!(project=="SBC"&!month %in% c(7,8,9))) %>%
+  group_by(project) %>%
+  summarise(temp= round(mean(temp,  na.rm=TRUE),1),.groups = 'drop') %>%
+  ungroup()
+
+# three other sites of data coming from Mack
+other_temp <- data.frame(project=c("VCR","NGA","PIE"),temp=c(24,11.2,15.2)) 
+
+all_temp_ready <- all_temp2 %>%
+  bind_rows(other_temp)
+
 ## -------------------------------------------- ##
 #                   Export ----
 ## -------------------------------------------- ##
@@ -327,22 +356,37 @@ dplyr::glimpse(tidy_v4)
 tidy_final <- tidy_v4
 
 # Check structure
-dplyr::glimpse(tidy_final)
+# dplyr::glimpse(tidy_final)
 
 # Grab today's date
 date <- gsub(pattern = "-", replacement = "", x = Sys.Date())
 
 # Generate a date-stamped file name for this file
-( tidy_filename <- paste0("harmonized_environment_", date, ".csv") )
+(tidy_filename <- paste0("harmonized_environment_", date, ".csv") )
+
+(temperature_filename <- paste0("temperature_allsites_", date, ".csv"))
 
 # Create necessary sub-folder(s)
-dir.create(path = file.path("tidy"), showWarnings = F)
+dir.create(path = file.path("tier1"), showWarnings = F)
 
 # Export locally
-write.csv(x = tidy_final, file = file.path("tidy", tidy_filename), na = 'NA', row.names = F)
+write.csv(x = tidy_final, file = file.path("tier1", tidy_filename), na = '.', row.names = F)
+
+write.csv(x = all_temp_ready, file = file.path("tier1", temperature_filename), na = '.', row.names = F)
 
 # Export harmonized dataset to Drive
-googledrive::drive_upload(media = file.path("tidy", tidy_filename), overwrite = T,
+googledrive::drive_upload(media = file.path("tier1", tidy_filename), overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
+
+googledrive::drive_upload(media = file.path("tier1", tidy_filename), overwrite = T,
+                          name = "harmonized_environment.csv",
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
+
+googledrive::drive_upload(media = file.path("tier1", temperature_filename), overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
+
+googledrive::drive_upload(media = file.path("tier1", temperature_filename), overwrite = T,
+                          name = "temperature_allsites.csv",
                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
 
 # End ----
