@@ -309,6 +309,9 @@ mcr_ready <-mcr_all_dm1 %>%
   separate(measurement_type, into = c("measurement_type", "measurement_unit"),sep = "_", remove = FALSE) 
 
 #### MCR end
+# rm(mcr, mcr_all_dm, mcr_all_dm1, mcr_biomass_final, mcr_d1, mcr_diet, mcr_diet_cat,
+#    mcr_dm_coeff, MCR_sw1_final, MCR_sw5_final, MCR_biomass_d3, MCR_biomass_swath1,
+#    MCR_biomass_swath5, expand_MCR_biomass_new_col)
 
 # GCE start ---------------------------------------------------------------
 ## touched base w Amanda Spivak & Jimmy Nelson re: data questions and have yet
@@ -323,17 +326,221 @@ nga <- dt %>%
 nga_d1 <- nga %>%
   pivot_wider(names_from = c(measurement_type,measurement_unit), values_from = measurement_value)
 
+#site = site
+#subsite_level1 = transect
+#note the wetmass_mg/m3 is a total biomass for all species of that size class. 
+#you need to divide wetmass_mg/m3 by density_num/m3 to get individual biomass and 
+# multiply by "0.001" to get wetmass/ind in g
+
+expand_NGA_biomass_new_col <- nga_d1 %>%
+  ### obtain the individual biomass by creating a new column
+  dplyr::mutate(ind_bio = (`wetmass_mg/m3`/`density_num/m3`*0.001)) 
+glimpse(expand_NGA_biomass_new_col) #missing small # of ind_bio estimates
+
+###calculate avg species ind_biom
+nga_sp_avg_ind_bio <- expand_NGA_biomass_new_col |> 
+  filter(ind_bio != 0) |> 
+  group_by(scientific_name) |> 
+  summarize(avg_bio = mean(ind_bio))
+
+###replace zeros with average and rename similar to mcr dataset
+expand_NGA_biomass_new_col <- expand_NGA_biomass_new_col |> 
+  mutate(count = count_num) |> 
+  dplyr::select(-count_num) |> 
+  left_join(nga_sp_avg_ind_bio, by = "scientific_name") |> 
+  mutate(ind_bio = ifelse(ind_bio == 0, avg_bio, ind_bio),
+         wetmass_g = `wetmass_mg/m3`*0.001,
+         count_num = `density_num/m3`) |> 
+  dplyr::select(-avg_bio, -`wetmass_mg/m3`, `density_num/m3`)
+
+
+###zero-fill the data
+nga_zerofill <- expand_NGA_biomass_new_col |> 
+  complete(nesting(scientific_name, species, sp_code),
+           nesting(project, habitat, raw_filename, year, month, 
+                   day, date, site, subsite_level1),
+           fill = list(count_num = 0, wetmass_g = 0, ind_bio = 0,
+                       length_um = NA))
+
+###join with species list
+nga_diet <- species_list |> 
+  filter(project == "NGA")
+
+nga_diet_cat <- merge(nga_zerofill, nga_diet, 
+                      by= c("scientific_name", "species", "sp_code", "project"))
+
+###dry mass conversions
+dm_conv <- dm_conv1 |> #read_csv("other/dm_conversions_cndwg.csv") |> 
+  select(-level) |> #removes level for simplicity
+  filter(kingdom == "Animalia",
+         dm_wm_mean < 1) #only want animals and no coefficients greater than 1 (thats wrong)
+
+dm_coeff <- dm_conv |> 
+  group_by(class) |> 
+  summarise(dm_coeff= mean(as.numeric(dm_wm_mean), na.rm = T),.groups = "drop") |>
+  ungroup()
+
+nga_dm_coeff <- left_join(nga_diet_cat, dm_coeff, by = "class")
+# glimpse(nga_dm_coeff)
+na_coeff_result <- which(is.na(nga_dm_coeff$dm_coeff)) 
+
+### for small number of NAs take average coefficient
+nga_dm <- nga_dm_coeff |> 
+  mutate(dm_coeff = replace(dm_coeff, is.na(dm_coeff), 0.1916655))
+# na_coeff_result <- which(is.na(nga_dm$dm_coeff)) 
+
+nga_all_dm <- nga_dm |> 
+  mutate(`dmperind_g/ind` = ind_bio*dm_coeff,
+         `density_num/m3` = count_num,
+         `wetmass_g/m3` = wetmass_g,
+         `drymass_g/m3` = `wetmass_g/m3`*dm_coeff,
+         temp_c = 11.2)
+glimpse(nga_all_dm)
+
+nga_all_dm1 <- nga_all_dm |> 
+  mutate(row_num = paste0(raw_filename, "_", 1:nrow(nga_all_dm)),
+         count_num = count) |>
+  dplyr::select(project,habitat,raw_filename,row_num,year,month,
+                day,date,site,subsite_level1,subsite_level2,subsite_level3,
+                sp_code,scientific_name,species,
+                count_num,length_um,`wetmass_g/m3`,`dmperind_g/ind`,
+                `density_num/m3`,`excretionegestion_ug/m3`,
+                `drymass_g/m3`,temp_c) 
+
+nga_ready <- nga_all_dm1 %>%
+  pivot_longer(cols = count_num:temp_c, 
+               names_to = "measurement_type",
+               values_to = "measurement_value")%>%
+  separate(measurement_type, into = c("measurement_type", "measurement_unit"),sep = "_", remove = FALSE) 
+
+
 # NGA end -----------------------------------------------------------------
+# rm(nga, nga_all_dm, nga_all_dm1, nga_d1, nga_diet, nga_diet_cat, nga_dm,
+#    nga_dm_coeff, nga_sp_avg_ind_bio, nga_zerofill, expand_NGA_biomass_new_col)
 
 # PIE start ---------------------------------------------------------------
 
 pie <- dt %>%
-  filter(project == "PIE")
+  filter(project == "PIE") |> 
+  filter(year != 1900)
 
 pie_d1 <- pie %>%
   pivot_wider(names_from = c(measurement_type,measurement_unit), values_from = measurement_value)
+glimpse(pie_d1)
+#site = site
+#subsite_level1 = transect
+#note the wetmass_g is a total biomass for all species of that size class. 
+#you need to divide wetmass_g by density_num/m2 to get individual biomass 
+#to get wetmass/ind in g
+
+test <- pie_d1 |> 
+  group_by(year) |> 
+  mutate(transect = count_num/`density_num/m2`) |> 
+  summarise(avg_transect = mean(transect, na.rm = TRUE))
+
+pie_d2 <- left_join(pie_d1, test, by = "year")
+glimpse(pie_d2)
+pie_d2$avg_transect <- floor(pie_d2$avg_transect)
+
+expand_PIE_biomass_new_col <- pie_d2 %>%
+  select(-transectarea_m2, -`density_num/m2`) |> 
+  ### obtain the individual biomass by creating a new column
+  dplyr::mutate(`density_num/m2` = count_num/avg_transect,
+                ind_bio = wetmass_g/`density_num/m2`) 
+glimpse(expand_PIE_biomass_new_col) #missing small # of ind_bio estimates
+
+###calculate avg species ind_bio
+pie_sp_avg_ind_bio <- expand_PIE_biomass_new_col |> 
+  filter(!is.na(ind_bio)) |> 
+  group_by(scientific_name) |> 
+  summarize(avg_bio = mean(ind_bio, na.rm = TRUE))
+
+###replace zeros with average and rename similar to mcr dataset
+expand_PIE_biomass_new_col <- expand_PIE_biomass_new_col |> 
+  mutate(count = count_num) |> 
+  dplyr::select(-count_num) |> 
+  left_join(pie_sp_avg_ind_bio, by = "scientific_name") |> 
+  mutate(ind_bio = ifelse(is.na(ind_bio), avg_bio, ind_bio)) |> 
+  dplyr::select(-avg_bio)
+glimpse(expand_PIE_biomass_new_col)
+
+###zero-fill the data
+pie_zero_fill <- expand_PIE_biomass_new_col |> 
+  complete(nesting(scientific_name, species, sp_code),
+           nesting(project, habitat, raw_filename, year, month, 
+                   day, date, site, subsite_level1, subsite_level2),
+           fill = list(count = 0, ind_bio = 0, `density_num/m2` = 0,
+                       length_mm = NA))
+
+###join with species list
+pie_diet <- species_list |> 
+  filter(project == "PIE")
+
+pie_diet_cat <- merge(pie_zero_fill, pie_diet, 
+                      by= c("scientific_name", "species", "sp_code", "project"))
+
+###dry mass conversions
+dm_conv <- dm_conv1 |> #read_csv("other/dm_conversions_cndwg.csv") |> 
+  select(-level) |> #removes level for simplicity
+  filter(kingdom == "Animalia",
+         dm_wm_mean < 1) #only want animals and no coefficients greater than 1 (thats wrong)
+
+dm_coeff <- dm_conv |> 
+  group_by(class) |> 
+  summarise(dm_coeff= mean(as.numeric(dm_wm_mean), na.rm = T),.groups = "drop") |>
+  ungroup()
+
+pie_dm_coeff <- left_join(pie_diet_cat, dm_coeff, by = "class")
+# glimpse(nga_dm_coeff)
+na_coeff_result <- which(is.na(pie_dm_coeff$dm_coeff)) #yay
+
+# ### for small number of NAs take average coefficient
+# pie_dm <- pie_dm_coeff |> 
+#   mutate(dm_coeff = replace(dm_coeff, is.na(dm_coeff), 0.1916655))
+# # na_coeff_result <- which(is.na(nga_dm$dm_coeff)) 
+
+pie_all_dm <- pie_dm_coeff |> 
+  mutate(`dmperind_g/ind` = ind_bio*dm_coeff,
+         `density_num/m2` = `density_num/m2`,
+         temp_c = 15.2)
+glimpse(pie_all_dm)
+
+### na check
+na_count_per_column <- sapply(pie_all_dm, function(x) sum(is.na(x)))
+print(na_count_per_column)
+
+### missing some site data it appears
+site_test <- pie_all_dm |> 
+  select(site, subsite_level1, subsite_level2, subsite_level3) |> 
+  distinct() #missing some of the site information
+### not terrible - so just filter out below - can't fix this
+
+pie_all_dm1 <- pie_all_dm |> 
+  filter(!is.na(subsite_level1))
+na_count_per_column <- sapply(pie_all_dm1, function(x) sum(is.na(x)))
+print(na_count_per_column)
+glimpse(pie_all_dm1)
+
+pie_all_dm2 <- pie_all_dm1 |> 
+  mutate(row_num = paste0(raw_filename, "_", 1:nrow(pie_all_dm1)),
+         count_num = count,
+         `dmperind_g/ind` = ind_bio) |>
+  dplyr::select(project,habitat,raw_filename,row_num,year,month,
+                day,date,site,subsite_level1,subsite_level2,subsite_level3,
+                sp_code,scientific_name,species,
+                count_num,length_mm,`dmperind_g/ind`,
+                `density_num/m2`,temp_c) 
+
+pie_ready <- pie_all_dm2 %>%
+  pivot_longer(cols = count_num:temp_c, 
+               names_to = "measurement_type",
+               values_to = "measurement_value")%>%
+  separate(measurement_type, into = c("measurement_type", "measurement_unit"),sep = "_", remove = FALSE) 
 
 # PIE end -----------------------------------------------------------------
+# rm(pie, pie_all_dm, pie_all_dm1, pie_all_dm2, pie_d1, pie_d2, pie_diet, pie_diet_cat,
+#    pie_dm_coeff, pie_sp_avg_ind_bio, pie_zero_fill, expand_PIE_biomass_new_col,
+#    site_test,test)
 
 # VCR start ------------------------------------------------------------
 ### NA in species column with count zero represents no fishes collected @ site
@@ -344,13 +551,103 @@ vcr <- dt %>%
 vcr_d1 <- vcr %>%
   pivot_wider(names_from = c(measurement_type,measurement_unit), values_from = measurement_value)
 
+###split site into site and subsite_level1
+vcr_d2 <- vcr_d1 |> 
+  separate(site, into = c("site", "subsite_level1"), sep = "_", extra = "merge", fill = "right")
+glimpse(vcr_d2)
+
+expand_VCR_biomass_new_col <- vcr_d2 %>%
+  ### obtain the individual biomass by creating a new column
+  dplyr::mutate(`density_num/m2` = count_num/transectarea_m2,
+                ind_bio = wetmass_g/count_num,
+                ind_bio = replace(ind_bio, is.na(ind_bio), 0),
+                wetmass_g = replace(wetmass_g, is.na(wetmass_g),0),
+                `wetmass/m2` = wetmass_g/transectarea_m2,
+                scientific_name = ifelse(is.na(scientific_name), "Gerreidae", scientific_name)) #fill in w real species so we dont lose true zeros in dataset
+glimpse(expand_VCR_biomass_new_col) #missing small # of ind_bio estimates
+
+# ###calculate avg species ind_biom
+# nga_sp_avg_ind_bio <- expand_NGA_biomass_new_col |> 
+#   filter(ind_bio != 0) |> 
+#   group_by(scientific_name) |> 
+#   summarize(avg_bio = mean(ind_bio))
+
+# ###replace zeros with average and rename similar to mcr dataset
+# expand_NGA_biomass_new_col <- expand_NGA_biomass_new_col |> 
+#   mutate(count = count_num) |> 
+#   dplyr::select(-count_num) |> 
+#   left_join(nga_sp_avg_ind_bio, by = "scientific_name") |> 
+#   mutate(ind_bio = ifelse(ind_bio == 0, avg_bio, ind_bio),
+#          wetmass_g = `wetmass_mg/m3`*0.001,
+#          count_num = `density_num/m3`) |> 
+#   dplyr::select(-avg_bio, -`wetmass_mg/m3`, `density_num/m3`)
+glimpse(expand_VCR_biomass_new_col)
+
+###zero-fill the data
+vcr_zerofill <- expand_VCR_biomass_new_col |> 
+  complete(nesting(scientific_name, species, sp_code),
+           nesting(project, habitat, raw_filename, year, month, 
+                   day, date, site, subsite_level1),
+           fill = list(count_num = 0, wetmass_g = 0, ind_bio = 0,
+                       `density_num/m2` = 0, `wetmass/m2` = 0,
+                       length_cm = NA))
+
+###join with species list
+vcr_diet <- species_list |> 
+  filter(project == "VCR")
+
+vcr_diet_cat <- merge(vcr_zerofill, vcr_diet, 
+                      by= c("scientific_name", "species", "sp_code", "project"))
+
+###dry mass conversions
+dm_conv <- dm_conv1 |> #read_csv("other/dm_conversions_cndwg.csv") |> 
+  select(-level) |> #removes level for simplicity
+  filter(kingdom == "Animalia",
+         dm_wm_mean < 1) #only want animals and no coefficients greater than 1 (thats wrong)
+
+dm_coeff <- dm_conv |> 
+  group_by(class) |> 
+  summarise(dm_coeff= mean(as.numeric(dm_wm_mean), na.rm = T),.groups = "drop") |>
+  ungroup()
+
+vcr_dm_coeff <- left_join(vcr_diet_cat, dm_coeff, by = "class")
+# glimpse(nga_dm_coeff)
+na_coeff_result <- which(is.na(vcr_dm_coeff$dm_coeff)) #yay
+
+# ### for small number of NAs take average coefficient
+# vcr_dm <- vcr_dm_coeff |> 
+#   mutate(dm_coeff = replace(dm_coeff, is.na(dm_coeff), 0.1916655))
+# # na_coeff_result <- which(is.na(nga_dm$dm_coeff)) 
+glimpse(vcr_dm_coeff)
+
+vcr_all_dm <- vcr_dm_coeff |> 
+  mutate(`dmperind_g/ind` = ind_bio*dm_coeff,
+         temp_c = 24.0)
+glimpse(vcr_all_dm)
+
+vcr_all_dm1 <- vcr_all_dm |> 
+  mutate(row_num = paste0(raw_filename, "_", 1:nrow(vcr_all_dm)),
+         `drymass_m2` = `wetmass/m2`*dm_coeff) |>
+  dplyr::select(project,habitat,raw_filename,row_num,year,month,
+                day,date,site,subsite_level1,subsite_level2,subsite_level3,
+                sp_code,scientific_name,species,
+                count_num,length_cm,`density_num/m2`,
+                `dmperind_g/ind`, `drymass_m2`, temp_c) 
+
+na_count_per_column <- sapply(vcr_all_dm1, function(x) sum(is.na(x)))
+print(na_count_per_column)
+
+vcr_ready <- vcr_all_dm1 %>%
+  pivot_longer(cols = count_num:temp_c, 
+               names_to = "measurement_type",
+               values_to = "measurement_value")%>%
+  separate(measurement_type, into = c("measurement_type", "measurement_unit"),sep = "_", remove = FALSE) 
+
 # VCR end -----------------------------------------------------------------
+# rm(vcr, vcr_all_dm, vcr_all_dm1, vcr_d1, vcr_d2, vcr_diet, vcr_diet_cat,
+#    vcr_dm_coeff, vcr_zerofill, expand_VCR_biomass_new_col)
 
-
-
-
-
-#### CCE 
+#### CCE start
 
 #extract temp data
 cce_mean_temp <- env$temp[env$project=="CCE"]
@@ -381,7 +678,42 @@ data_original <- dt %>%
                   project=="FCE")
   
 # concat data together
-harmonized_clean = rbind(data_original,coastalca_ready, sbc_ready,mcr_ready,cce_ready)
+harmonized_clean = rbind(data_original,
+                         coastalca_ready,sbc_ready,mcr_ready,nga_ready,
+                         pie_ready, sbc_ready, coastalca_ready, vcr_ready,
+                         cce_ready)
+
+na_count_per_column <- sapply(harmonized_clean, function(x) sum(is.na(x)))
+print(na_count_per_column)
+
+month_nas <- na_count_per_column <- harmonized_clean |> 
+  filter(is.na(month))
+unique(month_nas$year)
+
+fce_original <- dt |> 
+  filter(project == "FCE") |> 
+  filter(year == 2020)
+
+fce_monthtest <- fce_original |> 
+  group_by(month) |> 
+  summarise(n = n())
+
+### went back to og data and determined it was december 2020 that was improperly 
+### code for a subset
+
+harmonized_clean$month[is.na(harmonized_clean$month)] <- 12
+na_count_per_column <- sapply(harmonized_clean, function(x) sum(is.na(x)))
+print(na_count_per_column)
+
+value_nas <- harmonized_clean |> 
+  filter(is.na(measurement_value)) |> 
+  group_by(measurement_type) |> 
+  summarize(n = n())
+### check to see what dmperind data we are missing (missing total of 1002)
+value_nas <- harmonized_clean |> 
+  filter(is.na(measurement_value)) |> 
+  filter(measurement_type == "dmperind")
+### missing 1002, all from CCE, which I have already talked to them about
 
 # # check to see the measurement type and unit are the same
 # peace <- harmonized_clean %>%
