@@ -17,7 +17,7 @@
 
 # Does the species table need to be updated? 
 # Put 0 for no, 1 for yes
-species_update_flag <- 0
+species_update_flag <- 1
 
 ## ------------------------------------------ ##
 #            Housekeeping -----
@@ -80,12 +80,8 @@ sp_codes_id <- googledrive::drive_ls(googledrive::as_id("https://drive.google.co
 sp_fix_id <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/1LYffjtQdLcNYkStrf_FukihQ6tPKlw1a")) %>%
   dplyr::filter(name %in% c("MCR_species_fix"))
 
-# Identify the latest harmonized species table
-harm_sp_codes_id <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH")) %>%
-  dplyr::filter(name %in% c("harmonized_consumer_species.csv"))
-
 # Combine file IDs
-other_ids <- rbind(data_key_id, sp_codes_id, sp_fix_id, harm_sp_codes_id)
+other_ids <- rbind(data_key_id, sp_codes_id, sp_fix_id)
 
 # For each raw data file, download it into the consumer folder
 for(k in 1:nrow(raw_ids)){
@@ -123,6 +119,12 @@ key <- readxl::read_excel(path = file.path("tier0", "CND_Data_Key_spatial.xlsx")
 
 # Identify all downloaded files
 ( raw_files <- dir(path = file.path("tier0", "raw_data", "consumer")) )
+
+# Make sure you downloaded all the needed files that are listed in the data key
+key %>% 
+  filter(data_type == "consumer") %>%
+  select(raw_filename) %>%
+  distinct()
 
 # Make an empty list to store re-formatted raw data
 df_list <- list()
@@ -365,8 +367,6 @@ rm(list = setdiff(ls(), c("tidy_v1c", "species_update_flag")))
 # Read in the tables for PIE and CoastalCA species codes (for later)
 PIE_CoastalCA_codes <- read.csv(file = file.path("tier0", "PIE_CoastalCA_codes.csv"))
 MCR_sp_fix <- readxl::read_excel(path = file.path("tier0", "MCR_species_fix.xlsx")) 
-harm_sp_codes <- read.csv(file = file.path("tier0", "harmonized_consumer_species.csv"), na.strings = ".") %>%
-  dplyr::select(project, sp_code, common_name, scientific_name, species) 
 
 # Doing some preliminary wrangling on species names
 tidy_v2a <- tidy_v1c %>%
@@ -496,6 +496,7 @@ tidy_v2b <- tidy_v2a %>%
     scientific_name == "goby" ~ "Gobiidae",
     scientific_name == "Mullets" ~ "Mugil",
     scientific_name == "No fish observed" ~ NA,
+    scientific_name == "Sciaenid" ~ "Sciaenidae",
     T ~ scientific_name
   )) 
 
@@ -527,86 +528,49 @@ some_common_names_fix <- tidy_v2b %>%
                 genus_fix = NA,
                 species_fix = NA)
 
-for (i in 1:length(some_common_names_fix$common_name)){
-  # Query species for its taxonomic information
-  query_results <- taxize::tax_name(sci = some_common_names_fix[i,]$common_name,
-                                    get = c("kingdom", "phylum", "class", "order", "family", "genus", "species"),
-                                    db = "itis",
-                                    accepted = T,
-                                    ask = F)
+# If there are rows with only a common name and no scientific names...
+if (nrow(some_common_names_fix) > 0){
+  for (i in 1:length(some_common_names_fix$common_name)){
+    # Query species for its taxonomic information
+    query_results <- taxize::tax_name(sci = some_common_names_fix[i,]$common_name,
+                                      get = c("kingdom", "phylum", "class", "order", "family", "genus", "species"),
+                                      db = "itis",
+                                      accepted = T,
+                                      ask = F)
+    
+    # Save the query results
+    # In case the query returns NULL, the paste0(..., collapse = "") will coerce NULL into an empty string
+    some_common_names_fix[i,]$kingdom_fix <- paste0(query_results$kingdom, collapse = "")
+    some_common_names_fix[i,]$phylum_fix <- paste0(query_results$phylum, collapse = "")
+    some_common_names_fix[i,]$class_fix <- paste0(query_results$class, collapse = "")
+    some_common_names_fix[i,]$order_fix <- paste0(query_results$order, collapse = "")
+    some_common_names_fix[i,]$family_fix <- paste0(query_results$family, collapse = "")
+    some_common_names_fix[i,]$genus_fix <- paste0(query_results$genus, collapse = "")
+    some_common_names_fix[i,]$species_fix <- paste0(query_results$species, collapse = "")
+  }
   
-  # Save the query results
-  # In case the query returns NULL, the paste0(..., collapse = "") will coerce NULL into an empty string
-  some_common_names_fix[i,]$kingdom_fix <- paste0(query_results$kingdom, collapse = "")
-  some_common_names_fix[i,]$phylum_fix <- paste0(query_results$phylum, collapse = "")
-  some_common_names_fix[i,]$class_fix <- paste0(query_results$class, collapse = "")
-  some_common_names_fix[i,]$order_fix <- paste0(query_results$order, collapse = "")
-  some_common_names_fix[i,]$family_fix <- paste0(query_results$family, collapse = "")
-  some_common_names_fix[i,]$genus_fix <- paste0(query_results$genus, collapse = "")
-  some_common_names_fix[i,]$species_fix <- paste0(query_results$species, collapse = "")
+  some_common_names_fix_v2 <- some_common_names_fix %>%
+    # Replace the string "NA" with actual NA values
+    dplyr::mutate(dplyr::across(.cols = dplyr::everything(), .fns = ~dplyr::na_if(., y = "NA"))) 
+    # Manually find the scientific names for the rest of the common names that did not get automatically filled by taxize here
+    # If there are any
+
+  tidy_v2c <- left_join(tidy_v2b, some_common_names_fix_v2, by = "common_name") %>% 
+    # Coalesce taxonomic columns together to fill in missing taxonomic info whenever possible
+    dplyr::mutate(kingdom = dplyr::coalesce(kingdom, kingdom_fix),
+           phylum = dplyr::coalesce(phylum, phylum_fix),
+           class = dplyr::coalesce(class, class_fix),
+           order = dplyr::coalesce(order, order_fix),
+           family = dplyr::coalesce(family, family_fix),
+           genus = dplyr::coalesce(genus, genus_fix),
+           species = dplyr::coalesce(species, species_fix)) %>%
+    # Drop the rest of the columns from the taxon table
+    dplyr::select(-dplyr::contains("_fix")) %>%
+    # Combine info from across many taxon columns into scientific_name
+    dplyr::mutate(scientific_name = dplyr::coalesce(scientific_name, species, genus, family, order, class, phylum)) 
+} else {
+  tidy_v2c <- tidy_v2b
 }
-
-some_common_names_fix_v2 <- some_common_names_fix %>%
-  # Replace the string "NA" with actual NA values
-  dplyr::mutate(dplyr::across(.cols = dplyr::everything(), .fns = ~dplyr::na_if(., y = "NA"))) %>%
-  # Manually find the scientific names for the rest of the common names that did not get automatically filled by taxize
-  dplyr::mutate(species_fix = dplyr::case_when(
-    common_name == "Spot" ~ "Leiostomus xanthurus",
-    common_name == "Pinfish" ~ "Lagodon rhomboides",
-    common_name == "Striped burrfish" ~ "Chilomycterus schoepfi",
-    common_name == "Black Sea Bass" ~ "Centropristis striata",
-    common_name == "Pigfish" ~ "Orthopristis chrysoptera",
-    common_name == "Scup" ~ "Stenotomus chrysops",
-    common_name == "Sheepshead" ~ "Archosargus probatocephalus",
-    common_name == "Butterfish" ~ "Peprilus triacanthus",
-    common_name == "Summer Flounder" ~ "Paralichthys dentatus",
-    common_name == "Striped Blenny" ~ "Meiacanthus grammistes",
-    common_name == "Mangrove Snapper" ~ "Lutjanus griseus",
-    common_name == "Bluefish" ~ "Pomatomus saltatrix",
-    common_name == "Tautog" ~ "Tautoga onitis",
-    common_name == "Croaker" ~ "Micropogonias undulatus",
-    common_name == "Speckled Trout" ~ "Cynoscion nebulosus",
-    common_name == "Skilletfish" ~ "Gobiesox strumosus",
-    common_name == "Menhaden" ~ "Brevoortia tyrannus",
-    T ~ species_fix
-  )) %>%
-  dplyr::mutate(genus_fix = dplyr::case_when(
-    common_name == "Seahorse" ~ "Hippocampus",
-    T ~ genus_fix
-  )) %>%
-  dplyr::mutate(family_fix = dplyr::case_when(
-    common_name == "Mojarra" ~ "Gerreidae",
-    common_name == "Pipefish" ~ "Syngnathinae",
-    common_name == "Unknown Sciaenid" ~ "Sciaenid",
-    common_name == "Sand Mullet" ~ "Mugilidae",
-    common_name == "Pufferfish" ~ "Tetraodontidae",
-    common_name == "Filefish" ~ "Monacanthidae",
-    common_name == "American Anchovy" ~ "Engraulidae",
-    common_name == "Goby" ~ "Gobiidae",
-    T ~ family_fix
-  )) %>%
-  dplyr::mutate(order_fix = dplyr::case_when(
-    common_name == "Silversides" ~ "Atheriniformes",
-    T ~ order_fix
-  )) %>%
-  dplyr::mutate(class_fix = dplyr::case_when(
-    common_name == "Squid" ~ "Coleoidea",
-    T ~ class_fix
-  ))
-
-tidy_v2c <- left_join(tidy_v2b, some_common_names_fix_v2, by = "common_name") %>% 
-  # Coalesce taxonomic columns together to fill in missing taxonomic info whenever possible
-  dplyr::mutate(kingdom = dplyr::coalesce(kingdom, kingdom_fix),
-         phylum = dplyr::coalesce(phylum, phylum_fix),
-         class = dplyr::coalesce(class, class_fix),
-         order = dplyr::coalesce(order, order_fix),
-         family = dplyr::coalesce(family, family_fix),
-         genus = dplyr::coalesce(genus, genus_fix),
-         species = dplyr::coalesce(species, species_fix)) %>%
-  # Drop the rest of the columns from the taxon table
-  dplyr::select(-dplyr::contains("_fix")) %>%
-  # Combine info from across many taxon columns into scientific_name
-  dplyr::mutate(scientific_name = dplyr::coalesce(scientific_name, species, genus, family, order, class, phylum)) 
 
 # Check unique scientific names
 unique(tidy_v2c$scientific_name)
@@ -865,7 +829,7 @@ tidy_v2h <- tidy_v2g %>%
   dplyr::select(-common_name, -kingdom, -phylum, -class, -order, -family, -genus, -taxa_group)
 
 # Clean up environment
-rm(list = setdiff(ls(), c("tidy_v2h", "species_table", "species_update_flag")))
+#rm(list = setdiff(ls(), c("tidy_v2h", "species_table", "species_update_flag")))
 
 ## -------------------------------------------- ##
 #      Reordering & Changing Column Types ----
