@@ -80,11 +80,43 @@ df1 <-df %>%
 # #check the unit that match with the measurement, good to go
 # peace <- df1 %>%
 #   distinct(project,habitat,measurement_type,measurement_unit)
+glimpse(df1)
 
-df2 <- df1 %>%
+### pivot_wider indicates duplicates and generating lists instead of columns in dbl
+### check for replicates in data
+df1_replicates <- df1 |> 
+  group_by(across(everything())) |> 
+  filter(n() > 1) |> 
+  ungroup()
+
+unique(df1_replicates$project) #[1] "CoastalCA" "SBC"  
+unique(df1_replicates$habitat) #[1] "ocean"
+
+df1_replicates_distinct <- df1_replicates |> 
+  distinct()
+### appears that everything for for sbc-beach and CoastalCA are duplicated
+### df1_replicates = 4380336 obs.
+### df1_replicates_distinct = 2190168 obs.
+### > 2190168*2 = [1] 4380336
+
+### get rid of duplicates - but check out data first to make sure we aren't 
+### kicking anything we shouldn't
+
+rep <- mean(df1_replicates$measurement_value)
+rep_distinct <- mean(df1_replicates_distinct$measurement_value)
+
+df2 <- df1 |> 
+  distinct()
+#> 7783290 (data with replicates) - 5593122 (data w/o replicates) 
+#> = [1] 2190168 (data with distinct replicates)
+### everything makes sense
+
+df3 <- df2 %>%
   pivot_wider(names_from = c(measurement_type,measurement_unit), values_from = measurement_value) 
 
-# check species list before merging, need to check
+glimpse(df3)
+
+# check df3# check species list before merging, need to check
 # peace2 <- species_list %>%
 #   group_by(project,sp_code,scientific_name,species) %>%
 #   summarise(n=n(),.groups='drop') %>%
@@ -97,17 +129,73 @@ spe2 <- species_list %>%
   ungroup()
 
 # merge with the species list
-df3 <-df2 %>%
+df4 <- df3 %>%
   left_join(spe2,by=c("project","sp_code","scientific_name","species")) 
 
 # check to see anything that don't have diet cat column
-# peace3<-df3 %>%
+# peace3<-df4 %>%
 #   filter(is.na(diet_cat)) %>%
 #   distinct(project,habitat,sp_code,scientific_name,species,diet_cat)
+na_count_per_column <- sapply(df4, function(x) sum(is.na(x)))
+print(na_count_per_column)
+
+### examine small # of data w missing scientific name column
+value_nas <- df4 |> 
+  filter(is.na(scientific_name)) #all from PISCO and are anchovies/sardines
+
+### fill NAs in scientific_name with order 'Clupeiformes' since most resolved portion of shared taxonomy
+
+df5 <- df4 |> 
+  mutate(scientific_name = ifelse(is.na(scientific_name), "Clupeiformes", scientific_name))
+
+na_count_per_column <- sapply(df5, function(x) sum(is.na(x)))
+print(na_count_per_column)
+
+### examine data without family classification
+
+## FCE 
+value_nas <- df5 |> 
+  filter(is.na(family)) |> 
+  filter(project == "FCE") 
+unique(value_nas$scientific_name)
+
+## VCR
+value_nas <- df5 |> 
+  filter(is.na(family)) |> 
+  filter(project == "VCR") 
+unique(value_nas$scientific_name)
+
+## CoastalCA
+value_nas <- df5 |> 
+  filter(is.na(family)) |> 
+  filter(project == "CoastalCA") 
+unique(value_nas$scientific_name)
+
+df6 <- df5 %>%
+  mutate(family = case_when(
+    scientific_name == "Cichlasoma urophthalmus" ~ "Cichlidae",
+    scientific_name == "Aphrododerus sayanus" ~ "Aphrododeridae",
+    scientific_name == "Farfantepenaeus duorarum" ~ "Penaeidae",
+    scientific_name == "Gambusia holbrooki" ~ "Poeciliidae",
+    scientific_name == "Kleptolebias marmoratus" ~ "Rivulidae",
+    scientific_name == "Palaemonetes pugio" ~ "Palaemonidae",
+    TRUE ~ family  # Keep the existing family if none of the above conditions are met
+  ))
+
+value_nas <- df6 |> 
+  filter(is.na(family)) |> 
+  filter(project == "FCE") 
+unique(value_nas$scientific_name)
+glimpse(df6)
+
+### tidy up environment
+rm(df, df1, df2, df3, df4, df5, df1_replicates, 
+   df1_replicates_distinct, value_nas, na_count_per_column,
+   rep, rep_distinct)
 
 ###########################
 #using bradley's code below for excretion calculation
-cons <- df3
+cons <- df6
 
 cons_np_ratio <- cons %>% 
   #N
