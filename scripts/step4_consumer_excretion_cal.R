@@ -132,6 +132,9 @@ spe2 <- species_list %>%
 df4 <- df3 %>%
   left_join(spe2,by=c("project","sp_code","scientific_name","species")) 
 
+
+# fix nas that dont make sense --------------------------------------------
+
 # check to see anything that don't have diet cat column
 # peace3<-df4 %>%
 #   filter(is.na(diet_cat)) %>%
