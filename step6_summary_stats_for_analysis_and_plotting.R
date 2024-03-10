@@ -82,10 +82,10 @@ dt_calcs <- dt |>
             p_ind_mean_nozeros = mean(pind_ug_hr[pind_ug_hr != 0], na.rm = TRUE),
             # p_ind_cv = (p_ind_sd/p_ind_mean)*100,
             p_ind_cv_nozeros = (p_ind_sd_nozeros/p_ind_mean_nozeros)*100,
-            total_bm_m = sum(dmperind_g_ind*density_num_m),
-            total_bm_m2 = sum(dmperind_g_ind*density_num_m2),
-            total_bm_m3 = sum(dmperind_g_ind*density_num_m3),
-            total_bm = total_bm_m + total_bm_m2 + total_bm_m3,
+            total_bm_m = sum(dmperind_g_ind*density_num_m, na.rm = TRUE),
+            total_bm_m2 = sum(dmperind_g_ind*density_num_m2, na.rm = TRUE),
+            total_bm_m3 = sum(dmperind_g_ind*density_num_m3, na.rm = TRUE),
+            total_bm = sum(total_bm_m + total_bm_m2 + total_bm_m3, na.rm = TRUE),
             # bm_ind_sd = sd(dmperind_g_ind, na.rm = TRUE),
             bm_ind_sd_nozeros = sd(dmperind_g_ind[dmperind_g_ind != 0], na.rm = TRUE),
             # bm_ind_mean = mean(dmperind_g_ind, na.rm = TRUE),
@@ -107,33 +107,29 @@ dt_calcs <- dt |>
   ungroup() |> 
   dplyr::select(-total_n_ug_hr_m, -total_n_ug_hr_m2, -total_n_ug_hr_m3,
                 -total_p_ug_hr_m, -total_p_ug_hr_m2, -total_p_ug_hr_m3,
-                # -total_bm_m, -total_bm_m2, -total_bm_m2, -total_bm_m3,
+                -total_bm_m, -total_bm_m2, -total_bm_m3,
                 -n_obs,
                 -diet_algae_detritus_n, -diet_invert_n, -diet_algae_invert_n,
                 -diet_fish_invert_n, -diet_fish_n)
 
 ### check for NAs 
 na_count_per_column <- sapply(dt_calcs, function(x) sum(is.na(x)))
-print(na_count_per_column) #total_bm missing 15318 obs (that's everything)
+print(na_count_per_column) #dont understand NAs, but small fraction of dataset
 
-### calculate mean total
-bm_avg_test <- dt_calcs |> 
-  group_by(project, habitat) |> 
-  summarize(bm1 = mean(total_bm_m),
-            bm2 = mean(total_bm_m2),
-            bm3 = mean(total_bm_m3),
-            total_bm = mean(total_bm)) 
-#appears that NGA is missing all biomass estimates
-#causing all of the sites to lose their total_bm estimate
+dt_calcs_clean <- dt_calcs |> 
+  ### replace NAs with zeros in mean columns
+  mutate(n_ind_mean_nozeros = replace_na(n_ind_mean_nozeros, 0),
+         p_ind_mean_nozeros = replace_na(p_ind_mean_nozeros, 0),
+         bm_ind_mean_nozeros = replace_na(bm_ind_mean_nozeros, 0)) |> 
+  ### set sd/cv columns to zero since instance when 1 individual collected
+  mutate(n_ind_sd_nozeros = 0,
+         n_ind_cv_nozeros = 0,
+         p_ind_sd_nozeros = 0,
+         p_ind_cv_nozeros = 0,
+         bm_ind_sd_nozeros = 0,
+         bm_ind_cv_nozeros = 0)
 
-number_test <- dt_calcs |> 
-  filter(is.na())
-
-nga_test <- dt |> 
-  filter(project == "NGA")
-glimpse(nga_test)
-
-na_count_per_column <- sapply(nga_test, function(x) sum(is.na(x)))
+na_count_per_column <- sapply(dt_calcs_clean, function(x) sum(is.na(x)))
 print(na_count_per_column)
 
 
