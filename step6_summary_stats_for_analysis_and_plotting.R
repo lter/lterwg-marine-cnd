@@ -40,8 +40,11 @@ dt <- read.csv(file.path("tier2", "harmonized_consumer_excretion_CLEAN.csv"),str
 glimpse(dt)
 
 strata_list <- readxl::read_excel(path = file.path("tier2", "strata_class.xlsx"),na=".") |> 
-  dplyr::select(-...9,-...10)
-glimpse(strata_list)
+  ### remove decimals from numbered sites
+  mutate(site = str_remove(site, "\\.0$"),
+         subsite_level1 = str_remove(subsite_level1, "\\.0$"),
+         subsite_level2 = str_remove(subsite_level2, "\\.0$"),
+         subsite_level3 = str_remove(subsite_level3, "\\.0$"))
 
 # set up data for summary statistics --------------------------------------
 
@@ -50,7 +53,8 @@ glimpse(strata_list)
 ### each project without throwing NAs
 
 dt <- dt %>%
-  mutate(subsite_level2 = replace_na(subsite_level2, "Not Available"),
+  mutate(subsite_level1 = replace_na(subsite_level1, "Not Available"),
+         subsite_level2 = replace_na(subsite_level2, "Not Available"),
          subsite_level3 = replace_na(subsite_level3, "Not Available"))
 
 ### check to see NA fixes incorporated
@@ -128,8 +132,163 @@ dt_calcs_clean <- dt_calcs |>
          p_ind_cv_nozeros = 0,
          bm_ind_sd_nozeros = 0,
          bm_ind_cv_nozeros = 0)
+glimpse(dt_calcs_clean)
 
-na_count_per_column <- sapply(dt_calcs_clean, function(x) sum(is.na(x)))
-print(na_count_per_column)
+# na_count_per_column <- sapply(dt_calcs_clean, function(x) sum(is.na(x)))
+# print(na_count_per_column)
+
+# join strata and prepare data for plotting -------------------------------
+
+### 
+strata_list <- strata_list %>%
+  mutate(subsite_level1 = replace_na(subsite_level1, "Not Available"),
+         subsite_level2 = replace_na(subsite_level2, "Not Available"),
+         subsite_level3 = replace_na(subsite_level3, "Not Available"))
+
+dt_calcs_strata <- left_join(dt_calcs_clean, 
+                             strata_list, 
+                             by = c("project", "habitat", "site",
+                                    "subsite_level1", "subsite_level2",
+                                    "subsite_level3")) |> 
+  mutate(strata = if_else(is.na(ecoregion_habitat), site, ecoregion_habitat)) |> 
+  select(-ecoregion_habitat)
+
+# na_count_per_column <- sapply(dt_calcs_strata, function(x) sum(is.na(x)))
+# print(na_count_per_column)
+
+# generate project-habitat + date column ----------------------------------
+
+dt_calcs_strata_1 <- dt_calcs_strata |>
+  ### create project-habitat column since some projects sample multiple habitats (i.e., SBC ocean & beach)
+  unite("projecthabitat", project, habitat, sep = "-", remove = FALSE) |> 
+  ### create date columns for timeseries plotting
+  mutate(sdate = ymd(paste(year, month, "01", sep = "-")))
+
+# na_count_per_column <- sapply(dt_calcs_strata_1, function(x) sum(is.na(x)))
+# print(na_count_per_column)
+
+### tidy up environment
+dt <- dt_calcs_strata_1
+all_objects <- ls() #list all objects in the environment
+object_to_keep <- "dt" #specify the object you want to keep
+rm(list = all_objects[all_objects != object_to_keep])
+rm(all_objects, object_to_keep)
+
+# setup individual 'projecthabitats' for plotting -------------------------
+### Below I have seperated each unique projecthabitat out to mutate new columns based on either
+### the strata they want their data colored by (i.e., color = XXXX)and the level to which they want
+### their data summarized (i.e., for FCE-estuary, I want summarized at subsite_level1..
+### whereas SBC wants their data summarized at the site level. This approach sets up
+### an easy way to map plots across all unique projecthabitats, instead of doing them
+### individually
+
+### CCE-oceanic
+cce <- dt |> 
+  filter(projecthabitat == "CCE-oceanic") |> 
+  mutate(group = site,
+         color = strata,
+         units = 'm2')
+
+### CoastalCA-ocean
+pisco_central <- dt |> 
+  filter(projecthabitat == "CoastalCA-ocean",
+         site == "CENTRAL") |> #split pisco into central and southern
+  mutate(group = subsite_level2,
+         color = strata,
+         units = 'm2',
+         projecthabitat = "CoastalCA-ocean-CENTRAL") #split pisco into central and southern
+
+pisco_south <- dt |> 
+  filter(projecthabitat == "CoastalCA-ocean",
+         site == "SOUTH") |> #split pisco into central and southern
+  mutate(group = subsite_level2,
+         color = strata,
+         units = 'm2',
+         projecthabitat = "CoastalCA-ocean-SOUTH") #split pisco into central and southern
+
+### FCE-estuary
+fce <- dt |> 
+  filter(projecthabitat == "FCE-estuary") |>
+  mutate(group = subsite_level1,
+         color = strata,
+         units = 'm') #group at subsite_level1
+
+### MCR-ocean
+mcr <- dt |> 
+  filter(projecthabitat == "MCR-ocean") |> 
+  ### join site and subsite_level1 according DB request for grouping variable
+  unite("group", site, subsite_level1, sep = "-", remove = FALSE) |>
+  mutate(group = group,
+         color = subsite_level1,
+         units = 'm2')
+
+### NGA-oceanic
+nga <- dt |> 
+  filter(projecthabitat == "NGA-oceanic") |> 
+  mutate(group = site,
+         color = strata,
+         units = 'm3')
+
+### PIE-estuary
+pie <- dt |> 
+  filter(projecthabitat == "PIE-estuary") |> 
+  mutate(group = site,
+         color = strata,
+         units = 'm2') 
+
+### SBC-beach
+sbc_beach <- dt |> 
+  filter(projecthabitat == "SBC-beach") |> 
+  mutate(group = site,
+         color = strata,
+         units = 'm') 
+### SBC-ocean
+sbc_reef <- dt |> 
+  filter(projecthabitat == "SBC-ocean") |> 
+  mutate(group = site,
+         color = strata,
+         units = 'm2')
+
+### VCR-estuary
+vcr <- dt |> 
+  filter(projecthabitat == "VCR-estuary") |> 
+  mutate(group = site,
+         color = strata,
+         units = 'm2')
+
+#Binding everything back together, removing index row generated when saving out of R
+## and arranging the data by date
+plotting_dat_ready <- bind_rows(cce, fce, mcr, pisco_central, pisco_south, sbc_beach, sbc_reef,
+                                nga, pie, vcr)
+
+### tidy up environment
+all_objects <- ls() #list all objects in the environment
+object_to_keep <- "plotting_dat_ready" #specify the object you want to keep
+rm(list = all_objects[all_objects != object_to_keep])
+rm(all_objects, object_to_keep)
+
+# na_count_per_column <- sapply(plotting_dat_ready, function(x) sum(is.na(x)))
+# print(na_count_per_column)
+
+### check out data to see if anything jumps out
+# test <- plotting_dat_ready |> 
+#   group_by(projecthabitat, strata) |> 
+#   summarize(mean_n = mean(total_n),
+#             mean_p = mean(total_p),
+#             mean_bm = mean(total_bm))
+
+dt <- plotting_dat_ready
+rm(plotting_dat_ready)
+
+#### export and write to the drive
+# Export locally
+tidy_filename <- "harmonized_consumer_excretion_CLEAN_summarized.csv"
+
+write.csv(dt, file = file.path("tier2", tidy_filename), na = '.', row.names = F)
+
+# Export harmonized clean dataset to Drive
+googledrive::drive_upload(media= file.path("tier2",tidy_filename), overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/1/folders/1VakpcnFVckAYNggv_zNyfDRfkcGTjZxX"))
+
 
 
