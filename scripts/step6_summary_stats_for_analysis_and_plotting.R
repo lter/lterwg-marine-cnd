@@ -26,7 +26,7 @@ for(k in 1:nrow(harmonized_ids)){
   # Download file (but silence how chatty this function is)
   googledrive::with_drive_quiet(
     googledrive::drive_download(file = harmonized_ids[k, ]$id, overwrite = T,
-                                path = file.path("tier2", harmonized_ids[k, ]$name)) )
+                                path = file.path("../tier2", harmonized_ids[k, ]$name)) )
   
   # Print success message
   message("Downloaded file ", k, " of ", nrow(harmonized_ids))
@@ -35,11 +35,11 @@ for(k in 1:nrow(harmonized_ids)){
 rm(list = ls()) #cleans env
 
 ### read in clean excretion and strata data from google drive
-dt <- read.csv(file.path("tier2", "harmonized_consumer_excretion_CLEAN.csv"),stringsAsFactors = F,na.strings =".") |> 
+dt <- read.csv(file.path("../tier2", "harmonized_consumer_excretion_CLEAN.csv"),stringsAsFactors = F,na.strings =".") |> 
   janitor::clean_names()
 glimpse(dt)
 
-strata_list <- readxl::read_excel(path = file.path("tier2", "strata_class.xlsx"),na=".") |> 
+strata_list <- readxl::read_excel(path = file.path("../tier2", "strata_class.xlsx"),na=".") |> 
   ### remove decimals from numbered sites
   mutate(site = str_remove(site, "\\.0$"),
          subsite_level1 = str_remove(subsite_level1, "\\.0$"),
@@ -61,10 +61,28 @@ dt <- dt %>%
 # na_count_per_column <- sapply(dt, function(x) sum(is.na(x)))
 # print(na_count_per_column)
 
+# look into outliers for project-species combinations -----------
+
+dt <- dt |> 
+  group_by(project, habitat) |> 
+  mutate(mean_dmperind = mean(dmperind_g_ind, na.rm = TRUE),  
+         sd_dmperind = sd(dmperind_g_ind, na.rm = TRUE),  
+         lower_bound = mean_dmperind - 5 * sd_dmperind,  
+         upper_bound = mean_dmperind + 5 * sd_dmperind,
+         outlier = dmperind_g_ind < lower_bound | dmperind_g_ind > upper_bound,
+         sharkray = grepl("\\bshark\\b|\\bray\\b", common_name, ignore.case = TRUE),
+         elasmo = class %in% c("Chondrichthyes", "Elasmobranchii")) |> 
+  ungroup() |> 
+  filter(!(outlier & sharkray & elasmo)) |> 
+  select(-mean_dmperind, -sd_dmperind, -lower_bound, -upper_bound, -outlier, -sharkray, -elasmo)#lose 251 data points
+
 # summarize data for plotting ---------------------------------------------
 glimpse(dt)
 
 dt_calcs <- dt |> 
+  group_by(project, habitat, year, month, site, subsite_level1, subsite_level2, subsite_level3, scientific_name) |>
+  mutate(max_size = max(dmperind_g_ind, na.rm = TRUE)) |> 
+  ungroup() |> 
   group_by(project, habitat, year, month, site, subsite_level1, subsite_level2, subsite_level3) |> 
   summarise(total_n_ug_hr_m = sum(nind_ug_hr * density_num_m, na.rm = TRUE),
             total_n_ug_hr_m2 = sum(nind_ug_hr * density_num_m2, na.rm = TRUE),
@@ -96,7 +114,6 @@ dt_calcs <- dt |>
             bm_ind_mean_nozeros = mean(dmperind_g_ind[dmperind_g_ind != 0], na.rm = TRUE),
             # bm_ind_cv = (bm_ind_sd/bm_ind_mean)*100,
             bm_ind_cv_nozeros = (bm_ind_sd_nozeros/bm_ind_mean_nozeros)*100,
-            n_spp = n_distinct(scientific_name[dmperind_g_ind != 0]),
             n_obs = n(),
             diet_algae_detritus_n = sum(diet_cat == "algae_detritus", na.rm = TRUE),
             diet_invert_n = sum(diet_cat == "invert", na.rm = TRUE),
@@ -107,14 +124,21 @@ dt_calcs <- dt |>
             prop_invert = diet_invert_n / n_obs,
             prop_algae_invert = diet_algae_invert_n / n_obs,
             prop_fish_invert = diet_fish_invert_n / n_obs,
-            prop_fish = diet_fish_n / n_obs) |>
-  ungroup() |> 
+            prop_fish = diet_fish_n / n_obs,
+            n_spp = n_distinct(scientific_name[dmperind_g_ind != 0]),
+            mean_max_community_size = mean(max_size)) |> 
+  ungroup() |>
   dplyr::select(-total_n_ug_hr_m, -total_n_ug_hr_m2, -total_n_ug_hr_m3,
                 -total_p_ug_hr_m, -total_p_ug_hr_m2, -total_p_ug_hr_m3,
                 -total_bm_m, -total_bm_m2, -total_bm_m3,
                 -n_obs,
                 -diet_algae_detritus_n, -diet_invert_n, -diet_algae_invert_n,
                 -diet_fish_invert_n, -diet_fish_n)
+
+# ### check to make sure mean max size makes sense
+# test <- dt_calcs |> 
+#   group_by(project, habitat) |> 
+#   summarize(mean_WeightMax = mean(max_size))
 
 ### check for NAs 
 na_count_per_column <- sapply(dt_calcs, function(x) sum(is.na(x)))
