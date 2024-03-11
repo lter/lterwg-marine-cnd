@@ -26,7 +26,7 @@ for(k in 1:nrow(harmonized_ids)){
   # Download file (but silence how chatty this function is)
   googledrive::with_drive_quiet(
     googledrive::drive_download(file = harmonized_ids[k, ]$id, overwrite = T,
-                                path = file.path("../tier2", harmonized_ids[k, ]$name)) )
+                                path = file.path("tier2", harmonized_ids[k, ]$name)) )
   
   # Print success message
   message("Downloaded file ", k, " of ", nrow(harmonized_ids))
@@ -35,11 +35,11 @@ for(k in 1:nrow(harmonized_ids)){
 rm(list = ls()) #cleans env
 
 ### read in clean excretion and strata data from google drive
-dt <- read.csv(file.path("../tier2", "harmonized_consumer_excretion_CLEAN.csv"),stringsAsFactors = F,na.strings =".") |> 
+dt <- read.csv(file.path("tier2", "harmonized_consumer_excretion_CLEAN.csv"),stringsAsFactors = F,na.strings =".") |> 
   janitor::clean_names()
 glimpse(dt)
 
-strata_list <- readxl::read_excel(path = file.path("../tier2", "strata_class.xlsx"),na=".") |> 
+strata_list <- readxl::read_excel(path = file.path("tier2", "strata_class.xlsx"),na=".") |> 
   ### remove decimals from numbered sites
   mutate(site = str_remove(site, "\\.0$"),
          subsite_level1 = str_remove(subsite_level1, "\\.0$"),
@@ -65,16 +65,17 @@ dt <- dt %>%
 
 dt <- dt |> 
   group_by(project, habitat) |> 
+  ### filtering out sharks and rays that are considered "biomass busters"
   mutate(mean_dmperind = mean(dmperind_g_ind, na.rm = TRUE),  
          sd_dmperind = sd(dmperind_g_ind, na.rm = TRUE),  
          lower_bound = mean_dmperind - 5 * sd_dmperind,  
          upper_bound = mean_dmperind + 5 * sd_dmperind,
+         ### +/- 5 SD cutoff... rest of sharks and rays included
          outlier = dmperind_g_ind < lower_bound | dmperind_g_ind > upper_bound,
          sharkray = grepl("\\bshark\\b|\\bray\\b", common_name, ignore.case = TRUE),
          elasmo = class %in% c("Chondrichthyes", "Elasmobranchii")) |> 
   ungroup() |> 
-  filter(!(outlier & sharkray & elasmo)) |> 
-  select(-mean_dmperind, -sd_dmperind, -lower_bound, -upper_bound, -outlier, -sharkray, -elasmo)#lose 251 data points
+  filter(!(outlier & sharkray & elasmo)) #lose 251 sharks and rays from MCR/PISCO datasets
 
 # summarize data for plotting ---------------------------------------------
 glimpse(dt)
@@ -136,13 +137,13 @@ dt_calcs <- dt |>
                 -diet_fish_invert_n, -diet_fish_n)
 
 # ### check to make sure mean max size makes sense
-# test <- dt_calcs |> 
-#   group_by(project, habitat) |> 
-#   summarize(mean_WeightMax = mean(max_size))
+# test <- dt_calcs |>
+#   group_by(project, habitat) |>
+#   summarize(mean_WeightMax = mean(mean_max_community_size))
 
 ### check for NAs 
-na_count_per_column <- sapply(dt_calcs, function(x) sum(is.na(x)))
-print(na_count_per_column) #dont understand NAs, but small fraction of dataset
+# na_count_per_column <- sapply(dt_calcs, function(x) sum(is.na(x)))
+# print(na_count_per_column) #dont understand NAs, but small fraction of dataset
 
 dt_calcs_clean <- dt_calcs |> 
   ### replace NAs with zeros in mean columns
@@ -175,7 +176,7 @@ dt_calcs_strata <- left_join(dt_calcs_clean,
                                     "subsite_level1", "subsite_level2",
                                     "subsite_level3")) |> 
   mutate(strata = if_else(is.na(ecoregion_habitat), site, ecoregion_habitat)) |> 
-  select(-ecoregion_habitat)
+  dplyr::select(-ecoregion_habitat)
 
 # na_count_per_column <- sapply(dt_calcs_strata, function(x) sum(is.na(x)))
 # print(na_count_per_column)
@@ -220,7 +221,7 @@ pisco_central <- dt |>
   mutate(group = subsite_level2,
          color = strata,
          units = 'm2',
-         projecthabitat = "CoastalCA-ocean-CENTRAL") #split pisco into central and southern
+         projecthabitat = "CoastalCA-ocean-CENTRAL")
 
 pisco_south <- dt |> 
   filter(projecthabitat == "CoastalCA-ocean",
@@ -228,7 +229,12 @@ pisco_south <- dt |>
   mutate(group = subsite_level2,
          color = strata,
          units = 'm2',
-         projecthabitat = "CoastalCA-ocean-SOUTH") #split pisco into central and southern
+         projecthabitat = "CoastalCA-ocean-SOUTH") |> 
+  group_by(subsite_level2, year) |> 
+  mutate(test = mean(total_n)) |>
+  ungroup() |> 
+  filter(!test > 75000) |> 
+  dplyr::select(-test)
 
 ### FCE-estuary
 fce <- dt |> 
@@ -276,7 +282,7 @@ sbc_reef <- dt |>
 ### VCR-estuary
 vcr <- dt |> 
   filter(projecthabitat == "VCR-estuary") |> 
-  mutate(group = site,
+  mutate(group = subsite_level1,
          color = strata,
          units = 'm2')
 
@@ -302,6 +308,7 @@ rm(all_objects, object_to_keep)
 #             mean_bm = mean(total_bm))
 
 dt <- plotting_dat_ready
+
 rm(plotting_dat_ready)
 
 #### export and write to the drive

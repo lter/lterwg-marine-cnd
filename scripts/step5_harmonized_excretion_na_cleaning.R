@@ -16,7 +16,7 @@ exc_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/dr
 rm(list = ls()) #cleans env
 
 ### read in data from google drive
-dt <- read.csv(file.path("../tier2", "harmonized_consumer_excretion.csv"),stringsAsFactors = F,na.strings =".") 
+dt <- read.csv(file.path("tier2", "harmonized_consumer_excretion.csv"),stringsAsFactors = F,na.strings =".") 
 glimpse(dt)
 
 # data manipulation -------------------------------------------------------
