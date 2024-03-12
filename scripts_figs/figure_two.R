@@ -22,6 +22,9 @@ dt <- read.csv(file.path("tier2", "harmonized_consumer_excretion_CLEAN_summarize
   mutate(sdate = as.Date(sdate))
 glimpse(dt)
 
+test <- dt |> 
+  filter(project == "MCR")
+
 ###########################################################################
 # nitrogen supply ~ space and time (z-scored by project and strata) -------
 ###########################################################################
@@ -39,9 +42,10 @@ dt |>
   summarise(mean_total_nitrogen_z = mean(mean_nitrogen_z), na.rm = TRUE,
             sd_total_nitrogen_z = mean(sd_nitrogen_z), na.rm = TRUE) |>
   ungroup() |>
-  unite(p_strata, c(projecthabitat, color), sep = "-", remove = FALSE) |> #only needed for all together figure
+  unite(p_strata, c(projecthabitat, color), sep = "-", remove = FALSE) |>
+  # unite(year_group, c(year, group), sep = "-", remove = FALSE) |> 
   ggplot(aes(x = mean_total_nitrogen_z, y = sd_total_nitrogen_z, 
-             color = p_strata, label = year)) + #change label to only year for facet_wrapped plot
+             color = p_strata, label = year)) + 
   geom_point(alpha = 0.9, size = 4) +
   geom_text_repel() +
   geom_smooth(aes(group = 1), method = "rlm", se = FALSE, color = "black") +
@@ -56,11 +60,11 @@ dt |>
         axis.title = element_text(face = "bold"),
         legend.position = "right")
 
-ggsave(
-  filename = "figure2a_z_nitrogen.png",
-  path = "plots/figure2/zscore/nitrogen/",
-  width = 15, height = 9
-)
+# ggsave(
+#   filename = "figure2a_z_nitrogen.png",
+#   path = "plots/figure2/zscore/nitrogen/",
+#   width = 15, height = 9
+# )
 
 dt %>%
   filter(projecthabitat %in% c("FCE-estuary", "MCR-ocean", "SBC-ocean")) %>%
