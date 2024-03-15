@@ -60,12 +60,12 @@ nitrogen_supply_smoothed <- function(f) {
 
 nitrogen_supply_smoothed_fig1 <- map(unique(dt$projecthabitat), nitrogen_supply_smoothed)
 
-# ggsave(
-#   filename = "nitrogen_supply_smoothed_fig1.pdf",
-#   path = "plots/figure1/nitrogen/",
-#   plot = marrangeGrob(nitrogen_supply_smoothed_fig1, nrow = 1, ncol = 1),
-#   width = 15, height = 9
-# )
+ggsave(
+  filename = "nitrogen_supply_smoothed_fig1.pdf",
+  path = "plots/figure1/nitrogen/",
+  plot = marrangeGrob(nitrogen_supply_smoothed_fig1, nrow = 1, ncol = 1),
+  width = 15, height = 9
+)
 
 ###########################################################################
 # areal nitrogen supply ~ space and time with strata boxplot --------------
@@ -93,12 +93,12 @@ nitrogen_supply_boxplot <- function(f) {
 # Generate boxplot figures for each projecthabitat
 nitrogen_supply_boxplot_fig1 <- map(unique(dt$projecthabitat), nitrogen_supply_boxplot)
 
-# ggsave(
-#   filename = "nitrogen_supply_boxplot_fig1.pdf",
-#   path = "plots/figure1/nitrogen/",
-#   plot = marrangeGrob(nitrogen_supply_boxplot_fig1 , nrow = 1, ncol = 1),
-#   width = 15, height = 9
-# )
+ggsave(
+  filename = "nitrogen_supply_boxplot_fig1.pdf",
+  path = "plots/figure1/nitrogen/",
+  plot = marrangeGrob(nitrogen_supply_boxplot_fig1 , nrow = 1, ncol = 1),
+  width = 15, height = 9
+)
 
 ###########################################################################
 ###########################################################################
@@ -138,12 +138,12 @@ phosphorus_supply_smoothed <- function(f) {
 
 phosphorus_supply_smoothed_fig1 <- map(unique(dt$projecthabitat), phosphorus_supply_smoothed)
 
-# ggsave(
-#   filename = "phosphorus_supply_smoothed_fig1.pdf",
-#   path = "plots/figure1/phosphorus/",
-#   plot = marrangeGrob(phosphorus_supply_smoothed_fig1, nrow = 1, ncol = 1),
-#   width = 15, height = 9
-# )
+ggsave(
+  filename = "phosphorus_supply_smoothed_fig1.pdf",
+  path = "plots/figure1/phosphorus/",
+  plot = marrangeGrob(phosphorus_supply_smoothed_fig1, nrow = 1, ncol = 1),
+  width = 15, height = 9
+)
 
 ###########################################################################
 # areal phosphorus supply ~ space and time with strata boxplot ------------
@@ -171,12 +171,12 @@ phosphorus_supply_boxplot <- function(f) {
 # Generate boxplot figures for each projecthabitat
 phosphorus_supply_boxplot_fig1 <- map(unique(dt$projecthabitat), phosphorus_supply_boxplot)
 
-# ggsave(
-#   filename = "phosphorus_supply_boxplot_fig1.pdf",
-#   path = "plots/figure1/phosphorus/",
-#   plot = marrangeGrob(phosphorus_supply_boxplot_fig1, nrow = 1, ncol = 1),
-#   width = 15, height = 9
-# )
+ggsave(
+  filename = "phosphorus_supply_boxplot_fig1.pdf",
+  path = "plots/figure1/phosphorus/",
+  plot = marrangeGrob(phosphorus_supply_boxplot_fig1, nrow = 1, ncol = 1),
+  width = 15, height = 9
+)
 
 
 ###########################################################################
@@ -217,12 +217,12 @@ total_biomass_smoothed <- function(f) {
 
 total_biomass_smoothed_fig1 <- map(unique(dt$projecthabitat), total_biomass_smoothed)
 
-# ggsave(
-#   filename = "total_biomass_smoothed_fig1.pdf",
-#   path = "plots/figure1/biomass/",
-#   plot = marrangeGrob(total_biomass_smoothed_fig1, nrow = 1, ncol = 1),
-#   width = 15, height = 9
-# )
+ggsave(
+  filename = "total_biomass_smoothed_fig1.pdf",
+  path = "plots/figure1/biomass/",
+  plot = marrangeGrob(total_biomass_smoothed_fig1, nrow = 1, ncol = 1),
+  width = 15, height = 9
+)
 
 ###########################################################################
 # total biomass ~ space and time with strata boxplot ----------------------
@@ -250,11 +250,11 @@ total_biomass_boxplot <- function(f) {
 # Generate boxplot figures for each projecthabitat
 total_biomass_boxplot_fig1 <- map(unique(dt$projecthabitat), total_biomass_boxplot)
 
-# ggsave(
-#   filename = "total_biomass_boxplot_fig1.pdf",
-#   path = "plots/figure1/biomass/",
-#   plot = marrangeGrob(total_biomass_boxplot_fig1, nrow = 1, ncol = 1),
-#   width = 15, height = 9)
+ggsave(
+  filename = "total_biomass_boxplot_fig1.pdf",
+  path = "plots/figure1/biomass/",
+  plot = marrangeGrob(total_biomass_boxplot_fig1, nrow = 1, ncol = 1),
+  width = 15, height = 9)
 
 ###########################################################################
 ###########################################################################
@@ -297,12 +297,12 @@ size_structure_smoothed <- function(f) {
 
 size_structure_smoothed_fig1 <- map(unique(dt_size_structure$projecthabitat), size_structure_smoothed)
 
-# ggsave(
-#   filename = "size_structure_smoothed_fig1.pdf",
-#   path = "plots/figure1/size structure/",
-#   plot = marrangeGrob(size_structure_smoothed_fig1, nrow = 1, ncol = 1),
-#   width = 15, height = 9
-# )
+ggsave(
+  filename = "size_structure_smoothed_fig1.pdf",
+  path = "plots/figure1/size structure/",
+  plot = marrangeGrob(size_structure_smoothed_fig1, nrow = 1, ncol = 1),
+  width = 15, height = 9
+)
 
 ###########################################################################
 # size structure ~ space and time with strata boxplot ---------------------
@@ -330,11 +330,11 @@ size_structure_boxplot <- function(f) {
 # Generate boxplot figures for each projecthabitat
 size_structure_boxplot_fig1 <- map(unique(dt_size_structure$projecthabitat), size_structure_boxplot)
 
-# ggsave(
-#   filename = "size_structure_boxplot_fig1.pdf",
-#   path = "plots/figure1/size structure/",
-#   plot = marrangeGrob(size_structure_boxplot_fig1, nrow = 1, ncol = 1),
-#   width = 15, height = 9)
+ggsave(
+  filename = "size_structure_boxplot_fig1.pdf",
+  path = "plots/figure1/size structure/",
+  plot = marrangeGrob(size_structure_boxplot_fig1, nrow = 1, ncol = 1),
+  width = 15, height = 9)
 
 ###########################################################################
 ###########################################################################
@@ -374,12 +374,12 @@ diet_prop_stacked_bar <- function(f) {
 
 diet_prop_stacked_bar_fig1 <- map(unique(dt_diet_prop$projecthabitat), diet_prop_stacked_bar)
 
-# ggsave(
-#   filename = "diet_prop_stacked_bar_fig1.pdf",
-#   path = "plots/figure1/",
-#   plot = marrangeGrob(diet_prop_stacked_bar_fig1, nrow = 1, ncol = 1),
-#   width = 15, height = 9
-# )
+ggsave(
+  filename = "diet_prop_stacked_bar_fig1.pdf",
+  path = "plots/figure1/",
+  plot = marrangeGrob(diet_prop_stacked_bar_fig1, nrow = 1, ncol = 1),
+  width = 15, height = 9
+)
 
 ###########################################################################
 ###########################################################################
@@ -405,11 +405,11 @@ dt |>
         axis.text = element_text(face = "bold"),
         axis.title = element_text(face = "bold"))
 
-# ggsave(
-#   filename = "raw_total_nitrogen_freq.png",
-#   path = "plots/figure1/histogram/raw/",
-#   width = 15, height = 9
-# )
+ggsave(
+  filename = "raw_total_nitrogen_freq.png",
+  path = "plots/figure1/histogram/raw/",
+  width = 15, height = 9
+)
 
 ### log-transformed nitrogen histogram
 dt |> 
@@ -426,11 +426,11 @@ dt |>
         axis.text = element_text(face = "bold"),
         axis.title = element_text(face = "bold"))
 
-# ggsave(
-#   filename = "log_total_nitrogen_freq.png",
-#   path = "plots/figure1/histogram/log_transformed/",
-#   width = 15, height = 9
-# )
+ggsave(
+  filename = "log_total_nitrogen_freq.png",
+  path = "plots/figure1/histogram/log_transformed/",
+  width = 15, height = 9
+)
 
 ###########################################################################
 # phosphorus: raw & log-transformed ---------------------------------------
@@ -450,11 +450,11 @@ dt |>
         axis.text = element_text(face = "bold"),
         axis.title = element_text(face = "bold"))
 
-# ggsave(
-#   filename = "raw_total_phosphorus_freq.png",
-#   path = "plots/figure1/histogram/raw/",
-#   width = 15, height = 9
-# )
+ggsave(
+  filename = "raw_total_phosphorus_freq.png",
+  path = "plots/figure1/histogram/raw/",
+  width = 15, height = 9
+)
 
 ### log-transformed phosphorus histogram
 dt |> 
@@ -470,11 +470,11 @@ dt |>
         axis.text = element_text(face = "bold"),
         axis.title = element_text(face = "bold"))
 
-# ggsave(
-#   filename = "log_total_phosphorus_freq.png",
-#   path = "plots/figure1/histogram/log_transformed/",
-#   width = 15, height = 9
-# )
+ggsave(
+  filename = "log_total_phosphorus_freq.png",
+  path = "plots/figure1/histogram/log_transformed/",
+  width = 15, height = 9
+)
 
 
 ###########################################################################
@@ -495,11 +495,11 @@ dt |>
         axis.text = element_text(face = "bold"),
         axis.title = element_text(face = "bold"))
 
-# ggsave(
-#   filename = "raw_total_biomass_freq.png",
-#   path = "plots/figure1/histogram/raw/",
-#   width = 15, height = 9
-# )
+ggsave(
+  filename = "raw_total_biomass_freq.png",
+  path = "plots/figure1/histogram/raw/",
+  width = 15, height = 9
+)
 
 ### log-transformed total biomass histogram
 dt |> 
@@ -515,11 +515,11 @@ dt |>
         axis.text = element_text(face = "bold"),
         axis.title = element_text(face = "bold"))
 
-# ggsave(
-#   filename = "log_total_biomass_freq.png",
-#   path = "plots/figure1/histogram/log_transformed/",
-#   width = 15, height = 9
-# )
+ggsave(
+  filename = "log_total_biomass_freq.png",
+  path = "plots/figure1/histogram/log_transformed/",
+  width = 15, height = 9
+)
 
 ###########################################################################
 # size structure: raw & log-transformed ---------------------------------------
@@ -539,11 +539,11 @@ dt |>
         axis.text = element_text(face = "bold"),
         axis.title = element_text(face = "bold"))
 
-# ggsave(
-#   filename = "raw_size_structure_freq.png",
-#   path = "plots/figure1/histogram/raw/",
-#   width = 15, height = 9
-# )
+ggsave(
+  filename = "raw_size_structure_freq.png",
+  path = "plots/figure1/histogram/raw/",
+  width = 15, height = 9
+)
 
 ### log-transformed size structure histogram
 dt |> 
@@ -559,11 +559,11 @@ dt |>
         axis.text = element_text(face = "bold"),
         axis.title = element_text(face = "bold"))
 
-# ggsave(
-#   filename = "log_size_structure_freq.png",
-#   path = "plots/figure1/histogram/log_transformed/",
-#   width = 15, height = 9
-# )
+ggsave(
+  filename = "log_size_structure_freq.png",
+  path = "plots/figure1/histogram/log_transformed/",
+  width = 15, height = 9
+)
 # 
 # ###########################################################################
 # ###########################################################################

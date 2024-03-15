@@ -34,6 +34,7 @@ for(k in 1:nrow(harmonized_ids)){
 
 rm(list = ls()) #cleans env
 
+
 ### read in clean excretion and strata data from google drive
 dt <- read.csv(file.path("tier2", "harmonized_consumer_excretion_CLEAN.csv"),stringsAsFactors = F,na.strings =".") |> 
   janitor::clean_names()
@@ -58,8 +59,8 @@ dt <- dt %>%
          subsite_level3 = replace_na(subsite_level3, "Not Available"))
 
 ### check to see NA fixes incorporated
-# na_count_per_column <- sapply(dt, function(x) sum(is.na(x)))
-# print(na_count_per_column)
+na_count_per_column <- sapply(dt, function(x) sum(is.na(x)))
+print(na_count_per_column)
 
 # look into outliers for project-species combinations -----------
 
@@ -178,8 +179,8 @@ dt_calcs_strata <- left_join(dt_calcs_clean,
   mutate(strata = if_else(is.na(ecoregion_habitat), site, ecoregion_habitat)) |> 
   dplyr::select(-ecoregion_habitat)
 
-# na_count_per_column <- sapply(dt_calcs_strata, function(x) sum(is.na(x)))
-# print(na_count_per_column)
+na_count_per_column <- sapply(dt_calcs_strata, function(x) sum(is.na(x)))
+print(na_count_per_column)
 
 # generate project-habitat + date column ----------------------------------
 

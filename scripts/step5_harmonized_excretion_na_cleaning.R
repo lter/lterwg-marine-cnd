@@ -26,6 +26,10 @@ dt_wide <- dt |>
               values_from = measurement_value) 
 glimpse(dt_wide)  
 
+# FCE hydroyear to year fix -----------------------------------------------
+dt_wide <- dt_wide |> 
+  mutate(year = if_else(project == "FCE" & month < 10, year + 1, year))
+
 ### check for NAs
 na_count_per_column <- sapply(dt_wide, function(x) sum(is.na(x)))
 print(na_count_per_column) #1002 observations of NAs in dmperind_g/ind
@@ -61,7 +65,7 @@ cce_spp_avg <- dt_wide1 |>
 dt_wide2 <- dt_wide1 |> 
   left_join(cce_spp_avg, by = "scientific_name") |> 
   mutate(`dmperind_g/ind` = if_else(project == "CCE" & is.na(`dmperind_g/ind`), avg_dmperind, `dmperind_g/ind`)) |> 
-  select(-avg_dmperind)  #remove the temporary avg_dmperind column
+  dplyr::select(-avg_dmperind)  #remove the temporary avg_dmperind column
 
 ### re-check to ensure NAs are gone
 na_count_per_column <- sapply(dt_wide2, function(x) sum(is.na(x)))
