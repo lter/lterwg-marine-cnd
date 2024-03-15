@@ -25,18 +25,20 @@ dt <- read.csv(file.path("tier2", "harmonized_consumer_excretion_CLEAN_summarize
   mutate(sdate = as.Date(sdate))
 glimpse(dt)
 
+### update sites with new "color" according to how Deron thinks we should group
+
 fce_plotting_annual <- dt |>
   filter(projecthabitat == "FCE-estuary") |>
-  unite(color2, c(site, subsite_level1), sep = "", remove = FALSE) |> 
+  unite(color2, c(site, subsite_level1), sep = "-", remove = FALSE) |> 
   mutate(year = if_else(project == "FCE" & month < 10, year - 1, year))
   
 mcr_plotting_annual <- dt |>
   filter(projecthabitat == "MCR-ocean") |>
-  unite(color2, c(subsite_level1, site), sep = "", remove = FALSE)
+  unite(color2, c(subsite_level1, site), sep = "-", remove = FALSE)
 
 sbc_plotting_annual <- dt |>
   filter(projecthabitat == "SBC-ocean") |>
-  mutate(color2 = site)
+  unite(color2, c(site, color), sep = "-", remove = FALSE)
 
 dt <- bind_rows(fce_plotting_annual, mcr_plotting_annual, sbc_plotting_annual)
 
@@ -82,11 +84,11 @@ dt |>
         axis.title = element_text(face = "bold"),
         legend.position = "right")
 
-# ggsave(
-#   filename = "figure2a_z_nitrogen.png",
-#   path = "plots/figure2/zscore/nitrogen/",
-#   width = 15, height = 9
-# )
+ggsave(
+  filename = "figure2a_z_nitrogen.png",
+  path = "plots/figure2/zscore/nitrogen/",
+  width = 15, height = 9
+)
 
 ###########################################################################
 # nitrogen supply ~ space (raw by project and strata)-----------------
@@ -124,11 +126,11 @@ dt |>
                     axis.title = element_text(face = "bold"),
                     legend.position = "right")
 
-# ggsave(
-#   filename = "figure2b_z_nitrogen.png",
-#   path = "plots/figure2/zscore/nitrogen/",
-#   width = 15, height = 9
-# )
+ggsave(
+  filename = "figure2b_z_nitrogen.png",
+  path = "plots/figure2/zscore/nitrogen/",
+  width = 15, height = 9
+)
 
 ###########################################################################
 ###########################################################################
@@ -172,11 +174,11 @@ dt |>
         axis.title = element_text(face = "bold"),
         legend.position = "right")
 
-# ggsave(
-#   filename = "figure2a_z_phosphorus.png",
-#   path = "plots/figure2/zscore/phosphorus/",
-#   width = 15, height = 9
-# )
+ggsave(
+  filename = "figure2a_z_phosphorus.png",
+  path = "plots/figure2/zscore/phosphorus/",
+  width = 15, height = 9
+)
 
 ###########################################################################
 # phosphorus supply ~ space (raw by project and strata)-----------------
@@ -214,11 +216,11 @@ dt |>
         axis.title = element_text(face = "bold"),
         legend.position = "right")
 
-# ggsave(
-#   filename = "figure2b_z_phosphorus.png",
-#   path = "plots/figure2/zscore/phosphorus/",
-#   width = 15, height = 9
-# )
+ggsave(
+  filename = "figure2b_z_phosphorus.png",
+  path = "plots/figure2/zscore/phosphorus/",
+  width = 15, height = 9
+)
 
 
 ###########################################################################
@@ -263,11 +265,11 @@ dt |>
         axis.title = element_text(face = "bold"),
         legend.position = "right")
 
-# ggsave(
-#   filename = "figure2a_z_biomass.png",
-#   path = "plots/figure2/zscore/biomass/",
-#   width = 15, height = 9
-# )
+ggsave(
+  filename = "figure2a_z_biomass.png",
+  path = "plots/figure2/zscore/biomass/",
+  width = 15, height = 9
+)
 
 ###########################################################################
 # biomass ~ space (raw by project and strata)-----------------
@@ -305,11 +307,11 @@ dt |>
         axis.title = element_text(face = "bold"),
         legend.position = "right")
 
-# ggsave(
-#   filename = "figure2b_z_biomass.png",
-#   path = "plots/figure2/zscore/biomass/",
-#   width = 15, height = 9
-# )
+ggsave(
+  filename = "figure2b_z_biomass.png",
+  path = "plots/figure2/zscore/biomass/",
+  width = 15, height = 9
+)
 
 
 ###########################################################################
@@ -354,11 +356,11 @@ dt |>
         axis.title = element_text(face = "bold"),
         legend.position = "right")
 
-# ggsave(
-#   filename = "figure2a_z_MaxSize.png",
-#   path = "plots/figure2/zscore/MaxSize/",
-#   width = 15, height = 9
-# )
+ggsave(
+  filename = "figure2a_z_MaxSize.png",
+  path = "plots/figure2/zscore/MaxSize/",
+  width = 15, height = 9
+)
 
 ###########################################################################
 # MaxSize ~ space (raw by project and strata)-----------------
@@ -396,8 +398,8 @@ dt |>
         axis.title = element_text(face = "bold"),
         legend.position = "right")
 
-# ggsave(
-#   filename = "figure2b_z_MaxSize.png",
-#   path = "plots/figure2/zscore/MaxSize/",
-#   width = 15, height = 9
-# )
+ggsave(
+  filename = "figure2b_z_MaxSize.png",
+  path = "plots/figure2/zscore/MaxSize/",
+  width = 15, height = 9
+)
