@@ -26,21 +26,51 @@ dt <- read.csv(file.path("tier2", "harmonized_consumer_excretion_CLEAN_summarize
 glimpse(dt)
 
 ### update sites with new "color" according to how Deron thinks we should group
+cce_plotting_annual <- dt |> 
+  filter(projecthabitat == "CCE-oceanic") |> 
+  unite(color2, c(site, color), sep = "-", remove = FALSE)
+
+pisco_central_plotting_annual <- dt |> 
+  filter(projecthabitat == "CoastalCA-ocean-CENTRAL") |> 
+  unite(color2, c(subsite_level2, color), sep = "-", remove = FALSE)
+
+pisco_south_plotting_annual <- dt |> 
+  filter(projecthabitat == "CoastalCA-ocean-SOUTH") |> 
+  unite(color2, c(subsite_level2, color), sep = "-", remove = FALSE)
+
+sbc_beach_plotting_annual <- dt |> 
+  filter(projecthabitat == "SBC-beach") |> 
+  unite(color2, c(site, color), sep = "-", remove = FALSE)
+
+nga_plotting_annual <- dt |> 
+  filter(projecthabitat == "NGA-oceanic") |> 
+  unite(color2, c(site, color), sep = "-", remove = FALSE)
+
+pie_plotting_annual <- dt |> 
+  filter(projecthabitat == "PIE-estuary") |> 
+  mutate(color2 = site)
+
+vcr_plotting_annual <- dt |> 
+  filter(projecthabitat == "VCR-estuary") |> 
+  unite(color2, c(subsite_level1, color), sep = "-", remove = FALSE)
 
 fce_plotting_annual <- dt |>
   filter(projecthabitat == "FCE-estuary") |>
   unite(color2, c(site, subsite_level1), sep = "-", remove = FALSE) |> 
   mutate(year = if_else(project == "FCE" & month < 10, year - 1, year))
-  
+
 mcr_plotting_annual <- dt |>
   filter(projecthabitat == "MCR-ocean") |>
   unite(color2, c(subsite_level1, site), sep = "-", remove = FALSE)
 
-sbc_plotting_annual <- dt |>
+sbc_ocean_plotting_annual <- dt |>
   filter(projecthabitat == "SBC-ocean") |>
   unite(color2, c(site, color), sep = "-", remove = FALSE)
 
-dt <- bind_rows(fce_plotting_annual, mcr_plotting_annual, sbc_plotting_annual)
+dt <- bind_rows(cce_plotting_annual, pisco_central_plotting_annual, pisco_south_plotting_annual,
+                fce_plotting_annual, mcr_plotting_annual, sbc_ocean_plotting_annual,
+                sbc_beach_plotting_annual, nga_plotting_annual, pie_plotting_annual, 
+                vcr_plotting_annual)
 
 ###########################################################################
 ###########################################################################
