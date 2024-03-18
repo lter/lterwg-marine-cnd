@@ -5,6 +5,8 @@ label_mapping <- data.frame(
                  "PIE", "VCR") # Replace with actual labels
 )
 
+cols
+
 model_results <- dt |> 
   group_by(projecthabitat, color2, year) |> 
   mutate(mean_nitrogen = mean(total_n, na.rm = TRUE),
@@ -44,3 +46,8 @@ model_results |>
         strip.text = element_text(size = 14),
         legend.text = element_text(size = 12))
 
+ggsave(
+  filename = "slope_figtwo_nitrogen.tiff",
+  path = "plots/",
+  width = 21, height = 7
+)

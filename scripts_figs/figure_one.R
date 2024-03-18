@@ -9,7 +9,7 @@
 ### load necessary libraries
 ### install.packages("librarian")
 librarian::shelf(tidyverse, googledrive, readxl, taxize, stringr, gridExtra, 
-                 MASS, ggrepel, purrr)
+                 MASS, ggrepel, purrr, ggtext)
 
 ### set google drive path
 exc_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1VakpcnFVckAYNggv_zNyfDRfkcGTjZxX")) |> 
