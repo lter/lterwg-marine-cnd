@@ -143,8 +143,8 @@ dt_calcs <- dt |>
 #   summarize(mean_WeightMax = mean(mean_max_community_size))
 
 ### check for NAs 
-# na_count_per_column <- sapply(dt_calcs, function(x) sum(is.na(x)))
-# print(na_count_per_column) #dont understand NAs, but small fraction of dataset
+na_count_per_column <- sapply(dt_calcs, function(x) sum(is.na(x)))
+print(na_count_per_column) #dont understand NAs, but small fraction of dataset
 
 dt_calcs_clean <- dt_calcs |> 
   ### replace NAs with zeros in mean columns
@@ -160,8 +160,8 @@ dt_calcs_clean <- dt_calcs |>
          bm_ind_cv_nozeros = 0)
 glimpse(dt_calcs_clean)
 
-# na_count_per_column <- sapply(dt_calcs_clean, function(x) sum(is.na(x)))
-# print(na_count_per_column)
+na_count_per_column <- sapply(dt_calcs_clean, function(x) sum(is.na(x)))
+print(na_count_per_column)
 
 # join strata and prepare data for plotting -------------------------------
 
@@ -190,8 +190,8 @@ dt_calcs_strata_1 <- dt_calcs_strata |>
   ### create date columns for timeseries plotting
   mutate(sdate = ymd(paste(year, month, "01", sep = "-")))
 
-# na_count_per_column <- sapply(dt_calcs_strata_1, function(x) sum(is.na(x)))
-# print(na_count_per_column)
+na_count_per_column <- sapply(dt_calcs_strata_1, function(x) sum(is.na(x)))
+print(na_count_per_column)
 
 ### tidy up environment
 dt <- dt_calcs_strata_1
@@ -298,8 +298,8 @@ object_to_keep <- "plotting_dat_ready" #specify the object you want to keep
 rm(list = all_objects[all_objects != object_to_keep])
 rm(all_objects, object_to_keep)
 
-# na_count_per_column <- sapply(plotting_dat_ready, function(x) sum(is.na(x)))
-# print(na_count_per_column)
+na_count_per_column <- sapply(plotting_dat_ready, function(x) sum(is.na(x)))
+print(na_count_per_column)
 
 ### check out data to see if anything jumps out
 # test <- plotting_dat_ready |> 
@@ -310,7 +310,7 @@ rm(all_objects, object_to_keep)
 
 dt <- plotting_dat_ready
 
-rm(plotting_dat_ready)
+rm(plotting_dat_ready, na_count_per_column)
 
 #### export and write to the drive
 # Export locally

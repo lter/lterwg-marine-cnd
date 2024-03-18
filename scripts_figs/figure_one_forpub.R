@@ -84,11 +84,11 @@ dt |>
         legend.title = element_text(face = "bold", size = 14),
         legend.text = element_text(face = "bold", size = 14))
 
-ggsave(
-  filename = "figure1_nsupply.tiff",
-  path = "plots/",
-  width = 21, height = 7
-)
+# ggsave(
+#   filename = "figure1_nsupply.tiff",
+#   path = "plots/",
+#   width = 21, height = 7
+# )
 
 
 ###########################################################################
@@ -129,11 +129,11 @@ dt |>
         legend.title = element_text(face = "bold", size = 14),
         legend.text = element_text(face = "bold", size = 14))
 
-ggsave(
-  filename = "figure1_psupply.tiff",
-  path = "plots/",
-  width = 21, height = 7
-)
+# ggsave(
+#   filename = "figure1_psupply.tiff",
+#   path = "plots/",
+#   width = 21, height = 7
+# )
 
 
 ###########################################################################
@@ -174,11 +174,11 @@ dt |>
         legend.title = element_text(face = "bold", size = 14),
         legend.text = element_text(face = "bold", size = 14))
 
-ggsave(
-  filename = "figure1_bm.tiff",
-  path = "plots/",
-  width = 21, height = 7
-)
+# ggsave(
+#   filename = "figure1_bm.tiff",
+#   path = "plots/",
+#   width = 21, height = 7
+# )
 
 ###########################################################################
 # SIZE STRUCTURE --------------------------------------------------------------
@@ -219,11 +219,11 @@ dt |>
         legend.title = element_text(face = "bold", size = 14),
         legend.text = element_text(face = "bold", size = 14))
 
-ggsave(
-  filename = "figure1_ss.tiff",
-  path = "plots/",
-  width = 21, height = 7
-)
+# ggsave(
+#   filename = "figure1_ss.tiff",
+#   path = "plots/",
+#   width = 21, height = 7
+# )
 
 
 ###########################################################################
@@ -241,8 +241,12 @@ dt |>
   left_join(label_mapping, by = "projecthabitat") |> 
   left_join(habitat_mapping, by = "color") |> 
   filter(Project %in% c('FCE', 'MCR', 'SBC-Ocean')) |> 
+  ### testing ways to make raw values work: start
+  # group_by(Project, year, color) |>
+  # mutate(mean_n = mean(total_n)) |> 
+  ### test ways to make raw values work: end
   ggplot(aes(x = total_n, fill = Project)) +
-  geom_density(alpha = 0.5) +  
+  geom_density(alpha = 0.5) +
   # labs(x = "Areal Nitrogen Supply (ug/hr/m_m2_m3)",
   #      y = "Frequency") +
   scale_fill_manual(values = cols) +
@@ -256,11 +260,11 @@ dt |>
         legend.title = element_text(face = "bold", size = 14),
         legend.text = element_text(face = "bold", size = 14))
 
-ggsave(
-  filename = "raw_total_nitrogen_freq.tiff",
-  path = "plots/figure1/histogram/raw/",
-  width = 7, height = 7
-)
+# ggsave(
+#   filename = "raw_total_nitrogen_freq.tiff",
+#   path = "plots/figure1/histogram/raw/",
+#   width = 7, height = 7
+# )
 
 ### log-transformed nitrogen histogram
 dt |> 
@@ -282,11 +286,11 @@ dt |>
         legend.title = element_text(face = "bold", size = 14),
         legend.text = element_text(face = "bold", size = 14))
 
-ggsave(
-  filename = "log_total_nitrogen_freq.tiff",
-  path = "plots/figure1/histogram/log_transformed/",
-  width = 7, height = 7
-)
+# ggsave(
+#   filename = "log_total_nitrogen_freq.tiff",
+#   path = "plots/figure1/histogram/log_transformed/",
+#   width = 7, height = 7
+# )
 
 ###########################################################################
 # phosphorus: raw & log-transformed ---------------------------------------
