@@ -566,23 +566,6 @@ expand_VCR_biomass_new_col <- vcr_d2 %>%
                 scientific_name = ifelse(is.na(scientific_name), "Gerreidae", scientific_name)) #fill in w real species so we dont lose true zeros in dataset
 glimpse(expand_VCR_biomass_new_col) #missing small # of ind_bio estimates
 
-# ###calculate avg species ind_biom
-# nga_sp_avg_ind_bio <- expand_NGA_biomass_new_col |> 
-#   filter(ind_bio != 0) |> 
-#   group_by(scientific_name) |> 
-#   summarize(avg_bio = mean(ind_bio))
-
-# ###replace zeros with average and rename similar to mcr dataset
-# expand_NGA_biomass_new_col <- expand_NGA_biomass_new_col |> 
-#   mutate(count = count_num) |> 
-#   dplyr::select(-count_num) |> 
-#   left_join(nga_sp_avg_ind_bio, by = "scientific_name") |> 
-#   mutate(ind_bio = ifelse(ind_bio == 0, avg_bio, ind_bio),
-#          wetmass_g = `wetmass_mg/m3`*0.001,
-#          count_num = `density_num/m3`) |> 
-#   dplyr::select(-avg_bio, -`wetmass_mg/m3`, `density_num/m3`)
-glimpse(expand_VCR_biomass_new_col)
-
 ###zero-fill the data
 vcr_zerofill <- expand_VCR_biomass_new_col |> 
   complete(nesting(scientific_name, species, sp_code),
@@ -591,6 +574,16 @@ vcr_zerofill <- expand_VCR_biomass_new_col |>
            fill = list(count_num = 0, wetmass_g = 0, ind_bio = 0,
                        `density_num/m2` = 0, `wetmass/m2` = 0,
                        length_cm = NA))
+glimpse(vcr_zerofill)
+
+### check to see if we need to remove south bay bare sites after 2017 according to Max C
+# test <- vcr_zerofill |> 
+#   filter(year > 2017) |> 
+#   mutate(rm = paste(site, subsite_level1, sep = "_"))
+# unique(test$rm)
+
+### nope, zero-fill accounted for missing data 2017 and after at South Bay Bare Sites
+
 
 ###join with species list
 vcr_diet <- species_list |> 
