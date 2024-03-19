@@ -54,13 +54,9 @@ dt |>
   left_join(label_mapping, by = "projecthabitat") |> 
   left_join(habitat_mapping, by = "color") |> 
   filter(Project %in% c("FCE", "MCR", "SBC-Ocean")) |> 
-  # mutate(Project = factor(Project, levels = c("Bay", "Riverine", "Back Reef", "Fore Reef",
-  #                                             "Fringing Reef", "Marine Protected Area", "Reference"))) |> 
   group_by(Project, units, sdate, year, month, Habitat, group) |> 
   summarise(mean_total_n = mean(total_n, na.rm = TRUE)) |> 
-  ungroup() |>  
-  ### code below sets stage to map() plot across all sites
-  # filter(projecthabitat == f) |> 
+  ungroup() |>
   ggplot(aes(x = sdate, y = mean_total_n, group = group)) +
   geom_line(alpha = 0.4, color = 'black') +
   ### separates the aesthetics of the smoothing term from the actual sites being plotted
@@ -70,26 +66,31 @@ dt |>
   theme_classic() +
   facet_wrap(~Project, scales = "free") +
   theme(strip.background = element_blank(),
-        strip.text = element_text(face = "bold", colour = "black", size = 24)) +
-  labs(x = 'Date',
-       y = 'Nitrogen Supply') +
+        strip.text = element_blank()) +
+  # labs(x = 'Date',
+  #      y = 'Nitrogen Supply') +
   scale_x_date(date_breaks = '1 year', date_labels = "%Y") + #adds all years to x axis for ease of interpetations
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        panel.background = element_rect(fill = "white"),
+  theme(panel.background = element_rect(fill = "white"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.title.y = element_blank(),
+        # axis.text.y = element_blank(),
         axis.line = element_line("black"),
         axis.text = element_text(face = "bold", size = 14),
-        axis.title.y = element_text(face = "bold", size = 24),
-        axis.title = element_text(face = "bold", size = 14),
-        legend.title.align = 0.5,
-        legend.title = element_text(face = "bold", size = 14),
-        legend.text = element_text(face = "bold", size = 14))
+        legend.position = "none")
+# axis.title.y = element_text(face = "bold", size = 28),
+# axis.title = element_text(face = "bold", size = 28),
+# legend.title.align = 0.5,
+# legend.title = element_text(face = "bold", size = 36, hjust = 0.5),
+# legend.text = element_text(face = "bold", size = 36),
+# legend.position = "bottom")
+# plot.title = element_text(face = "bold", size = 48, hjust = 0.5))
 
-# ggsave(
-#   filename = "figure1_nsupply.tiff",
-#   path = "plots/",
-#   width = 21, height = 7
-# )
-
+ggsave(
+  filename = "figure1_nsupply_test.tiff",
+  path = "plots/",
+  width = 28, height = 7
+)
 
 ###########################################################################
 # PHOSPHORUS --------------------------------------------------------------
@@ -115,31 +116,36 @@ dt |>
               method = "loess", span = 0.2, se = FALSE, linewidth = 2.5, alpha = 0.2) +
   theme_classic() +
   facet_wrap(~Project, scales = "free") +
-  theme(strip.text = element_blank()) +
-  labs(x = 'Date',
-       y = 'Phosphorus Supply') +
+  theme(strip.background = element_blank(),
+        strip.text = element_blank()) +
+  # labs(x = 'Date',
+  #      y = 'Phosphorus Supply') +
   scale_x_date(date_breaks = '1 year', date_labels = "%Y") + #adds all years to x axis for ease of interpetations
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        panel.background = element_rect(fill = "white"),
+  theme(panel.background = element_rect(fill = "white"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.title.y = element_blank(),
         axis.line = element_line("black"),
-        axis.title.y = element_text(face = "bold", size = 24),
         axis.text = element_text(face = "bold", size = 14),
-        axis.title = element_text(face = "bold", size = 14),
-        legend.title.align = 0.5,
-        legend.title = element_text(face = "bold", size = 14),
-        legend.text = element_text(face = "bold", size = 14))
+        legend.position = "none")
+# axis.title.y = element_text(face = "bold", size = 28),
+# axis.title = element_text(face = "bold", size = 28),
+# legend.title.align = 0.5,
+# legend.title = element_text(face = "bold", size = 36, hjust = 0.5),
+# legend.text = element_text(face = "bold", size = 36),
+# legend.position = "bottom")
+# plot.title = element_text(face = "bold", size = 48, hjust = 0.5))
 
-# ggsave(
-#   filename = "figure1_psupply.tiff",
-#   path = "plots/",
-#   width = 21, height = 7
-# )
+ggsave(
+  filename = "figure1_psupply.tiff",
+  path = "plots/",
+  width = 28, height = 7
+)
 
 
 ###########################################################################
 # BIOMASS --------------------------------------------------------------
 ###########################################################################
-
 
 dt |> 
   left_join(label_mapping, by = "projecthabitat") |> 
@@ -160,25 +166,31 @@ dt |>
               method = "loess", span = 0.2, se = FALSE, linewidth = 2.5, alpha = 0.2) +
   theme_classic() +
   facet_wrap(~Project, scales = "free") +
-  theme(strip.text = element_blank()) +
-  labs(x = 'Date',
-       y = 'Total Dry Biomass') +
+  theme(strip.background = element_blank(),
+        strip.text = element_blank()) +
+  # labs(x = 'Date',
+  #      y = 'Total Dry Biomass') +
   scale_x_date(date_breaks = '1 year', date_labels = "%Y") + #adds all years to x axis for ease of interpetations
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        panel.background = element_rect(fill = "white"),
+  theme(panel.background = element_rect(fill = "white"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.title.y = element_blank(),
         axis.line = element_line("black"),
-        axis.title.y = element_text(face = "bold", size = 24),
         axis.text = element_text(face = "bold", size = 14),
-        axis.title = element_text(face = "bold", size = 14),
-        legend.title.align = 0.5,
-        legend.title = element_text(face = "bold", size = 14),
-        legend.text = element_text(face = "bold", size = 14))
+        legend.position = "none")
+# axis.title.y = element_text(face = "bold", size = 28),
+# axis.title = element_text(face = "bold", size = 28),
+# legend.title.align = 0.5,
+# legend.title = element_text(face = "bold", size = 36, hjust = 0.5),
+# legend.text = element_text(face = "bold", size = 36),
+# legend.position = "bottom")
+# plot.title = element_text(face = "bold", size = 48, hjust = 0.5))
 
-# ggsave(
-#   filename = "figure1_bm.tiff",
-#   path = "plots/",
-#   width = 21, height = 7
-# )
+ggsave(
+  filename = "figure1_bm.tiff",
+  path = "plots/",
+  width = 28, height = 7
+)
 
 ###########################################################################
 # SIZE STRUCTURE --------------------------------------------------------------
@@ -205,26 +217,31 @@ dt |>
               method = "loess", span = 0.2, se = FALSE, linewidth = 2.5, alpha = 0.2) +
   theme_classic() +
   facet_wrap(~Project, scales = "free") +
-  theme(strip.text = element_blank()) +
-  labs(x = 'Date',
-       y = 'Size Structure') +
+  theme(strip.background = element_blank(),
+        strip.text = element_blank()) +
+  # labs(x = 'Date',
+  #      y = 'Size Structure') +
   scale_x_date(date_breaks = '1 year', date_labels = "%Y") + #adds all years to x axis for ease of interpetations
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        panel.background = element_rect(fill = "white"),
+  theme(panel.background = element_rect(fill = "white"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.title.y = element_blank(),
         axis.line = element_line("black"),
-        axis.title.y = element_text(face = "bold", size = 24),
         axis.text = element_text(face = "bold", size = 14),
-        axis.title = element_text(face = "bold", size = 14),
-        legend.title.align = 0.5,
-        legend.title = element_text(face = "bold", size = 14),
-        legend.text = element_text(face = "bold", size = 14))
+        legend.position = "none")
+# axis.title.y = element_text(face = "bold", size = 28),
+# axis.title = element_text(face = "bold", size = 28),
+# legend.title.align = 0.5,
+# legend.title = element_text(face = "bold", size = 36, hjust = 0.5),
+# legend.text = element_text(face = "bold", size = 36),
+# legend.position = "bottom")
+# plot.title = element_text(face = "bold", size = 48, hjust = 0.5))
 
-# ggsave(
-#   filename = "figure1_ss.tiff",
-#   path = "plots/",
-#   width = 21, height = 7
-# )
-
+ggsave(
+  filename = "figure1_ss.tiff",
+  path = "plots/",
+  width = 28, height = 7
+)
 
 ###########################################################################
 ###########################################################################
@@ -251,20 +268,25 @@ dt |>
   #      y = "Frequency") +
   scale_fill_manual(values = cols) +
   theme_classic() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        panel.background = element_rect(fill = "white"),
+  theme(panel.background = element_rect(fill = "white"),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
         axis.line = element_line("black"),
-        axis.text = element_text(face = "bold"),
-        axis.title = element_text(face = "bold"),
-        legend.title.align = 0.5,
-        legend.title = element_text(face = "bold", size = 14),
-        legend.text = element_text(face = "bold", size = 14))
+        axis.text = element_text(face = "bold", size = 14),
+        legend.position = "none")
+# axis.title.y = element_text(face = "bold", size = 28),
+# axis.title = element_text(face = "bold", size = 28),
+# legend.title.align = 0.5,
+# legend.title = element_text(face = "bold", size = 36, hjust = 0.5),
+# legend.text = element_text(face = "bold", size = 36),
+# legend.position = "bottom")
+# plot.title = element_text(face = "bold", size = 48, hjust = 0.5))
 
-# ggsave(
-#   filename = "raw_total_nitrogen_freq.tiff",
-#   path = "plots/figure1/histogram/raw/",
-#   width = 7, height = 7
-# )
+ggsave(
+  filename = "raw_total_nitrogen_freq.tiff",
+  path = "plots/figure1/histogram/raw/",
+  width = 9.33, height = 7
+)
 
 ### log-transformed nitrogen histogram
 dt |> 
@@ -277,20 +299,25 @@ dt |>
   #      y = "Frequency") +
   scale_fill_manual(values = cols) +
   theme_classic() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        panel.background = element_rect(fill = "white"),
+  theme(panel.background = element_rect(fill = "white"),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
         axis.line = element_line("black"),
-        axis.text = element_text(face = "bold"),
-        axis.title = element_text(face = "bold"),
-        legend.title.align = 0.5,
-        legend.title = element_text(face = "bold", size = 14),
-        legend.text = element_text(face = "bold", size = 14))
+        axis.text = element_text(face = "bold", size = 14),
+        legend.position = "none")
+# axis.title.y = element_text(face = "bold", size = 28),
+# axis.title = element_text(face = "bold", size = 28),
+# legend.title.align = 0.5,
+# legend.title = element_text(face = "bold", size = 36, hjust = 0.5),
+# legend.text = element_text(face = "bold", size = 36),
+# legend.position = "bottom")
+# plot.title = element_text(face = "bold", size = 48, hjust = 0.5))
 
-# ggsave(
-#   filename = "log_total_nitrogen_freq.tiff",
-#   path = "plots/figure1/histogram/log_transformed/",
-#   width = 7, height = 7
-# )
+ggsave(
+  filename = "log_total_nitrogen_freq.tiff",
+  path = "plots/figure1/histogram/log_transformed/",
+  width = 9.33, height = 7
+)
 
 ###########################################################################
 # phosphorus: raw & log-transformed ---------------------------------------
@@ -305,19 +332,24 @@ dt |>
   geom_density(alpha = 0.5) + 
   scale_fill_manual(values = cols) +
   theme_classic() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        panel.background = element_rect(fill = "white"),
+  theme(panel.background = element_rect(fill = "white"),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
         axis.line = element_line("black"),
-        axis.text = element_text(face = "bold"),
-        axis.title = element_text(face = "bold"),
-        legend.title.align = 0.5,
-        legend.title = element_text(face = "bold", size = 14),
-        legend.text = element_text(face = "bold", size = 14))
+        axis.text = element_text(face = "bold", size = 14),
+        legend.position = "none")
+# axis.title.y = element_text(face = "bold", size = 28),
+# axis.title = element_text(face = "bold", size = 28),
+# legend.title.align = 0.5,
+# legend.title = element_text(face = "bold", size = 36, hjust = 0.5),
+# legend.text = element_text(face = "bold", size = 36),
+# legend.position = "bottom")
+# plot.title = element_text(face = "bold", size = 48, hjust = 0.5))
 
 ggsave(
   filename = "raw_total_phosphorus_freq.tiff",
   path = "plots/figure1/histogram/raw/",
-  width = 7, height = 7
+  width = 9.33, height = 7
 )
 
 ### log-transformed histogram
@@ -329,19 +361,24 @@ dt |>
   geom_density(alpha = 0.5) +  
   scale_fill_manual(values = cols) +
   theme_classic() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        panel.background = element_rect(fill = "white"),
+  theme(panel.background = element_rect(fill = "white"),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
         axis.line = element_line("black"),
-        axis.text = element_text(face = "bold"),
-        axis.title = element_text(face = "bold"),
-        legend.title.align = 0.5,
-        legend.title = element_text(face = "bold", size = 14),
-        legend.text = element_text(face = "bold", size = 14))
+        axis.text = element_text(face = "bold", size = 14),
+        legend.position = "none")
+# axis.title.y = element_text(face = "bold", size = 28),
+# axis.title = element_text(face = "bold", size = 28),
+# legend.title.align = 0.5,
+# legend.title = element_text(face = "bold", size = 36, hjust = 0.5),
+# legend.text = element_text(face = "bold", size = 36),
+# legend.position = "bottom")
+# plot.title = element_text(face = "bold", size = 48, hjust = 0.5))
 
 ggsave(
   filename = "log_total_phosphorus_freq.tiff",
   path = "plots/figure1/histogram/log_transformed/",
-  width = 7, height = 7
+  width = 9.33, height = 7
 )
 
 ###########################################################################
@@ -357,19 +394,24 @@ dt |>
   geom_density(alpha = 0.5) + 
   scale_fill_manual(values = cols) +
   theme_classic() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        panel.background = element_rect(fill = "white"),
+  theme(panel.background = element_rect(fill = "white"),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
         axis.line = element_line("black"),
-        axis.text = element_text(face = "bold"),
-        axis.title = element_text(face = "bold"),
-        legend.title.align = 0.5,
-        legend.title = element_text(face = "bold", size = 14),
-        legend.text = element_text(face = "bold", size = 14))
+        axis.text = element_text(face = "bold", size = 14),
+        legend.position = "none")
+# axis.title.y = element_text(face = "bold", size = 28),
+# axis.title = element_text(face = "bold", size = 28),
+# legend.title.align = 0.5,
+# legend.title = element_text(face = "bold", size = 36, hjust = 0.5),
+# legend.text = element_text(face = "bold", size = 36),
+# legend.position = "bottom")
+# plot.title = element_text(face = "bold", size = 48, hjust = 0.5))
 
 ggsave(
   filename = "raw_total_bm_freq.tiff",
   path = "plots/figure1/histogram/raw/",
-  width = 7, height = 7
+  width = 9.33, height = 7
 )
 
 ### log-transformed histogram
@@ -381,19 +423,24 @@ dt |>
   geom_density(alpha = 0.5) +  
   scale_fill_manual(values = cols) +
   theme_classic() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        panel.background = element_rect(fill = "white"),
+  theme(panel.background = element_rect(fill = "white"),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
         axis.line = element_line("black"),
-        axis.text = element_text(face = "bold"),
-        axis.title = element_text(face = "bold"),
-        legend.title.align = 0.5,
-        legend.title = element_text(face = "bold", size = 14),
-        legend.text = element_text(face = "bold", size = 14))
+        axis.text = element_text(face = "bold", size = 14),
+        legend.position = "none")
+# axis.title.y = element_text(face = "bold", size = 28),
+# axis.title = element_text(face = "bold", size = 28),
+# legend.title.align = 0.5,
+# legend.title = element_text(face = "bold", size = 36, hjust = 0.5),
+# legend.text = element_text(face = "bold", size = 36),
+# legend.position = "bottom")
+# plot.title = element_text(face = "bold", size = 48, hjust = 0.5))
 
 ggsave(
   filename = "log_total_bm_freq.tiff",
   path = "plots/figure1/histogram/log_transformed/",
-  width = 7, height = 7
+  width = 9.33, height = 7
 )
 
 ###########################################################################
@@ -409,19 +456,24 @@ dt |>
   geom_density(alpha = 0.5) + 
   scale_fill_manual(values = cols) +
   theme_classic() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        panel.background = element_rect(fill = "white"),
+  theme(panel.background = element_rect(fill = "white"),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
         axis.line = element_line("black"),
-        axis.text = element_text(face = "bold"),
-        axis.title = element_text(face = "bold"),
-        legend.title.align = 0.5,
-        legend.title = element_text(face = "bold", size = 14),
-        legend.text = element_text(face = "bold", size = 14))
+        axis.text = element_text(face = "bold", size = 14),
+        legend.position = "none")
+# axis.title.y = element_text(face = "bold", size = 28),
+# axis.title = element_text(face = "bold", size = 28),
+# legend.title.align = 0.5,
+# legend.title = element_text(face = "bold", size = 36, hjust = 0.5),
+# legend.text = element_text(face = "bold", size = 36),
+# legend.position = "bottom")
+# plot.title = element_text(face = "bold", size = 48, hjust = 0.5))
 
 ggsave(
   filename = "raw_ss_freq.tiff",
   path = "plots/figure1/histogram/raw/",
-  width = 7, height = 7
+  width = 9.33, height = 7
 )
 
 ### log-transformed histogram
@@ -434,17 +486,22 @@ dt |>
   geom_density(alpha = 0.5) +  
   scale_fill_manual(values = cols) +
   theme_classic() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        panel.background = element_rect(fill = "white"),
+  theme(panel.background = element_rect(fill = "white"),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
         axis.line = element_line("black"),
-        axis.text = element_text(face = "bold"),
-        axis.title = element_text(face = "bold"),
-        legend.title.align = 0.5,
-        legend.title = element_text(face = "bold", size = 14),
-        legend.text = element_text(face = "bold", size = 14))
+        axis.text = element_text(face = "bold", size = 14),
+        # legend.position = "none")
+# axis.title.y = element_text(face = "bold", size = 28),
+# axis.title = element_text(face = "bold", size = 28),
+# legend.title.align = 0.5,
+legend.title = element_text(face = "bold", size = 36, hjust = 0.5),
+legend.text = element_text(face = "bold", size = 36),
+legend.position = "bottom")
+# plot.title = element_text(face = "bold", size = 48, hjust = 0.5))
 
 ggsave(
-  filename = "log_ss_freq.tiff",
+  filename = "log_ss_freq_test.tiff",
   path = "plots/figure1/histogram/log_transformed/",
-  width = 7, height = 7
+  width = 9.33, height = 7
 )

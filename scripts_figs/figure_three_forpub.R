@@ -1,6 +1,6 @@
 ###project: LTER Marine Consumer Nutrient Dynamic Synthesis Working Group
 ###author(s): Mack White, Li Kui, Angel Chen
-###goal(s): generate figure two for manuscript
+###goal(s): generate figure three for manuscript
 ###date(s): January - March 2024
 ###note(s): 
 # fce data may make more sense if grouped by hydrologic year, for data averaged at that resolution
@@ -24,6 +24,7 @@ rm(list = ls()) #cleans env
 dt <- read.csv(file.path("tier2", "harmonized_consumer_excretion_CLEAN_summarized.csv"),stringsAsFactors = F,na.strings =".") |> 
   mutate(sdate = as.Date(sdate))
 glimpse(dt)
+
 
 ### update sites with new "color" according to how Deron thinks we should group
 cce_plotting_annual <- dt |> 
@@ -71,19 +72,20 @@ dt <- bind_rows(cce_plotting_annual, pisco_central_plotting_annual, pisco_south_
                 fce_plotting_annual, mcr_plotting_annual, sbc_ocean_plotting_annual,
                 sbc_beach_plotting_annual, nga_plotting_annual, pie_plotting_annual, 
                 vcr_plotting_annual)
+
 rm(cce_plotting_annual, pisco_central_plotting_annual, pisco_south_plotting_annual,
    fce_plotting_annual, mcr_plotting_annual, sbc_ocean_plotting_annual,
    sbc_beach_plotting_annual, nga_plotting_annual, pie_plotting_annual, 
    vcr_plotting_annual)
 
-# set up labels/habitats for plotting -------------------------------------
+
+# add labels and colors for figures ---------------------------------------
 
 label_mapping <- data.frame(
   projecthabitat = unique(dt$projecthabitat),
-  Project = c("CCE", "PISCO-Central", "PISCO-South", "FCE",
-                 "MCR", "SBC-Ocean", "SBC-Beach", "NGA", 
-                 "PIE", "VCR") # Replace with actual labels
-)
+  Project = c("CCE", "FCE", "MCR", "PISCO-Central",
+              "PISCO-South", "SBC-Beach", "SBC-Ocean", "NGA", 
+              "PIE", "VCR")) 
 
 habitat_mapping <- data.frame(
   color = unique(dt$color),
@@ -103,54 +105,89 @@ cols = c("CCE" = '#00008B',
          "PIE" = '#556B2F',
          "VCR" = '#7CFC00')
 
-# linear models to pull slopes --------------------------------------------
 
-model_results <- dt |> 
+###########################################################################
+# cv mean annual nitrogen supply ~ cv mean annual biomass (all sites) -----
+###########################################################################
+
+dt |> 
   left_join(label_mapping, by = "projecthabitat") |>
   left_join(habitat_mapping, by = "color") |>
-  # filter(Project %in% c("FCE", "MCR", "SBC-Ocean")) |>
   group_by(Project, color2, year) |> 
-  mutate(mean_nitrogen = mean(total_n, na.rm = TRUE),
-         sd_nitrogen = sd(total_n, na.rm = TRUE),
-         sd_nitrogen = replace_na(sd_nitrogen, 0)) |> 
+  summarise(across(where(is.numeric), 
+                   ~ (sd(., na.rm = TRUE) / mean(., na.rm = TRUE)) * 100, 
+                   .names = "{.col}_cv")) |> 
   ungroup() |> 
-  group_by(Project, color2) |> 
-  do({
-    model <- lm(sd_nitrogen ~ mean_nitrogen, data = .)
-    data.frame(slope = coef(model)[2])
-  }) |> 
-  ungroup() |> 
-  group_by(Project) |> 
-  na.omit() |> 
-  mutate(median_slope = median(slope)) |> 
-  ungroup()
-
-model_results |> 
-  mutate(Project_label = factor(Project, levels = unique(Project[order(median_slope)]))) |> 
-  ggplot(aes(x = Project_label, y = slope)) +
-  geom_boxplot() +
-  labs(x = "Project", y = "Slope: SD Nitrogen Supply ~ Mean Nitrogen Supply", title = "Box plot of Slopes by Project Habitat") +
-  # scale_fill_manual("CCE" = '#00008B',
-  #                   "FCE" = '#3CB371',
-  #                   "MCR" = '#FF7F50',
-  #                   "PISCO-Central" = '#708090',
-  #                   "PISCO-South" = '#B0C4DE', 
-  #                   "SBC-Beach" = '#F4A460',
-  #                   "SBC-Ocean" = '#004953',
-  #                   "NGA" = '#1E90FF',
-  #                   "PIE" = '#556B2F',
-  #                   "VCR" = '#7CFC00')+
+  unite(year_site, c(year, color2), sep = "-", remove = FALSE) |>
+  ggplot(aes(x = total_bm_cv, y = total_n_cv,
+             color = Project)) + 
+  geom_point(alpha = 0.9, size = 4) +
+  scale_color_manual(values = cols) +
+  # geom_text_repel() +
+  geom_smooth(aes(group = 1), method = "rlm", se = FALSE, color = "black") +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +
   theme_classic() +
-  theme(axis.title = element_text(face = "bold", size = 14),
-        plot.title = element_blank(),
-        axis.text.y = element_text(face = "bold", size = 14, colour = "black"), 
-        axis.ticks.x = element_blank(),
-        axis.text.x = element_text(face = "bold", size = 12, colour = "black"),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank())
+  labs(x = expression('CV Mean Annual Total Dry Biomass (g/m-m'^2~'-m'^3~')'),
+       y = expression('CV Mean Annual Areal Nitrogen Supply (ug/h/m-m'^2~'-m'^3~')')) +
+  theme(panel.background = element_rect(fill = "white"),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.line = element_line("black"),
+        axis.text = element_text(face = "bold", size = 14))
+        # axis.title.x = element_text(face = "bold", size = 20),
+        # axis.title.y = element_text(face = "bold", size = 20),
+        # # axis.title = element_text(face = "bold", size = 20),
+        # legend.title.align = 0.5,
+        # legend.title = element_text(face = "bold", size = 20, hjust = 0.5),
+        # legend.text = element_text(face = "bold", size = 20),
+        # legend.position = "bottom")
+
 
 ggsave(
-  filename = "slope_figtwo_nitrogen.tiff",
-  path = "plots/",
-  width = 14, height = 7
+  filename = "n_bm_cv_figure3_all.tiff",
+  path = "plots/figure3",
+  width = 15, height = 9
+)
+
+###########################################################################
+# cv mean annual phosphorus supply ~ cv mean annual biomass (all sites)----
+###########################################################################
+
+dt |> 
+  left_join(label_mapping, by = "projecthabitat") |>
+  left_join(habitat_mapping, by = "color") |>
+  group_by(Project, color2, year) |> 
+  summarise(across(where(is.numeric), 
+                   ~ (sd(., na.rm = TRUE) / mean(., na.rm = TRUE)) * 100, 
+                   .names = "{.col}_cv")) |> 
+  ungroup() |> 
+  unite(year_site, c(year, color2), sep = "-", remove = FALSE) |>
+  ggplot(aes(x = total_bm_cv, y = total_p_cv,
+             color = Project)) + 
+  geom_point(alpha = 0.9, size = 4) +
+  scale_color_manual(values = cols) +
+  # geom_text_repel() +
+  geom_smooth(aes(group = 1), method = "rlm", se = FALSE, color = "black") +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +
+  theme_classic() +
+  labs(x = expression('CV Mean Annual Total Dry Biomass (g/m-m'^2~'-m'^3~')'),
+       y = expression('CV Mean Annual Areal Nitrogen Supply (ug/h/m-m'^2~'-m'^3~')')) +
+  theme(panel.background = element_rect(fill = "white"),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.line = element_line("black"),
+        axis.text = element_text(face = "bold", size = 14))
+# axis.title.x = element_text(face = "bold", size = 20),
+# axis.title.y = element_text(face = "bold", size = 20),
+# # axis.title = element_text(face = "bold", size = 20),
+# legend.title.align = 0.5,
+# legend.title = element_text(face = "bold", size = 20, hjust = 0.5),
+# legend.text = element_text(face = "bold", size = 20),
+# legend.position = "bottom")
+
+
+ggsave(
+  filename = "p_bm_cv_figure3_all_.tiff",
+  path = "plots/figure3",
+  width = 15, height = 9
 )
