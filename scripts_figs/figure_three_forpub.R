@@ -133,7 +133,8 @@ dt |>
         axis.title.x = element_blank(),
         axis.title.y = element_blank(),
         axis.line = element_line("black"),
-        axis.text = element_text(face = "bold", size = 14))
+        axis.text.x = element_blank(),
+        axis.text.y = element_text(face = "bold", size = 14))
         # axis.title.x = element_text(face = "bold", size = 20),
         # axis.title.y = element_text(face = "bold", size = 20),
         # # axis.title = element_text(face = "bold", size = 20),
@@ -176,7 +177,8 @@ dt |>
         axis.title.x = element_blank(),
         axis.title.y = element_blank(),
         axis.line = element_line("black"),
-        axis.text = element_text(face = "bold", size = 14))
+        axis.text.x = element_text(face = "bold", size = 14),
+        axis.text.y = element_text(face = "bold", size = 14))
 # axis.title.x = element_text(face = "bold", size = 20),
 # axis.title.y = element_text(face = "bold", size = 20),
 # # axis.title = element_text(face = "bold", size = 20),
