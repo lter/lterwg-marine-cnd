@@ -11,7 +11,7 @@
 
 ### load necessary libraries
 ### install.packages("librarian")
-librarian::shelf(tidyverse, readr, Rbeast, forecast, changepoint)
+librarian::shelf(tidyverse, readr, Rbeast, changepoint)
 
 ### set google drive path
 exc_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1VakpcnFVckAYNggv_zNyfDRfkcGTjZxX")) |> 
@@ -91,84 +91,126 @@ habitat_mapping <- data.frame(
               "Kodiak Island", "Middleton Island", "Prince William Sound", "Fertilized",
               "Natural", "Fertilized", "Natural", "Seagrass", "Sand")) 
 
-dt_annual <- dt |> 
+data <- dt |> 
   left_join(label_mapping, by = "projecthabitat") |>
   left_join(habitat_mapping, by = "color") |>
-  group_by(Project, Habitat, color2, year) |> 
-  summarize(n_mean_annual = mean(total_n),
-         p_mean_annual = mean(total_p),
-         bm_mean_annual = mean(total_bm),
-         ss_mean_annual = mean(mean_max_community_size)) |> 
-  ungroup() |> 
-  group_by(Project, Habitat, color2) |> 
-  mutate(n = n()) |> 
-  ungroup() |> 
+  select(-projecthabitat, -habitat, -project) |> 
+  group_by(Project, Habitat, year) |>
+  summarize(n_mean= mean(total_n),
+            n_sd = sd(total_n),
+            p_mean = mean(total_p),
+            p_sd = sd(total_p),
+            bm_mean = mean(total_bm),
+            bm_sd = sd(total_bm),
+            ss_mean = mean(mean_max_community_size),
+            ss_sd = sd(mean_max_community_size)) |>
+  ungroup() |>
+  group_by(Project, Habitat) |>
+  mutate(n = n()) |>
+  ungroup() |>
   filter(n > 10)
 
-unique(dt_annual$Project)
+###########################################################################
+# +/- 2 SD Approach -------------------------------------------------------
+###########################################################################
 
-# na_count_per_column <- sapply(dt_annual, function(x) sum(is.na(x)))
-# print(na_count_per_column)
+data1 <- data |> 
+  # filter(Project %in% c("FCE", "MCR", "SBC-Ocean")) |> 
+  group_by(Project, Habitat) |> 
+  arrange(Project, Habitat, year) |> 
+  mutate(delta_n = n_mean - lag(n_mean),
+         lag_year = year - 1,
+         row_id = row_number()) |> 
+  ungroup() |> 
+  filter(row_id != 1) |> 
+  group_by(Project, Habitat) |> 
+  mutate(mean_delta_n = mean(delta_n),
+         sd_delta_n = sd(delta_n),
+         lower = mean_delta_n - 2 * sd_delta_n,
+         upper = mean_delta_n + 2 * sd_delta_n) |> 
+  ungroup() |> 
+  dplyr::select(Project, Habitat, year, lag_year, delta_n, mean_delta_n, sd_delta_n, lower, upper)
 
-# Step 1: Detrend the time series for each site using LOESS
-detrended_data <- dt_annual %>%
-  group_by(color2) %>%
-  do({
-    loess_model <- loess(n_mean_annual ~ year, data = ., span = 0.75)  # Adjust span as needed
-    trend <- predict(loess_model)
-    detrended_values <- .$n_mean_annual - trend
-    data.frame(year = .$year, n_mean_annual = detrended_values, color2 = unique(.$color2), Project = unique(.$Project), Habitat = unique(.$Habitat))
-  }) %>%
-  ungroup()
+data_og <- data |> 
+  # filter(Project %in% c("FCE", "MCR", "SBC-Ocean")) |> 
+  group_by(Project, Habitat) |> 
+  arrange(Project, Habitat, year) |> 
+  mutate(row_id = row_number()) |> 
+  ungroup() |> 
+  filter(row_id != 1) |> 
+  dplyr::select(Project, Habitat, year, n_mean)
 
-# Step 2: Calculate the slope for each site
-slopes <- detrended_data %>%
-  group_by(color2) %>%
-  do({
-    model <- lm(n_mean_annual ~ year, data = .)
-    slope <- coef(model)["year"]
-    data.frame(site = unique(.$color2), Project = unique(.$Project), Habitat = unique(.$Habitat), slope = slope)
-  }) %>%
-  ungroup()
+data_final <- left_join(data_og, data1) |> 
+  mutate(abrupt = delta_n > upper | delta_n < lower)
+glimpse(data_final)
 
-# Step 3: Aggregate slope data by project and habitat
-slope_summary <- slopes %>%
-  group_by(Project, color2) %>%
-  summarise(mean_slope = mean(slope), sd_slope = sd(slope), .groups = 'drop')
-
-# Step 4: Plot the results
-ggplot(slope_summary, aes(x = color2, y = mean_slope, fill = Project)) +
-  geom_bar(stat = "identity", position = "dodge")
-  # geom_errorbar(aes(ymin = mean_slope - sd_slope, ymax = mean_slope + sd_slope), position = position_dodge(width = 0.9), width = 0.25)
-
-data <- dt_annual |> 
-  group_by(Project, Habitat, year) |> 
-  summarize(mean_n = mean(n_mean_annual))
-
-ggplot(data, aes(x = year, y = mean_n, group = Habitat, color = Habitat)) +
-  geom_line() +
-  facet_wrap(~ Project, scales = 'free_y') +
-  labs(title = "Time Series for Each Project-Habitat Combination",
+data_final |> 
+  # filter(Project == "FCE", Habitat == "Riverine") |> 
+  unite(site, Project, Habitat, sep = "-") |> 
+  ggplot(aes(x = year, y = delta_n)) +
+  geom_line(aes(group = 1), color = "blue") +  # Add a line connecting the points
+  geom_point(aes(color = abrupt), size = 3) +  # Add points colored by 'abrupt'
+  geom_hline(aes(yintercept = mean_delta_n), linetype = "dashed", color = "black") +  # Add mean_delta_n as a dashed line
+  geom_ribbon(aes(ymin = lower, ymax = upper), fill = "grey", alpha = 0.2) +  # Highlight the area between 'lower' and 'upper'
+  scale_color_manual(values = c("TRUE" = "red", "FALSE" = "blue"),
+                     labels = c("TRUE" = "Abrupt Change", "FALSE" = "Stable")) +
+  labs(title = "n_mean over Years for Project FCE and Habitat Riverine",
        x = "Year",
-       y = "Mean Annual Value") +
-  theme_minimal() +
-  theme(legend.position = "bottom")
+       y = "n_mean") +
+  facet_wrap(~site, scales = "free_y")+
+  theme_minimal()
 
-# Function to detect change points in a given time series
-detect_change_points <- function(data) {
-  # Assuming the data is already ordered by time (year)
-  # Apply the cpt.mean function to detect changes in mean
-  # You can also use cpt.var or cpt.meanvar depending on your specific needs
-  cp_model <- cpt.mean(data$mean_n, method = "BinSeg", penalty = "SIC", Q = 3)#only grabbing first three, not most intense 3
-  cpts <- cpts(cp_model)
-  return(data.frame(change_point = data$year[cpts], Project = unique(data$Project), Habitat = unique(data$Habitat)))
+###########################################################################
+# Using changepoint package
+###########################################################################
+df <- data
+
+### using "SegNeigh" method with Q = 4 and penalty value of 0.05
+for (project in unique(df$Project)) {
+  for (habitat in unique(df$Habitat[df$Project == project])) {
+    subset_df <- df %>% filter(Project == project, Habitat == habitat)
+    
+    # Apply change point detection
+    result <- cpt.mean(subset_df$n_mean, penalty = "Manual", pen.value = 0.05, Q=4,
+                       method = "SegNeigh", test.stat = "Normal", class = TRUE)
+    
+    # Plot the results
+    plot(subset_df$year, subset_df$n_mean, type = "l", main = paste("Change Points for", project, habitat),
+         xlab = "Year", ylab = "n_mean")
+    abline(v = subset_df$year[cpts(result)], col = "red", lwd = 2) # Add vertical lines for change points
+  }
 }
 
-# Apply the function to each project-habitat group
-change_points <- data %>%
-  group_by(Project, Habitat) %>%
-  do(detect_change_points(.))
+### using "SegNeigh" method with Q = 4 and penalty of BIC
+for (project in unique(df$Project)) {
+  for (habitat in unique(df$Habitat[df$Project == project])) {
+    subset_df <- df %>% filter(Project == project, Habitat == habitat)
+    
+    # Apply change point detection
+    result <- cpt.mean(subset_df$n_mean, penalty = "BIC", Q=4,
+                       method = "SegNeigh", test.stat = "CUSUM", class = TRUE)
+    
+    # Plot the results
+    plot(subset_df$year, subset_df$n_mean, type = "l", main = paste("Change Points for", project, habitat),
+         xlab = "Year", ylab = "n_mean")
+    abline(v = subset_df$year[cpts(result)], col = "red", lwd = 2) # Add vertical lines for change points
+  }
+}
 
-# View the change points
-print(change_points)
+###
 
+for (project in unique(df$Project)) {
+  for (habitat in unique(df$Habitat[df$Project == project])) {
+    # Filter data for the current project-habitat combination
+    subset_df <- df[df$Project == project & df$Habitat == habitat,]
+    
+    # Check if the subset is not empty
+    if (nrow(subset_df) > 0) {
+      # Apply beast function
+      result <- beast(subset_df$n_mean, time = subset_df$year)
+      
+      # Plot the results
+      plot(result, main = paste("Change Points for Project:", project, "Habitat:", habitat))
+    }
+  }
+}
