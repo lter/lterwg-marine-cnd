@@ -126,8 +126,8 @@ data1 <- data |>
   group_by(Project, Habitat) |> 
   mutate(mean_delta_n = mean(delta_n),
          sd_delta_n = sd(delta_n),
-         lower = mean_delta_n - 2 * sd_delta_n,
-         upper = mean_delta_n + 2 * sd_delta_n) |> 
+         lower = mean_delta_n - 1.5 * sd_delta_n,
+         upper = mean_delta_n + 1.5 * sd_delta_n) |> 
   ungroup() |> 
   dplyr::select(Project, Habitat, year, lag_year, delta_n, mean_delta_n, sd_delta_n, lower, upper)
 
@@ -145,6 +145,7 @@ data_final <- left_join(data_og, data1) |>
 glimpse(data_final)
 
 data_final |> 
+  # rename(ChangeVelocity = abrupt) |> 
   # filter(Project == "FCE", Habitat == "Riverine") |> 
   unite(site, Project, Habitat, sep = "-") |> 
   ggplot(aes(x = year, y = delta_n)) +
@@ -154,11 +155,11 @@ data_final |>
   geom_ribbon(aes(ymin = lower, ymax = upper), fill = "grey", alpha = 0.2) +  # Highlight the area between 'lower' and 'upper'
   scale_color_manual(values = c("TRUE" = "red", "FALSE" = "blue"),
                      labels = c("TRUE" = "Abrupt Change", "FALSE" = "Stable")) +
-  labs(title = "n_mean over Years for Project FCE and Habitat Riverine",
+  labs(title = "Mean Annual Change in Nitrogen Supply (1.5 +/- SD)",
        x = "Year",
        y = "n_mean") +
   facet_wrap(~site, scales = "free_y")+
-  theme_minimal()
+  theme_minimal(legend)
 
 ###########################################################################
 # Using changepoint package
