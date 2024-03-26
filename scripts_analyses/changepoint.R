@@ -89,7 +89,18 @@ habitat_mapping <- data.frame(
               "Back Reef",
               "Fore Reef", "Fringing Reef",'Reference', "Seward", "Knight Island Passage",
               "Kodiak Island", "Middleton Island", "Prince William Sound", "Fertilized",
-              "Natural", "Fertilized", "Natural", "Seagrass", "Sand")) 
+              "Natural", "Fertilized", "Natural", "Seagrass", "Sand"))
+
+cols = c("CCE" = '#00008B',
+         "FCE" = '#3CB371',
+         "MCR" = '#FF7F50',
+         "PISCO-Central" = '#708090',
+         "PISCO-South" = '#B0C4DE', 
+         "SBC-Beach" = '#F4A460',
+         "SBC-Ocean" = '#004953',
+         "NGA" = '#1E90FF',
+         "PIE" = '#556B2F',
+         "VCR" = '#7CFC00')
 
 data <- dt |> 
   left_join(label_mapping, by = "projecthabitat") |>
@@ -111,7 +122,107 @@ data <- dt |>
   filter(n > 10)
 
 ###########################################################################
-# +/- 2 SD Approach -------------------------------------------------------
+# +/- 1 SD Lagged 1 Year Approach -------------------------------------------------------
+###########################################################################
+
+data1 <- data |> 
+  # filter(Project %in% c("FCE", "MCR", "SBC-Ocean")) |> 
+  group_by(Project, Habitat) |> 
+  arrange(Project, Habitat, year) |> 
+  mutate(delta_n = n_mean - lag(n_mean),
+         lag_year = year - 1,
+         row_id = row_number()) |> 
+  ungroup() |> 
+  filter(row_id != 1) |> 
+  group_by(Project, Habitat) |> 
+  mutate(mean_delta_n = mean(delta_n),
+         sd_delta_n = sd(delta_n),
+         lower = mean_delta_n - 1 * sd_delta_n,
+         upper = mean_delta_n + 1 * sd_delta_n) |> 
+  ungroup() |> 
+  dplyr::select(Project, Habitat, year, lag_year, delta_n, mean_delta_n, sd_delta_n, lower, upper)
+
+data_og <- data |> 
+  # filter(Project %in% c("FCE", "MCR", "SBC-Ocean")) |> 
+  group_by(Project, Habitat) |> 
+  arrange(Project, Habitat, year) |> 
+  mutate(row_id = row_number()) |> 
+  ungroup() |> 
+  filter(row_id != 1) |> 
+  dplyr::select(Project, Habitat, year, n_mean)
+
+data_final <- left_join(data_og, data1) |> 
+  mutate(abrupt = delta_n > upper | delta_n < lower)
+glimpse(data_final)
+
+data_final |> 
+  # rename(ChangeVelocity = abrupt) |> 
+  # filter(Project == "FCE", Habitat == "Riverine") |> 
+  unite(site, Project, Habitat, sep = " ") |> 
+  ggplot(aes(x = year, y = delta_n)) +
+  geom_line(aes(group = 1), color = "blue") +  # Add a line connecting the points
+  geom_point(aes(color = abrupt), size = 3) +  # Add points colored by 'abrupt'
+  geom_hline(aes(yintercept = mean_delta_n), linetype = "dashed", color = "black") +  # Add mean_delta_n as a dashed line
+  geom_ribbon(aes(ymin = lower, ymax = upper), fill = "grey", alpha = 0.2) +  # Highlight the area between 'lower' and 'upper'
+  scale_color_manual(values = c("TRUE" = "red", "FALSE" = "blue"),
+                     labels = c("TRUE" = "Abrupt Change", "FALSE" = "Stable")) +
+  labs(title = "Mean Annual Change in Nitrogen Supply (+/- 1 SD)",
+       x = "Year",
+       y = "n_mean") +
+  facet_wrap(~site, scales = "free_y")
+
+###########################################################################
+# +/- 1 SD Raw Data Approach -------------------------------------------------------
+###########################################################################
+
+data1 <- data |> 
+  # filter(Project %in% c("FCE", "MCR", "SBC-Ocean")) |> 
+  # group_by(Project, Habitat) |> 
+  # arrange(Project, Habitat, year) |> 
+  # mutate(delta_n = n_mean - lag(n_mean),
+  #        lag_year = year - 1,
+  #        row_id = row_number()) |> 
+  # ungroup() |> 
+  # filter(row_id != 1) |> 
+  group_by(Project, Habitat) |> 
+  mutate(mean_n = mean(n_mean),
+         sd_n = sd(n_mean),
+         lower = mean_n - 1 * sd_n,
+         upper = mean_n + 1 * sd_n) |> 
+  ungroup() |> 
+  dplyr::select(Project, Habitat, year, n_mean, mean_n, sd_n, lower, upper)
+
+data_og <- data |> 
+  # filter(Project %in% c("FCE", "MCR", "SBC-Ocean")) |> 
+  group_by(Project, Habitat) |> 
+  arrange(Project, Habitat, year) |> 
+  mutate(row_id = row_number()) |> 
+  ungroup() |> 
+  filter(row_id != 1) |> 
+  dplyr::select(Project, Habitat, year, n_mean)
+
+data_final <- left_join(data, data1) |> 
+  mutate(abrupt = n_mean > upper | n_mean < lower)
+glimpse(data_final)
+
+data_final |> 
+  # rename(ChangeVelocity = abrupt) |> 
+  # filter(Project == "FCE", Habitat == "Riverine") |> 
+  unite(site, Project, Habitat, sep = " ") |> 
+  ggplot(aes(x = year, y = n_mean)) +
+  geom_line(aes(group = 1), color = "blue") +  # Add a line connecting the points
+  geom_point(aes(color = abrupt), size = 3) +  # Add points colored by 'abrupt'
+  geom_hline(aes(yintercept = mean_n), linetype = "dashed", color = "black") +  # Add mean_delta_n as a dashed line
+  geom_ribbon(aes(ymin = lower, ymax = upper), fill = "grey", alpha = 0.2) +  # Highlight the area between 'lower' and 'upper'
+  scale_color_manual(values = c("TRUE" = "red", "FALSE" = "blue"),
+                     labels = c("TRUE" = "Abrupt Change", "FALSE" = "Stable")) +
+  labs(title = "Mean Annual Total Nitrogen Supply (+/- 1 SD)",
+       x = "Year",
+       y = "n_mean") +
+  facet_wrap(~site, scales = "free_y")
+
+###########################################################################
+# +/- 1.5 SD Lagged 1 Year Approach -------------------------------------------------------
 ###########################################################################
 
 data1 <- data |> 
@@ -147,7 +258,125 @@ glimpse(data_final)
 data_final |> 
   # rename(ChangeVelocity = abrupt) |> 
   # filter(Project == "FCE", Habitat == "Riverine") |> 
-  unite(site, Project, Habitat, sep = "-") |> 
+  unite(site, Project, Habitat, sep = " ") |> 
+  ggplot(aes(x = year, y = delta_n)) +
+  geom_line(aes(group = 1), color = "black") +  # Add a line connecting the points
+  geom_point(aes(color = abrupt), size = 7) +  # Add points colored by 'abrupt'
+  geom_hline(aes(yintercept = mean_delta_n), linetype = "dashed", color = "black") +  # Add mean_delta_n as a dashed line
+  geom_ribbon(aes(ymin = lower, ymax = upper), fill = "#5C5E60", alpha = 0.2) +  # Highlight the area between 'lower' and 'upper'
+  scale_color_manual(values = c("TRUE" = "#850d0d", "FALSE" = "#00806b"),
+                     labels = c("TRUE" = "Abrupt", "FALSE" = "Stable")) +
+  labs(x = "Year",
+       y = "Mean Annual Change in Nitrogen Supply",
+       color = "Change Velocity") +
+  facet_wrap(~site, scales = "free") + 
+  theme_classic() +
+  theme(panel.background = element_rect(fill = "white"),
+        axis.line = element_line("black"),
+        axis.text = element_text(face = "bold", color = "black", size = 18),
+        axis.title = element_text(face = "bold", color = "black", size = 24),
+        strip.text = element_text(face = "bold", color = "black", size = 18),
+        strip.clip = "off",
+        strip.background = element_rect(color = NA),
+        legend.position = "bottom",
+        legend.title = element_text(face = "bold", color = "black", size = 24),
+        legend.text = element_text(face = "bold", color = "black", size = 24))
+
+ggsave(
+  filename = "mean_annual_change_test.tiff",
+  path = "plots/",
+  width = 21, height = 14
+)
+
+
+###########################################################################
+# +/- 1.5 SD Raw Data Approach -------------------------------------------------------
+###########################################################################
+
+data1 <- data |> 
+  # filter(Project %in% c("FCE", "MCR", "SBC-Ocean")) |> 
+  # group_by(Project, Habitat) |> 
+  # arrange(Project, Habitat, year) |> 
+  # mutate(delta_n = n_mean - lag(n_mean),
+  #        lag_year = year - 1,
+  #        row_id = row_number()) |> 
+  # ungroup() |> 
+  # filter(row_id != 1) |> 
+  group_by(Project, Habitat) |> 
+  mutate(mean_n = mean(n_mean),
+         sd_n = sd(n_mean),
+         lower = mean_n - 1.5 * sd_n,
+         upper = mean_n + 1.5 * sd_n) |> 
+  ungroup() |> 
+  dplyr::select(Project, Habitat, year, n_mean, mean_n, sd_n, lower, upper)
+
+data_og <- data |> 
+  # filter(Project %in% c("FCE", "MCR", "SBC-Ocean")) |> 
+  group_by(Project, Habitat) |> 
+  arrange(Project, Habitat, year) |> 
+  mutate(row_id = row_number()) |> 
+  ungroup() |> 
+  filter(row_id != 1) |> 
+  dplyr::select(Project, Habitat, year, n_mean)
+
+data_final <- left_join(data, data1) |> 
+  mutate(abrupt = n_mean > upper | n_mean < lower)
+glimpse(data_final)
+
+data_final |> 
+  # rename(ChangeVelocity = abrupt) |> 
+  # filter(Project == "FCE", Habitat == "Riverine") |> 
+  unite(site, Project, Habitat, sep = " ") |> 
+  ggplot(aes(x = year, y = n_mean)) +
+  geom_line(aes(group = 1), color = "blue") +  # Add a line connecting the points
+  geom_point(aes(color = abrupt), size = 3) +  # Add points colored by 'abrupt'
+  geom_hline(aes(yintercept = mean_n), linetype = "dashed", color = "black") +  # Add mean_delta_n as a dashed line
+  geom_ribbon(aes(ymin = lower, ymax = upper), fill = "grey", alpha = 0.2) +  # Highlight the area between 'lower' and 'upper'
+  scale_color_manual(values = c("TRUE" = "red", "FALSE" = "blue"),
+                     labels = c("TRUE" = "Abrupt Change", "FALSE" = "Stable")) +
+  labs(title = "Mean Annual Total Nitrogen Supply (+/- 1.5 SD)",
+       x = "Year",
+       y = "n_mean") +
+  facet_wrap(~site, scales = "free_y")
+
+###########################################################################
+# +/- 2 SD Lagged 1 Year Approach -------------------------------------------------------
+###########################################################################
+
+data1 <- data |> 
+  # filter(Project %in% c("FCE", "MCR", "SBC-Ocean")) |> 
+  group_by(Project, Habitat) |> 
+  arrange(Project, Habitat, year) |> 
+  mutate(delta_n = n_mean - lag(n_mean),
+         lag_year = year - 1,
+         row_id = row_number()) |> 
+  ungroup() |> 
+  filter(row_id != 1) |> 
+  group_by(Project, Habitat) |> 
+  mutate(mean_delta_n = mean(delta_n),
+         sd_delta_n = sd(delta_n),
+         lower = mean_delta_n - 2 * sd_delta_n,
+         upper = mean_delta_n + 2 * sd_delta_n) |> 
+  ungroup() |> 
+  dplyr::select(Project, Habitat, year, lag_year, delta_n, mean_delta_n, sd_delta_n, lower, upper)
+
+data_og <- data |> 
+  # filter(Project %in% c("FCE", "MCR", "SBC-Ocean")) |> 
+  group_by(Project, Habitat) |> 
+  arrange(Project, Habitat, year) |> 
+  mutate(row_id = row_number()) |> 
+  ungroup() |> 
+  filter(row_id != 1) |> 
+  dplyr::select(Project, Habitat, year, n_mean)
+
+data_final <- left_join(data_og, data1) |> 
+  mutate(abrupt = delta_n > upper | delta_n < lower)
+glimpse(data_final)
+
+data_final |> 
+  # rename(ChangeVelocity = abrupt) |> 
+  # filter(Project == "FCE", Habitat == "Riverine") |> 
+  unite(site, Project, Habitat, sep = " ") |> 
   ggplot(aes(x = year, y = delta_n)) +
   geom_line(aes(group = 1), color = "blue") +  # Add a line connecting the points
   geom_point(aes(color = abrupt), size = 3) +  # Add points colored by 'abrupt'
@@ -155,11 +384,74 @@ data_final |>
   geom_ribbon(aes(ymin = lower, ymax = upper), fill = "grey", alpha = 0.2) +  # Highlight the area between 'lower' and 'upper'
   scale_color_manual(values = c("TRUE" = "red", "FALSE" = "blue"),
                      labels = c("TRUE" = "Abrupt Change", "FALSE" = "Stable")) +
-  labs(title = "Mean Annual Change in Nitrogen Supply (1.5 +/- SD)",
+  labs(title = "Mean Annual Change in Nitrogen Supply (+/- 2 SD)",
        x = "Year",
        y = "n_mean") +
-  facet_wrap(~site, scales = "free_y")+
-  theme_minimal(legend)
+  facet_wrap(~site, scales = "free_y")
+
+
+###########################################################################
+# +/- 2 SD Raw Data Approach -------------------------------------------------------
+###########################################################################
+
+data1 <- data |> 
+  # filter(Project %in% c("FCE", "MCR", "SBC-Ocean")) |> 
+  # group_by(Project, Habitat) |> 
+  # arrange(Project, Habitat, year) |> 
+  # mutate(delta_n = n_mean - lag(n_mean),
+  #        lag_year = year - 1,
+  #        row_id = row_number()) |> 
+  # ungroup() |> 
+  # filter(row_id != 1) |> 
+  group_by(Project, Habitat) |> 
+  mutate(mean_n = mean(n_mean),
+         sd_n = sd(n_mean),
+         lower = mean_n - 2 * sd_n,
+         upper = mean_n + 2 * sd_n) |> 
+  ungroup() |> 
+  dplyr::select(Project, Habitat, year, n_mean, mean_n, sd_n, lower, upper)
+
+data_og <- data |> 
+  # filter(Project %in% c("FCE", "MCR", "SBC-Ocean")) |> 
+  group_by(Project, Habitat) |> 
+  arrange(Project, Habitat, year) |> 
+  mutate(row_id = row_number()) |> 
+  ungroup() |> 
+  filter(row_id != 1) |> 
+  dplyr::select(Project, Habitat, year, n_mean)
+
+data_final <- left_join(data, data1) |> 
+  mutate(abrupt = n_mean > upper | n_mean < lower)
+glimpse(data_final)
+
+data_final |> 
+  # rename(ChangeVelocity = abrupt) |> 
+  # filter(Project == "FCE", Habitat == "Riverine") |> 
+  unite(site, Project, Habitat, sep = " ") |> 
+  ggplot(aes(x = year, y = n_mean)) +
+  geom_line(aes(group = 1), color = "blue") +  # Add a line connecting the points
+  geom_point(aes(color = abrupt), size = 3) +  # Add points colored by 'abrupt'
+  geom_hline(aes(yintercept = mean_n), linetype = "dashed", color = "black") +  # Add mean_delta_n as a dashed line
+  geom_ribbon(aes(ymin = lower, ymax = upper), fill = "grey", alpha = 0.2) +  # Highlight the area between 'lower' and 'upper'
+  scale_color_manual(values = c("TRUE" = "red", "FALSE" = "blue"),
+                     labels = c("TRUE" = "Abrupt Change", "FALSE" = "Stable")) +
+  labs(title = "Mean Annual Total Nitrogen Supply (+/- 2 SD)",
+       x = "Year",
+       y = "n_mean") +
+  facet_wrap(~site, scales = "free_y")
+
+###########################################################################
+###########################################################################
+###########################################################################
+# changpoint analyses -----------------------------------------------------
+###########################################################################
+###########################################################################
+###########################################################################
+
+
+
+
+
 
 ###########################################################################
 # Using changepoint package
