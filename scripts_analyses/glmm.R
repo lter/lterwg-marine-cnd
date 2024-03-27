@@ -8,7 +8,7 @@
 
 ### load necessary libraries
 ### install.packages("librarian")
-librarian::shelf(tidyverse, googledrive, readxl, taxize, stringr, e1071)
+librarian::shelf(tidyverse, googledrive, readxl, taxize, stringr, nlme)
 
 ### set google drive path
 exc_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1VakpcnFVckAYNggv_zNyfDRfkcGTjZxX")) |> 
@@ -86,10 +86,12 @@ glimpse(dt_og)
 
 dt_total <- dt_og |> 
   ### classify each individual as either being a vertebrate or invertebrate
-  mutate(vert = if_else(phylum == "Chordata", "vertebrate",
-                        if_else(project == "CoastalCA", "vertebrate", "invertebrate")),
-         vertebrate_n = if_else(vert == "vertebrate" & dmperind_g_ind != 0, 1, 0),
-         invertebrate_n = if_else(vert == "invertebrate" & dmperind_g_ind != 0, 1, 0)) |> 
+  mutate(vert_1 = if_else(phylum == "Chordata", "vertebrate", "invertebrate")) |> 
+  mutate(vert2 = if_else(is.na(vert_1) & project == "CoastalCA", "vertebrate", vert_1)) |> 
+  mutate(vert = ifelse(is.na(vert2), "invertebrate", vert2)) |> 
+  dplyr::select(-vert_1, -vert2) |> 
+  mutate(vertebrate_n = if_else(vert == "vertebrate" & dmperind_g_ind != 0, 1, 0),
+  invertebrate_n = if_else(vert == "invertebrate" & dmperind_g_ind != 0, 1, 0)) |> 
   ### calculate max size of community at this resolution so we can calculate mean max size of species within community
   group_by(project, habitat, year, month, site, subsite_level1, subsite_level2, subsite_level3, vert, scientific_name) |>
   mutate(max_size = max(dmperind_g_ind, na.rm = TRUE)) |> 
@@ -132,10 +134,10 @@ dt_total <- dt_og |>
             n_spp = n_distinct(scientific_name[dmperind_g_ind != 0]),
             mean_max_community_size = mean(max_size),
             vertebrate_count = sum(vertebrate_n),
-            invertebrate_count = sum(invertebrate_n)) |> 
-            # total_count = vertebrate_count + invertebrate_count) 
-            # vertebrate_prop = if_else(total_count > 0, vertebrate_count / total_count, 0),
-            # invertebrate_prop = if_else(total_count > 0, invertebrate_count / total_count, 0)) |>
+            invertebrate_count = sum(invertebrate_n),
+            total_count = vertebrate_count + invertebrate_count,
+            vertebrate_prop = if_else(total_count > 0, vertebrate_count / total_count, 0),
+            invertebrate_prop = if_else(total_count > 0, invertebrate_count / total_count, 0)) |>
   ungroup() |>
   dplyr::select(-total_nitrogen_m, -total_nitrogen_m2, -total_nitrogen_m3,
                 -total_phosphorus_m, -total_phosphorus_m2, -total_phosphorus_m3,
@@ -160,9 +162,7 @@ dt_total_clean <- dt_total |>
          phosphorus_ind_cv_nozeros = replace_na(phosphorus_ind_cv_nozeros, 0),
          bm_ind_sd_nozeros = replace_na(bm_ind_sd_nozeros, 0),
          bm_ind_cv_nozeros = replace_na(bm_ind_cv_nozeros, 0))
-  ### set vert and invert prop to zero since instances when nothing collected at all
-  # mutate(vertebrate_prop = replace_na(vertebrate_prop, 0),
-  #        invertebrate_prop = replace_na(invertebrate_prop, 0))
+
 glimpse(dt_total_clean)
 
 na_count_per_column <- sapply(dt_total_clean, function(x) sum(is.na(x)))
@@ -297,9 +297,9 @@ vcr <- dat |>
 plotting_dat_ready <- bind_rows(cce, fce, mcr, pisco_central, pisco_south, sbc_beach, sbc_reef,
                                 nga, pie, vcr)
 
-### tidy up environment
+## tidy up environment
 # all_objects <- ls() #list all objects in the environment
-# object_to_keep <- "plotting_dat_ready" #specify the object you want to keep
+# object_to_keep <- c("plotting_dat_ready", "dt_og") #specify the object you want to keep
 # rm(list = all_objects[all_objects != object_to_keep])
 # rm(all_objects, object_to_keep)
 
@@ -340,6 +340,7 @@ vcr_plotting_annual <- dt |>
 fce_plotting_annual <- dt |>
   filter(projecthabitat == "FCE-estuary") |>
   unite(color2, c(site, subsite_level1), sep = "-", remove = FALSE) |> 
+  ### revert back to hydrologic year to make more sense of dataset
   mutate(year = if_else(project == "FCE" & month < 10, year - 1, year))
 
 mcr_plotting_annual <- dt |>
@@ -381,8 +382,33 @@ data_step2 <- dt |>
   left_join(label_mapping, by = "projecthabitat") |>
   left_join(habitat_mapping, by = "color") |>
   select(-projecthabitat, -habitat, -project, -color) |> 
-  rename(color = color2)
+  rename(color = color2,
+         project = Project, 
+         habitat = Habitat)
+
+# filter <- data_step2 |> 
+#   filter(invertebrate_prop == 0 & vertebrate_prop == 0) #only ones are those with nothing caught!
 
 # write_csv(data_step2, "glmm.csv")
-filter <- data_step2 |> 
-  filter(invertebrate_prop == 0 & invertebrate_prop == 0)
+
+dt_glmm <- data_step2 |> 
+  group_by(project, color, year) |> 
+  mutate(across(where(is.numeric), 
+                   ~ (sd(., na.rm = TRUE) / mean(., na.rm = TRUE)) * 100, 
+                   .names = "{.col}_cv")) |> 
+  filter(!is.na(total_nitrogen_cv)) |> #~30 obs with NAs, omitted
+  ungroup() 
+
+### go to allgeier et al 2014 and think of metrics to associate with cv nitrogen supply
+### primarily metrics related to community structure
+### data needs to be grouped by site and then average/cv metrics gleaned
+### probably need to go back and determine how we want to handle vert vs invert... maybe calculate for both
+### also probably want to get rid of all the extra metrics in that initial "dt_total" df as to not muddy things up
+
+
+
+
+model <- lme(total_nitrogen_cv ~ total_biomass + n_spp + mean_max_community_size + n_spp_cv + mean_max_community_size_cv + vertebrate_prop + invertebrate_prop, 
+             data = dt_glmm,
+             random = ~ 1 | project/color)
+summary(model)
