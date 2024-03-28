@@ -406,8 +406,6 @@ dt_glmm <- data_step2 |>
 ### also probably want to get rid of all the extra metrics in that initial "dt_total" df as to not muddy things up
 
 
-
-
 model <- lme(total_nitrogen_cv ~ total_biomass + n_spp + mean_max_community_size + n_spp_cv + mean_max_community_size_cv + vertebrate_prop + invertebrate_prop, 
              data = dt_glmm,
              random = ~ 1 | project/color)
