@@ -347,8 +347,42 @@ dat_ready_2_ten_years <- dat_ready_2 |>
 unique(dat_ready_2_ten_years$project) # lost VCR, NGA, and SBC-Beach :(
 
 ###########################################################################
-# parse out data where we have at least 10 years of data ------------------
+# gamm stability models ---------------------------------------------------
 ###########################################################################
+
+gamm_dt <- dat_ready_2_ten_years |> 
+  group_by(project, site, year, vert) |> 
+  summarize(cv_n = (sd(total_nitrogen, na.rm = TRUE) / mean(total_nitrogen, na.rm = TRUE)) * 100,
+            cv_p = (sd(total_nitrogen, na.rm = TRUE) / mean(total_nitrogen, na.rm = TRUE)) * 100,
+            avg_bm = mean(total_biomass),
+            avg_spp = mean(n_spp),
+            avg_min_comm_size = mean(mean_min_size),
+            avg_mean_comm_size = mean(mean_mean_size),
+            avg_max_comm_size = mean(mean_max_size))
+
+na_count_per_column <- sapply(gamm_dt, function(x) sum(is.na(x)))
+print(na_count_per_column) #yayay
+
+test <- gamm_dt |> 
+  filter(is.na(cv_n))
+
+### look at number of vertebrate communities for analysis
+vert_gamm_dt <- gamm_dt |> 
+  filter(vert == "vertebrate")
+
+### look at number of invertebrate communities for analysis
+invert_gamm_dt <- gamm_dt |> 
+  filter(vert == "invertebrate")
+
+# notes from march 28 meeting with NL -------------------------------------
+
+### hypotheses driving and how common in the discipline
+### NL says it is looking 'GAMM'ish
+### used method to identify points and broke trend at each of those and looked at slope between points
+### permutation approach - if worried about failing assumptions
+# maybe quasi-random effect with this approach
+# normally each term is compared to null, with approach - each term compared against a different model
+
 # gamm(cv nitrogen supply ~ year*comm_structure*vert + comm_structure*vert)
 # could subset and run models as vertebrate and invertebrate...
 # the three way interaction term -> can totally happen
@@ -356,11 +390,5 @@ unique(dat_ready_2_ten_years$project) # lost VCR, NGA, and SBC-Beach :(
 # (1|project/site)
 # (project|1)
 # slope project effect above and then intercept term seperately
-#cv as dependent variable, but not independent - can be non-trivial to interpret this post-hoc
+# cv as dependent variable, but not independent - can be non-trivial to interpret this post-hoc
 
-### hypotheses driving and how common in the discipline
-### NL says it is looking gammish
-### used method to identify points and broke trend at each of those and looked at slope between points
-### permutation approach - if worried about failing assumptions
-# maybe quasi-random effect with this approach
-# normally each term is compared to null, with approach - each term compared against a different model
