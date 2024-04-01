@@ -8,7 +8,7 @@
 
 ### load necessary libraries
 ### install.packages("librarian")
-librarian::shelf(tidyverse, googledrive, readxl, taxize, stringr, nlme)
+librarian::shelf(tidyverse, googledrive, readxl, taxize, stringr, mgcv, gamm4, nlme)
 
 ### set google drive path
 exc_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1VakpcnFVckAYNggv_zNyfDRfkcGTjZxX")) |> 
@@ -33,7 +33,6 @@ for(k in 1:nrow(harmonized_ids)){
 }
 
 rm(list = ls()) #cleans env
-
 
 ### read in clean excretion and strata data from google drive
 dt <- read.csv(file.path("tier2", "harmonized_consumer_excretion_CLEAN.csv"),stringsAsFactors = F,na.strings =".") |> 
@@ -152,7 +151,7 @@ strata_list1 <- strata_list %>%
          subsite_level3 = replace_na(subsite_level3, "Not Available"))
 
 dt_total_strata <- left_join(dt_total, 
-                             strata_list, 
+                             strata_list1, 
                              by = c("project", "habitat", "site",
                                     "subsite_level1", "subsite_level2",
                                     "subsite_level3")) |> 
@@ -297,7 +296,7 @@ na_count_per_column <- sapply(dat_ready, function(x) sum(is.na(x)))
 print(na_count_per_column) #yay
 
 ### tidy up working environment
-rm(cce, fce, mcr, pisco_central, pisco_south, sbc_beach, sbc_reef, nga, pie, vcr, strata_list, strata_list1)
+rm(cce, fce, mcr, pisco_central, pisco_south, sbc_beach, sbc_reef, nga, pie, vcr)
 
 ###########################################################################
 # clean up dataset names for plotting and analysis ------------------------
@@ -333,7 +332,7 @@ dat_ready_2 <- dat_ready |>
          habitat = Habitat,
          date = sdate) |> 
   dplyr::select(project, habitat, year, month, date, vert, everything())
-
+# write_csv(dat_ready_2, "local_data/model_data_all.csv")
 ###########################################################################
 # parse out data where we have at least 10 years of data ------------------
 ###########################################################################
@@ -345,7 +344,7 @@ dat_ready_2_ten_years <- dat_ready_2 |>
 
 ### check to see what projects we lost
 unique(dat_ready_2_ten_years$project) # lost VCR, NGA, and SBC-Beach :(
-
+# write_csv(dat_ready_2_ten_years, "local_data/model_data.csv")
 ###########################################################################
 # gamm stability models ---------------------------------------------------
 ###########################################################################
@@ -358,18 +357,26 @@ gamm_dt <- dat_ready_2_ten_years |>
             avg_spp = mean(n_spp),
             avg_min_comm_size = mean(mean_min_size),
             avg_mean_comm_size = mean(mean_mean_size),
-            avg_max_comm_size = mean(mean_max_size))
+            avg_max_comm_size = mean(mean_max_size)) |> 
+  ### omit seven sites with NA here - it appears because there was no replication of the sites
+  na.omit()
 
-na_count_per_column <- sapply(gamm_dt, function(x) sum(is.na(x)))
-print(na_count_per_column) #yayay
-
-test <- gamm_dt |> 
-  filter(is.na(cv_n))
+### clean up environment to make room for modeling
+all_objects <- ls() #list all objects in the environment
+object_to_keep <- "gamm_dt" #specify the object you want to keep
+rm(list = all_objects[all_objects != object_to_keep])
+rm(all_objects, object_to_keep)
 
 ### look at number of vertebrate communities for analysis
 vert_gamm_dt <- gamm_dt |> 
   filter(vert == "vertebrate")
 
+vert_gamm_dt |> 
+  ggplot(aes(avg_max_comm_size, cv_n)) +
+  geom_point()+
+  facet_wrap(~project, scales = "free") +
+  geom_smooth(method = "lm")
+  
 ### look at number of invertebrate communities for analysis
 invert_gamm_dt <- gamm_dt |> 
   filter(vert == "invertebrate")
@@ -392,3 +399,96 @@ invert_gamm_dt <- gamm_dt |>
 # slope project effect above and then intercept term seperately
 # cv as dependent variable, but not independent - can be non-trivial to interpret this post-hoc
 
+###########################################################################
+# testing for autocorrelation in cv_n time series -------------------------
+########################################################################### 
+
+### invertebrate data------------------------------------------------------
+
+year = gamm(cv_n ~ s(year),
+            random = list(project = ~1, site = ~1),
+            data = invert_gamm_dt)
+
+corARMA.p1 = gamm(cv_n ~ s(year),
+             random = list(project = ~1, site = ~1),
+             correlation = corARMA(form = ~1|year, p = 1),
+             data = invert_gamm_dt)
+
+AIC(year$lme, corARMA.p1$lme) #no autocorrelation here
+
+rm(year, corARMA.p1)
+
+### vertebrate data -------------------------------------------------------
+
+year = gamm(cv_n ~ s(year),
+            random = list(project = ~1, site = ~1),
+            data = vert_gamm_dt)
+
+corARMA.p1 = gamm(cv_n ~ s(year),
+                  random = list(project = ~1, site = ~1),
+                  correlation = corARMA(form = ~1|year, p = 1),
+                  data = vert_gamm_dt)
+
+
+AIC(year$lme, corARMA.p1$lme) #no autocorrelation here
+
+rm(year, corARMA.p1)
+
+###########################################################################
+# models for vertebrate data ----------------------------------------------
+###########################################################################
+
+### null model with random slope/nested random intercept -----------------------
+null_model <- gamm4(cv_n ~ 1, 
+                    random = ~(project|project:site),
+                    data = vert_gamm_dt)
+
+summary(null_model$gam)
+
+### null model with nested random intercept ------------------------------------
+null_model_1 <- gamm4(cv_n ~ 1, 
+                    random = ~(1|project:site),
+                    data = vert_gamm_dt)
+
+summary(null_model_1$gam)
+
+### fixed effects model with random slope/nested random intercept --------------
+model <- gamm4(cv_n ~ s(avg_bm) + s(avg_spp) + s(avg_min_comm_size) + 
+               s(avg_mean_comm_size) + s(avg_max_comm_size), 
+               random = ~(project|project:site),
+               data = vert_gamm_dt)
+
+summary(model$gam)
+summary(model$mer)
+plot(model$gam)
+
+model_lm <- lme(cv_n ~ avg_bm + avg_spp + avg_min_comm_size + avg_mean_comm_size + avg_max_comm_size,
+                data = vert_gamm_dt,
+                random = ~project|project/site)
+
+### fixed effects model with nested random intercept ---------------------------
+model_1 <- gamm4(cv_n ~ s(avg_bm) + s(avg_spp) + s(avg_min_comm_size) + 
+                 s(avg_mean_comm_size) + s(avg_max_comm_size), 
+               random = ~(1|project:site),
+               data = vert_gamm_dt)
+
+summary(model_1$gam)
+
+# ### interactive effects model with random slope/nested random intercept --------
+# model_ie <- gamm4(cv_n ~ t2(avg_bm, year) + t2(avg_spp, year) + t2(avg_min_comm_size, year) + 
+#                  t2(avg_mean_comm_size, year) + t2(avg_max_comm_size, year), 
+#                random = ~(project|project:site),
+#                data = vert_gamm_dt)
+# 
+# summary(model_ie$gam)
+# 
+# ### interactive effects model with nested random intercept ---------------------
+# model_ie_1 <- gamm4(cv_n ~ t2(avg_bm, year) + t2(avg_spp, year) + t2(avg_min_comm_size, year) + 
+#                   t2(avg_mean_comm_size, year) + t2(avg_max_comm_size, year), 
+#                   random = ~(1|project:site),
+#                   data = vert_gamm_dt)
+# 
+# summary(model_ie_1$gam)
+
+AIC(null_model$mer, null_model_1$mer, model$mer, model_1$mer, model_lm) |> 
+  arrange(AIC)
