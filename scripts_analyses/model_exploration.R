@@ -91,11 +91,11 @@ mVERT_global_cat_with_yr <- (lmer(cv_n~ year + ecosystem + ocean + biome + ecosy
 mVERT_biomass <- lmer(cv_n~mean_bm +(1|project/strata),data=vm.df,REML=F)
 mVERT_spp_rich <- lmer(cv_n~mean_spp +(1|project/strata),data=vm.df,REML=F)
 mVERT_min_ss <- lmer(cv_n~min_ss +(1|project/strata),data=vm.df,REML=F)
-mVERT_max_ss <- lmer(cv_n~mean_bm +(1|project/strata),data=vm.df,REML=F)
-mVERT_biomassXyear <- lmer(cv_n~mean_bm +(1|project/strata),data=vm.df,REML=F)
-mVERT_spp_richXyear <- lmer(cv_n~mean_spp +(1|project/strata),data=vm.df,REML=F)
-mVERT_min_ssXyear <- lmer(cv_n~min_ss +(1|project/strata),data=vm.df,REML=F)
-mVERT_max_ssXyear <- lmer(cv_n~mean_bm +(1|project/strata),data=vm.df,REML=F)
+mVERT_max_ss <- lmer(cv_n~max_ss +(1|project/strata),data=vm.df,REML=F)
+mVERT_biomassXyear <- lmer(cv_n~mean_bm*year +(1|project/strata),data=vm.df,REML=F)
+mVERT_spp_richXyear <- lmer(cv_n~mean_spp*year +(1|project/strata),data=vm.df,REML=F)
+mVERT_min_ssXyear <- lmer(cv_n~min_ss*year +(1|project/strata),data=vm.df,REML=F)
+mVERT_max_ssXyear <- lmer(cv_n~max_ss*year +(1|project/strata),data=vm.df,REML=F)
 
 
 # AICc Comparison ---------------------------------------------------------
