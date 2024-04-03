@@ -5,7 +5,7 @@
 
 ### load necessary libraries
 ### install.packages("librarian")
-librarian::shelf(tidyverse, readxl, glmmTMB, MuMIn, corrplot, performance)
+librarian::shelf(tidyverse, readxl, glmmTMB, MuMIn, corrplot, performance, ggeffects, sjlabelled)
 # exc <- read_csv("local_data/model_data.csv") #sites with at least 10 years of data
 exc <- read_csv("local_data/model_data_all.csv") #all sites, no 10 year cutoff
 sc <- read_csv("local_data/site_characteristics.csv")
@@ -245,3 +245,21 @@ model_performance_deltaaicc <- model_performance |>
 
 ### read out model performance table
 # write_csv(model_performance_deltaaicc, "tables/nstability_model_performance.csv")
+
+avg_model <- model.avg(m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, 
+                       m11, m12_global, m13, m14, m15)
+
+summary(avg_model)
+### type = "re" incorporates variance from random effects
+# pred_fam_rich <- ggpredict(avg_model, "fam_richness", type = "re")
+# pred_max_ss <- ggpredict(avg_model, "max_ss", type = "re")
+# pred_TrophShDivInd <- ggpredict(avg_model, "TrophShDivInd", type = "re")
+
+### can't use average model because then no variance incorporated
+pred_fam_rich <- ggpredict(m1, "fam_richness", type = "re")
+pred_max_ss <- ggpredict(m1, "max_ss", type = "re")
+pred_TrophShDivInd <- ggpredict(m1, "TrophShDivInd", type = "re")
+
+plot(pred_fam_rich)
+plot(pred_max_ss)
+plot(pred_TrophShDivInd)
