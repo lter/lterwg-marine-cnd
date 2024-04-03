@@ -126,6 +126,39 @@ hist(normality_check)
 ### data right-skewed, so check shapiro-wilks with log transformation
 result <- shapiro.test(log(normality_check)) #use log link function
 
+### exploratory plots with log n-stability ~ project (lm)
+model_data|>ggplot(aes(mean_bm, n_stability))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="lm")
+model_data|>ggplot(aes(max_ss, n_stability))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="lm")
+model_data|>ggplot(aes(fam_richness, n_stability))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="lm")
+model_data|>ggplot(aes(spp_rich, n_stability))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="lm")
+model_data|>ggplot(aes(SppShDivInd, n_stability))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="lm")
+model_data|>ggplot(aes(TrophShDivInd, n_stability))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="lm")
+
+### exploratory plots with log n-stability (lm)
+model_data|>ggplot(aes(mean_bm, log(n_stability)))+geom_point()+geom_smooth(method="lm")
+model_data|>ggplot(aes(max_ss, log(n_stability)))+geom_point()+geom_smooth(method="lm")
+model_data|>ggplot(aes(fam_richness, log(n_stability)))+geom_point()+geom_smooth(method="lm")
+model_data|>ggplot(aes(spp_rich, log(n_stability)))+geom_point()+geom_smooth(method="lm")
+model_data|>ggplot(aes(SppShDivInd, log(n_stability)))+geom_point()+geom_smooth(method="lm")
+model_data|>ggplot(aes(TrophShDivInd, log(n_stability)))+geom_point()+geom_smooth(method="lm")
+
+### exploratory plots with log n-stability ~ project (gam)
+model_data|>ggplot(aes(mean_bm, log(n_stability)))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="gam")
+model_data|>ggplot(aes(max_ss, log(n_stability)))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="gam")
+model_data|>ggplot(aes(fam_richness, log(n_stability)))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="gam")
+model_data|>ggplot(aes(spp_rich, log(n_stability)))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="gam")
+model_data|>ggplot(aes(SppShDivInd, log(n_stability)))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="gam")
+model_data|>ggplot(aes(TrophShDivInd, log(n_stability)))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="gam")
+
+### exploratory plots with log n-stability (gam)
+model_data|>ggplot(aes(mean_bm, log(n_stability)))+geom_point()+geom_smooth(method="gam")
+model_data|>ggplot(aes(max_ss, log(n_stability)))+geom_point()+geom_smooth(method="gam")
+model_data|>ggplot(aes(fam_richness, log(n_stability)))+geom_point()+geom_smooth(method="gam")
+model_data|>ggplot(aes(spp_rich, log(n_stability)))+geom_point()+geom_smooth(method="gam")
+model_data|>ggplot(aes(SppShDivInd, log(n_stability)))+geom_point()+geom_smooth(method="gam")
+model_data|>ggplot(aes(TrophShDivInd, log(n_stability)))+geom_point()+geom_smooth(method="gam")
+
+
 ###########################################################################
 # create global model -----------------------------------------------------
 ###########################################################################
@@ -255,11 +288,12 @@ summary(avg_model)
 # pred_max_ss <- ggpredict(avg_model, "max_ss", type = "re")
 # pred_TrophShDivInd <- ggpredict(avg_model, "TrophShDivInd", type = "re")
 
-### can't use average model because then no variance incorporated
-pred_fam_rich <- ggpredict(m1, "fam_richness", type = "re")
-pred_max_ss <- ggpredict(m1, "max_ss", type = "re")
-pred_TrophShDivInd <- ggpredict(m1, "TrophShDivInd", type = "re")
+### can't use average model because then no variance incorporated?
+pred_fam_rich <- ggpredict(m1, "fam_richness", type = "sim")
+pred_max_ss <- ggpredict(m1, "max_ss", type = "sim")
+pred_TrophShDivInd <- ggpredict(m1, "TrophShDivInd", type = "sim")
 
 plot(pred_fam_rich)
 plot(pred_max_ss)
 plot(pred_TrophShDivInd)
+
