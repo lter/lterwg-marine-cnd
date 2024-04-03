@@ -85,7 +85,7 @@ glimpse(data)
 
 model_data <- data |> 
   ### selection of variables we want for regression models
-  select(n_stability, project, site, strata, ecosystem, ocean, biome, 
+  select(n_stability, p_stability, bm_stability, project, site, strata, ecosystem, ocean, biome, 
          mean_bm, min_ss, mean_ss, max_ss,
          spp_rich, fam_richness, SppShDivInd, SppInvSimpDivInd,
          TrophShDivInd, TrophInvSimpDivInd)
@@ -158,113 +158,132 @@ model_data|>ggplot(aes(spp_rich, log(n_stability)))+geom_point()+geom_smooth(met
 model_data|>ggplot(aes(SppShDivInd, log(n_stability)))+geom_point()+geom_smooth(method="gam")
 model_data|>ggplot(aes(TrophShDivInd, log(n_stability)))+geom_point()+geom_smooth(method="gam")
 
+### looking @ exploratory plots - not super useful... because relationships masked by other information
 
 ###########################################################################
 # create global model -----------------------------------------------------
 ###########################################################################
 
-global_model <- glmmTMB(n_stability ~ biome + ecosystem +
-                        mean_bm + max_ss + 
-                        fam_richness + spp_rich +
-                        SppShDivInd + TrophShDivInd + (1|project), data = model_data,
-                        na.action = "na.fail",
-                        family = Gamma(link = "log"))
+# global_model <- glmmTMB(n_stability ~ biome + ecosystem +
+#                         mean_bm + max_ss + 
+#                         fam_richness + spp_rich +
+#                         SppShDivInd + TrophShDivInd + 
+#                         SppInvSimpDivInd + TrophInvSimpDivInd + (1|project), data = model_data,
+#                         na.action = "na.fail",
+#                         family = Gamma(link = "log"))
+
+# global_model_1 <- glmmTMB(n_stability ~ biome + ecosystem +
+#                           mean_bm + max_ss + 
+#                           fam_richness + spp_rich +
+#                           SppShDivInd + TrophShDivInd + 
+#                           SppInvSimpDivInd + TrophInvSimpDivInd + (1|project), data = model_data,
+#                         na.action = "na.fail",
+#                         family = gaussian(link = "log"))
+
+### drop shannon diversity metrics and keep inv simp bc allgeier et al., 2014
+
+model_data_scaled <- model_data |> 
+  ### this is a function syntax
+  mutate(across(mean_bm:TrophInvSimpDivInd,\(x) scale(x, center = FALSE)))
+
+glimpse(model_data_scaled)
+
+global_model_2_N <- glmmTMB(
+  n_stability ~ biome + ecosystem +
+    mean_bm + max_ss +
+    fam_richness + spp_rich +
+    SppInvSimpDivInd + TrophInvSimpDivInd + (1|project),
+    data = model_data_scaled,
+    na.action = "na.fail",
+    family = gaussian(link = "log"),
+    REML = FALSE
+)
+
+diagnose(global_model_2_N)
+performance::check_model(global_model_2_N)
+
+global_model_2_P <- glmmTMB(
+  p_stability ~ biome + ecosystem +
+    mean_bm + max_ss +
+    fam_richness + spp_rich +
+    SppInvSimpDivInd + TrophInvSimpDivInd + (1|project),
+  data = model_data,
+  na.action = "na.fail",
+  family = gaussian(link = "log"),
+  REML = FALSE
+)
+
+performance::check_model(global_model_2_P)
+
+global_model_2_bm <- glmmTMB(
+    bm_stability ~ biome + ecosystem +
+    mean_bm + max_ss +
+    fam_richness + spp_rich +
+    SppInvSimpDivInd + TrophInvSimpDivInd + (1|project),
+  data = model_data,
+  na.action = "na.fail",
+  family = gaussian(link = "log"),
+  REML = FALSE
+)
+
+performance::check_model(global_model_2_bm)
+
+### added correlated terms for possible subsetting in dredge w WRJ - April 3 2024
+### terms added are InvSimpDivInd for species and trophic group
 
 ### tried running nested random intercept models but failed to converge
 ### i.e., (biome/project; project/strata; project/site)
 ### also, don't believe a random slope makes sense here
 
-#rerun with sig terms from best-fit model
-global_model2 <- glmmTMB(n_stability ~ biome + ecosystem +
-                        mean_bm + max_ss + 
-                        fam_richness +
-                        TrophShDivInd + (1|project), data = model_data,
-                        na.action = "na.fail",
-                        family = Gamma(link = "log"))
+### you cannot compare models fitted with different fixed effects using REML - Zuur + Ben Bolker
+
+### 
 ###########################################################################
 # create model set --------------------------------------------------------
 ###########################################################################
 
-model_set <- dredge(global_model)
-### 15 models with Delta AICc <4
+model_set_N <- dredge(global_model_2_N,
+                    subset = !(`cond(fam_richness)`&&`cond(spp_rich)`)) |> 
+  filter(delta < 4)
 
-model_set_output <- model_set |> 
-  filter(delta <= 4)
-model_set_output$weight <- as.numeric(model_set_output$weight)
+model_set_P <- dredge(global_model_2_P,
+                      subset = !(`cond(fam_richness)`&&`cond(spp_rich)`)) |> 
+  filter(delta < 4)
 
-glimpse(model_set_output)
-write_csv(model_set_output, "tables/model_set_output.csv")
+model_set_bm <- dredge(global_model_2_bm,
+                      subset = !(`cond(fam_richness)`&&`cond(spp_rich)`)) |> 
+  filter(delta < 4)
 
-# model_set2 <- dredge(global_model2)
-# ### 5 models with Delta AICc <4
+### 5 models with Delta AICc <4
+### look for sign (+/-) switching in variables... dependent on other things and maybe not the best variable for explaining
+
+model_set$weight <- as.numeric(model_set$weight)
+glimpse(model_set)
+
+# write_csv(model_set, "tables/model_set_output.csv")
+
+plot(model_data$bm_stability, model_data$p_stability)
+
+model_data |> ggplot(aes(n_stability, p_stability, color = project)) +
+  geom_point() +
+  geom_abline() + 
+  facet_wrap(~project, scales = "free")
+
+plot(model_data$bm_stability, model_data$n_stability)
 
 ###########################################################################
 # run models with delta AICc <4 -------------------------------------------
 ###########################################################################
-m1 <- glmmTMB(n_stability ~ biome + ecosystem + fam_richness + max_ss + mean_bm + TrophShDivInd + (1|project), data = model_data,
-              na.action = "na.fail",
-              family = Gamma(link = "log"))
+m1 <- glmmTMB(n_stability ~ biome + fam_richness + max_ss + mean_bm + TrophInvSimpDivInd + (1|project), data = model_data_scaled,
+              family = gaussian(link = "log"),
+              REML = FALSE)
 
-m2 <- glmmTMB(n_stability ~ biome + fam_richness + max_ss + mean_bm + TrophShDivInd + (1|project), data = model_data,
-              na.action = "na.fail",
-              family = Gamma(link = "log"))
+### switched to REML = TRUE, given presumed issues with model convergence resulting in Na/NaN in Std. Error & Warnings after model fitting
+### REML chosen over ML as it maximizes variance
 
-m3 <- glmmTMB(n_stability ~ biome + ecosystem + fam_richness + max_ss + mean_bm + spp_rich + TrophShDivInd + (1|project), data = model_data,
-              na.action = "na.fail",
-              family = Gamma(link = "log"))
-
-m4 <- glmmTMB(n_stability ~ biome + ecosystem + max_ss + mean_bm + spp_rich + TrophShDivInd + (1|project), data = model_data,
-              na.action = "na.fail",
-              family = Gamma(link = "log"))
-
-m5 <- glmmTMB(n_stability ~ biome + fam_richness + max_ss + mean_bm + spp_rich + TrophShDivInd + (1|project), data = model_data,
-              na.action = "na.fail",
-              family = Gamma(link = "log"))
-
-m6 <- glmmTMB(n_stability ~ biome + ecosystem + fam_richness + max_ss + mean_bm + SppShDivInd + TrophShDivInd + (1|project), data = model_data,
-              na.action = "na.fail",
-              family = Gamma(link = "log"))
-
-m7 <- glmmTMB(n_stability ~ biome + fam_richness + max_ss + TrophShDivInd + (1|project), data = model_data,
-              na.action = "na.fail",
-              family = Gamma(link = "log"))
-
-m8 <- glmmTMB(n_stability ~ biome + fam_richness + max_ss + mean_bm + SppShDivInd + (1|project), data = model_data,
-              na.action = "na.fail",
-              family = Gamma(link = "log"))
-
-m9 <- glmmTMB(n_stability ~ biome + fam_richness + max_ss + mean_bm + SppShDivInd + TrophShDivInd + (1|project), data = model_data,
-              na.action = "na.fail",
-              family = Gamma(link = "log"))
-
-m10 <- glmmTMB(n_stability ~ biome + ecosystem + max_ss + mean_bm + TrophShDivInd + (1|project), data = model_data,
-              na.action = "na.fail",
-              family = Gamma(link = "log"))
-
-m11 <- glmmTMB(n_stability ~ biome + ecosystem + fam_richness + max_ss + TrophShDivInd + (1|project), data = model_data,
-               na.action = "na.fail",
-               family = Gamma(link = "log"))
-
-m12_global <- glmmTMB(n_stability ~ biome + ecosystem + fam_richness + max_ss + mean_bm + spp_rich + SppShDivInd + TrophShDivInd + (1|project), data = model_data,
-               na.action = "na.fail",
-               family = Gamma(link = "log"))
-
-m13 <- glmmTMB(n_stability ~ biome + fam_richness + max_ss + mean_bm + spp_rich + (1|project), data = model_data,
-                      na.action = "na.fail",
-                      family = Gamma(link = "log"))
-
-m14 <- glmmTMB(n_stability ~ biome + ecosystem + max_ss + mean_bm + spp_rich + SppShDivInd + TrophShDivInd + (1|project), data = model_data,
-               na.action = "na.fail",
-               family = Gamma(link = "log"))
-
-m15 <- glmmTMB(n_stability ~ biome + fam_richness + max_ss + spp_rich + TrophShDivInd + (1|project), data = model_data,
-                  na.action = "na.fail",
-                  family = Gamma(link = "log"))
-
-m16_null <- glmmTMB(n_stability ~ 1 + (1|project), data = model_data,
-               na.action = "na.fail",
-               family = Gamma(link = "log"))
-
+test <- compare_performance(m1)
+summary(m1)
+plot(m1)
 ###########################################################################
 # compare model performance -----------------------------------------------
 ###########################################################################
@@ -283,17 +302,31 @@ avg_model <- model.avg(m1, m2, m3, m4, m5, m6, m7, m8, m9, m10,
                        m11, m12_global, m13, m14, m15)
 
 summary(avg_model)
+
+### adding a term and making it non-significant, within AICc of 4
+### doesn't make a ton of sense in our case, but if interested in predicting... then it would be
+### look into it being used in ecology???
+### AC sees no red flags so far - but ask folks in wg for opinion and see if they have stronger thoughts!
+
 ### type = "re" incorporates variance from random effects
-# pred_fam_rich <- ggpredict(avg_model, "fam_richness", type = "re")
-# pred_max_ss <- ggpredict(avg_model, "max_ss", type = "re")
-# pred_TrophShDivInd <- ggpredict(avg_model, "TrophShDivInd", type = "re")
 
 ### can't use average model because then no variance incorporated?
-pred_fam_rich <- ggpredict(m1, "fam_richness", type = "sim")
-pred_max_ss <- ggpredict(m1, "max_ss", type = "sim")
-pred_TrophShDivInd <- ggpredict(m1, "TrophShDivInd", type = "sim")
+pred_fam_rich <- ggeffect(m1, "fam_richness[0:1.6 by=0.1]", type = "re")
+pred_max_ss <- ggeffect(m1, "max_ss[0:3 by=0.1]", type = "re")
+pred_TrophShDivInd <- ggeffect(m1, "TrophInvSimpDivInd[0:1.4 by=0.1]", type = "re")
+pred_biome <- ggeffect(m1, "biome", type = "re")
 
 plot(pred_fam_rich)
 plot(pred_max_ss)
 plot(pred_TrophShDivInd)
+plot(pred_biome)
 
+### AC will get back on better ways to investigate marginal effects
+### VSCode - user interface for python!
+
+### EDI Uploading
+# Have seen groups upload by themselves - if find we don't have bandwidth
+# I'll reach out to Li and cc AC
+
+### worth re-scaling (i.e., reverting back to raw values for plotting)
+### how does it know how to scale???
