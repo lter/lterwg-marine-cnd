@@ -6,7 +6,7 @@
 ### load necessary libraries
 ### install.packages("librarian")
 librarian::shelf(tidyverse, readxl, glmmTMB, MuMIn, corrplot, performance, ggeffects, sjlabelled)
-# exc <- read_csv("local_data/model_data.csv") #sites with at least 10 years of data
+
 exc <- read_csv("local_data/model_data_all.csv") #all sites, no 10 year cutoff
 sc <- read_csv("local_data/site_characteristics.csv")
 
@@ -126,37 +126,37 @@ hist(normality_check)
 ### data right-skewed, so check shapiro-wilks with log transformation
 result <- shapiro.test(log(normality_check)) #use log link function
 
-### exploratory plots with log n-stability ~ project (lm)
-model_data|>ggplot(aes(mean_bm, n_stability))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="lm")
-model_data|>ggplot(aes(max_ss, n_stability))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="lm")
-model_data|>ggplot(aes(fam_richness, n_stability))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="lm")
-model_data|>ggplot(aes(spp_rich, n_stability))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="lm")
-model_data|>ggplot(aes(SppShDivInd, n_stability))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="lm")
-model_data|>ggplot(aes(TrophShDivInd, n_stability))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="lm")
-
-### exploratory plots with log n-stability (lm)
-model_data|>ggplot(aes(mean_bm, log(n_stability)))+geom_point()+geom_smooth(method="lm")
-model_data|>ggplot(aes(max_ss, log(n_stability)))+geom_point()+geom_smooth(method="lm")
-model_data|>ggplot(aes(fam_richness, log(n_stability)))+geom_point()+geom_smooth(method="lm")
-model_data|>ggplot(aes(spp_rich, log(n_stability)))+geom_point()+geom_smooth(method="lm")
-model_data|>ggplot(aes(SppShDivInd, log(n_stability)))+geom_point()+geom_smooth(method="lm")
-model_data|>ggplot(aes(TrophShDivInd, log(n_stability)))+geom_point()+geom_smooth(method="lm")
-
-### exploratory plots with log n-stability ~ project (gam)
-model_data|>ggplot(aes(mean_bm, log(n_stability)))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="gam")
-model_data|>ggplot(aes(max_ss, log(n_stability)))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="gam")
-model_data|>ggplot(aes(fam_richness, log(n_stability)))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="gam")
-model_data|>ggplot(aes(spp_rich, log(n_stability)))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="gam")
-model_data|>ggplot(aes(SppShDivInd, log(n_stability)))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="gam")
-model_data|>ggplot(aes(TrophShDivInd, log(n_stability)))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="gam")
-
-### exploratory plots with log n-stability (gam)
-model_data|>ggplot(aes(mean_bm, log(n_stability)))+geom_point()+geom_smooth(method="gam")
-model_data|>ggplot(aes(max_ss, log(n_stability)))+geom_point()+geom_smooth(method="gam")
-model_data|>ggplot(aes(fam_richness, log(n_stability)))+geom_point()+geom_smooth(method="gam")
-model_data|>ggplot(aes(spp_rich, log(n_stability)))+geom_point()+geom_smooth(method="gam")
-model_data|>ggplot(aes(SppShDivInd, log(n_stability)))+geom_point()+geom_smooth(method="gam")
-model_data|>ggplot(aes(TrophShDivInd, log(n_stability)))+geom_point()+geom_smooth(method="gam")
+# ### exploratory plots with log n-stability ~ project (lm)
+# model_data|>ggplot(aes(mean_bm, n_stability))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="lm")
+# model_data|>ggplot(aes(max_ss, n_stability))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="lm")
+# model_data|>ggplot(aes(fam_richness, n_stability))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="lm")
+# model_data|>ggplot(aes(spp_rich, n_stability))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="lm")
+# model_data|>ggplot(aes(SppShDivInd, n_stability))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="lm")
+# model_data|>ggplot(aes(TrophShDivInd, n_stability))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="lm")
+# 
+# ### exploratory plots with log n-stability (lm)
+# model_data|>ggplot(aes(mean_bm, log(n_stability)))+geom_point()+geom_smooth(method="lm")
+# model_data|>ggplot(aes(max_ss, log(n_stability)))+geom_point()+geom_smooth(method="lm")
+# model_data|>ggplot(aes(fam_richness, log(n_stability)))+geom_point()+geom_smooth(method="lm")
+# model_data|>ggplot(aes(spp_rich, log(n_stability)))+geom_point()+geom_smooth(method="lm")
+# model_data|>ggplot(aes(SppShDivInd, log(n_stability)))+geom_point()+geom_smooth(method="lm")
+# model_data|>ggplot(aes(TrophShDivInd, log(n_stability)))+geom_point()+geom_smooth(method="lm")
+# 
+# ### exploratory plots with log n-stability ~ project (gam)
+# model_data|>ggplot(aes(mean_bm, log(n_stability)))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="gam")
+# model_data|>ggplot(aes(max_ss, log(n_stability)))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="gam")
+# model_data|>ggplot(aes(fam_richness, log(n_stability)))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="gam")
+# model_data|>ggplot(aes(spp_rich, log(n_stability)))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="gam")
+# model_data|>ggplot(aes(SppShDivInd, log(n_stability)))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="gam")
+# model_data|>ggplot(aes(TrophShDivInd, log(n_stability)))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="gam")
+# 
+# ### exploratory plots with log n-stability (gam)
+# model_data|>ggplot(aes(mean_bm, log(n_stability)))+geom_point()+geom_smooth(method="gam")
+# model_data|>ggplot(aes(max_ss, log(n_stability)))+geom_point()+geom_smooth(method="gam")
+# model_data|>ggplot(aes(fam_richness, log(n_stability)))+geom_point()+geom_smooth(method="gam")
+# model_data|>ggplot(aes(spp_rich, log(n_stability)))+geom_point()+geom_smooth(method="gam")
+# model_data|>ggplot(aes(SppShDivInd, log(n_stability)))+geom_point()+geom_smooth(method="gam")
+# model_data|>ggplot(aes(TrophShDivInd, log(n_stability)))+geom_point()+geom_smooth(method="gam")
 
 ### looking @ exploratory plots - not super useful... because relationships masked by other information
 
@@ -164,29 +164,13 @@ model_data|>ggplot(aes(TrophShDivInd, log(n_stability)))+geom_point()+geom_smoot
 # create global model -----------------------------------------------------
 ###########################################################################
 
-# global_model <- glmmTMB(n_stability ~ biome + ecosystem +
-#                         mean_bm + max_ss + 
-#                         fam_richness + spp_rich +
-#                         SppShDivInd + TrophShDivInd + 
-#                         SppInvSimpDivInd + TrophInvSimpDivInd + (1|project), data = model_data,
-#                         na.action = "na.fail",
-#                         family = Gamma(link = "log"))
-
-# global_model_1 <- glmmTMB(n_stability ~ biome + ecosystem +
-#                           mean_bm + max_ss + 
-#                           fam_richness + spp_rich +
-#                           SppShDivInd + TrophShDivInd + 
-#                           SppInvSimpDivInd + TrophInvSimpDivInd + (1|project), data = model_data,
-#                         na.action = "na.fail",
-#                         family = gaussian(link = "log"))
-
-### drop shannon diversity metrics and keep inv simp bc allgeier et al., 2014
-
 model_data_scaled <- model_data |> 
   ### this is a function syntax
   mutate(across(mean_bm:TrophInvSimpDivInd,\(x) scale(x, center = FALSE)))
 
 glimpse(model_data_scaled)
+
+### drop shannon diversity metrics and keep inv simp bc allgeier et al., 2014
 
 global_model_2_N <- glmmTMB(
   n_stability ~ biome + ecosystem +
