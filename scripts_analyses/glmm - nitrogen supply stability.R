@@ -170,19 +170,6 @@ global_model_2_P <- glmmTMB(
 
 performance::check_model(global_model_2_P)
 
-global_model_2_bm <- glmmTMB(
-    bm_stability ~ biome + ecosystem +
-    mean_bm + max_ss +
-    fam_richness + spp_rich +
-    SppInvSimpDivInd + TrophInvSimpDivInd + (1|project),
-  data = model_data_scaled,
-  na.action = "na.fail",
-  family = gaussian(link = "log"),
-  REML = FALSE
-)
-
-performance::check_model(global_model_2_bm)
-
 ### added correlated terms for possible subsetting in dredge w WRJ - April 3 2024
 ### terms added are InvSimpDivInd for species and trophic group
 
@@ -203,17 +190,6 @@ model_set_N <- dredge(global_model_2_N,
 
 ### 5 models with Delta AICc <4
 ### look for sign (+/-) switching in variables... dependent on other things and maybe not the best variable for explaining
-
-model_set_P <- dredge(global_model_2_P,
-                      subset = !(`cond(fam_richness)`&&`cond(spp_rich)`)) |> 
-  filter(delta < 4)
-
-### 5 models with Delta AICc <4
-### look for sign (+/-) switching in variables... dependent on other things and maybe not the best variable for explaining
-
-model_set_bm <- dredge(global_model_2_bm,
-                      subset = !(`cond(fam_richness)`&&`cond(spp_rich)`)) |> 
-  filter(delta < 4)
 
 model_set_N$weight <- as.numeric(model_set_N$weight)
 glimpse(model_set_N)
