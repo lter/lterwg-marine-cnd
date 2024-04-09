@@ -1,3 +1,8 @@
+###project: LTER Marine Consumer Nutrient Dynamic Synthesis Working Group
+###author(s): Mack White, Li Kui, Angel Chen
+###goal(s): nutrient supply stability models
+###date(s): March-April 2024
+###note(s): 
 
 ###########################################################################
 # Housekeeping ------------------------------------------------------------
