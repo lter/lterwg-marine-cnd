@@ -126,40 +126,6 @@ hist(normality_check)
 ### data right-skewed, so check shapiro-wilks with log transformation
 result <- shapiro.test(log(normality_check)) #use log link function
 
-# ### exploratory plots with log n-stability ~ project (lm)
-# model_data|>ggplot(aes(mean_bm, n_stability))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="lm")
-# model_data|>ggplot(aes(max_ss, n_stability))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="lm")
-# model_data|>ggplot(aes(fam_richness, n_stability))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="lm")
-# model_data|>ggplot(aes(spp_rich, n_stability))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="lm")
-# model_data|>ggplot(aes(SppShDivInd, n_stability))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="lm")
-# model_data|>ggplot(aes(TrophShDivInd, n_stability))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="lm")
-# 
-# ### exploratory plots with log n-stability (lm)
-# model_data|>ggplot(aes(mean_bm, log(n_stability)))+geom_point()+geom_smooth(method="lm")
-# model_data|>ggplot(aes(max_ss, log(n_stability)))+geom_point()+geom_smooth(method="lm")
-# model_data|>ggplot(aes(fam_richness, log(n_stability)))+geom_point()+geom_smooth(method="lm")
-# model_data|>ggplot(aes(spp_rich, log(n_stability)))+geom_point()+geom_smooth(method="lm")
-# model_data|>ggplot(aes(SppShDivInd, log(n_stability)))+geom_point()+geom_smooth(method="lm")
-# model_data|>ggplot(aes(TrophShDivInd, log(n_stability)))+geom_point()+geom_smooth(method="lm")
-# 
-# ### exploratory plots with log n-stability ~ project (gam)
-# model_data|>ggplot(aes(mean_bm, log(n_stability)))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="gam")
-# model_data|>ggplot(aes(max_ss, log(n_stability)))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="gam")
-# model_data|>ggplot(aes(fam_richness, log(n_stability)))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="gam")
-# model_data|>ggplot(aes(spp_rich, log(n_stability)))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="gam")
-# model_data|>ggplot(aes(SppShDivInd, log(n_stability)))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="gam")
-# model_data|>ggplot(aes(TrophShDivInd, log(n_stability)))+geom_point()+facet_wrap(~project,scales="free")+geom_smooth(method="gam")
-# 
-# ### exploratory plots with log n-stability (gam)
-# model_data|>ggplot(aes(mean_bm, log(n_stability)))+geom_point()+geom_smooth(method="gam")
-# model_data|>ggplot(aes(max_ss, log(n_stability)))+geom_point()+geom_smooth(method="gam")
-# model_data|>ggplot(aes(fam_richness, log(n_stability)))+geom_point()+geom_smooth(method="gam")
-# model_data|>ggplot(aes(spp_rich, log(n_stability)))+geom_point()+geom_smooth(method="gam")
-# model_data|>ggplot(aes(SppShDivInd, log(n_stability)))+geom_point()+geom_smooth(method="gam")
-# model_data|>ggplot(aes(TrophShDivInd, log(n_stability)))+geom_point()+geom_smooth(method="gam")
-
-### looking @ exploratory plots - not super useful... because relationships masked by other information
-
 ###########################################################################
 # create global model -----------------------------------------------------
 ###########################################################################
@@ -191,7 +157,7 @@ global_model_2_P <- glmmTMB(
     mean_bm + max_ss +
     fam_richness + spp_rich +
     SppInvSimpDivInd + TrophInvSimpDivInd + (1|project),
-  data = model_data,
+  data = model_data_scaled,
   na.action = "na.fail",
   family = gaussian(link = "log"),
   REML = FALSE
@@ -204,7 +170,7 @@ global_model_2_bm <- glmmTMB(
     mean_bm + max_ss +
     fam_richness + spp_rich +
     SppInvSimpDivInd + TrophInvSimpDivInd + (1|project),
-  data = model_data,
+  data = model_data_scaled,
   na.action = "na.fail",
   family = gaussian(link = "log"),
   REML = FALSE
@@ -230,30 +196,24 @@ model_set_N <- dredge(global_model_2_N,
                     subset = !(`cond(fam_richness)`&&`cond(spp_rich)`)) |> 
   filter(delta < 4)
 
-model_set_P <- dredge(global_model_2_P,
-                      subset = !(`cond(fam_richness)`&&`cond(spp_rich)`)) |> 
-  filter(delta < 4)
+### 5 models with Delta AICc <4
+### look for sign (+/-) switching in variables... dependent on other things and maybe not the best variable for explaining
 
-model_set_bm <- dredge(global_model_2_bm,
+model_set_P <- dredge(global_model_2_P,
                       subset = !(`cond(fam_richness)`&&`cond(spp_rich)`)) |> 
   filter(delta < 4)
 
 ### 5 models with Delta AICc <4
 ### look for sign (+/-) switching in variables... dependent on other things and maybe not the best variable for explaining
 
-model_set$weight <- as.numeric(model_set$weight)
-glimpse(model_set)
+model_set_bm <- dredge(global_model_2_bm,
+                      subset = !(`cond(fam_richness)`&&`cond(spp_rich)`)) |> 
+  filter(delta < 4)
 
-# write_csv(model_set, "tables/model_set_output.csv")
+model_set_N$weight <- as.numeric(model_set_N$weight)
+glimpse(model_set_N)
 
-plot(model_data$bm_stability, model_data$p_stability)
-
-model_data |> ggplot(aes(n_stability, p_stability, color = project)) +
-  geom_point() +
-  geom_abline() + 
-  facet_wrap(~project, scales = "free")
-
-plot(model_data$bm_stability, model_data$n_stability)
+# write_csv(model_set_N, "tables/model_set_output.csv")
 
 ###########################################################################
 # run models with delta AICc <4 -------------------------------------------
@@ -265,52 +225,126 @@ m1 <- glmmTMB(n_stability ~ biome + fam_richness + max_ss + mean_bm + TrophInvSi
 ### switched to REML = TRUE, given presumed issues with model convergence resulting in Na/NaN in Std. Error & Warnings after model fitting
 ### REML chosen over ML as it maximizes variance
 
-test <- compare_performance(m1)
 summary(m1)
-plot(m1)
 ###########################################################################
-# compare model performance -----------------------------------------------
+# plot marginal effects ---------------------------------------------------
 ###########################################################################
-
-model_performance <- compare_performance(m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, 
-                                         m11, m12_global, m13, m14, m15, m16_null)
-
-model_performance_deltaaicc <- model_performance |> 
-  mutate(DeltaAICc = AICc - 1.239188) |> 
-  select(Name, AICc, DeltaAICc, AICc_wt, R2_marginal, RMSE, Sigma)
-
-### read out model performance table
-# write_csv(model_performance_deltaaicc, "tables/nstability_model_performance.csv")
-
-avg_model <- model.avg(m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, 
-                       m11, m12_global, m13, m14, m15)
-
-summary(avg_model)
-
-### adding a term and making it non-significant, within AICc of 4
-### doesn't make a ton of sense in our case, but if interested in predicting... then it would be
-### look into it being used in ecology???
-### AC sees no red flags so far - but ask folks in wg for opinion and see if they have stronger thoughts!
 
 ### type = "re" incorporates variance from random effects
 
 ### can't use average model because then no variance incorporated?
 pred_fam_rich <- ggeffect(m1, "fam_richness[0:1.6 by=0.1]", type = "re")
 pred_max_ss <- ggeffect(m1, "max_ss[0:3 by=0.1]", type = "re")
-pred_TrophShDivInd <- ggeffect(m1, "TrophInvSimpDivInd[0:1.4 by=0.1]", type = "re")
+pred_TrophInvSimpDivInd <- ggeffect(m1, "TrophInvSimpDivInd[0:1.4 by=0.1]", type = "re")
+pred_mean_bm <- ggeffect(m1, "mean_bm[0:3 by=0.1]", type = "re")
 pred_biome <- ggeffect(m1, "biome", type = "re")
 
 plot(pred_fam_rich)
 plot(pred_max_ss)
-plot(pred_TrophShDivInd)
+plot(pred_TrophInvSimpDivInd)
+plot(pred_mean_bm)
 plot(pred_biome)
 
-### AC will get back on better ways to investigate marginal effects
-### VSCode - user interface for python!
-
-### EDI Uploading
-# Have seen groups upload by themselves - if find we don't have bandwidth
-# I'll reach out to Li and cc AC
-
 ### worth re-scaling (i.e., reverting back to raw values for plotting)
-### how does it know how to scale???
+### how does it know how to scale??? - original scaling divided column by st. dev.
+### but did not subtract the mean, so need to multiply by original st. dev.
+
+### pull st. dev for each covariate in model_data df (i.e., dataset before scaling)
+
+sd(model_data$fam_richness)#1.84905
+sd(model_data$max_ss)#30.63198
+sd(model_data$TrophInvSimpDivInd)#0.3784153
+sd(model_data$mean_bm)#40.84087
+
+ggplot(pred_fam_rich, aes(x = x*1.84905, y = predicted)) + 
+  geom_line() +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = 0.2) +
+  labs(x = "Family Richness", y = "Nutrient Supply Stability (1/CV Nutrient Supply)") +
+  theme_classic() +
+  theme(panel.background = element_rect(fill = "white"),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.line = element_line("black"),
+        axis.text.x = element_text(face = "bold", size = 18),
+        axis.text.y = element_text(face = "bold", size = 18))
+
+# ggsave(
+#   filename = "fam_richness_nut_supply_marginaleffect.tiff",
+#   path = "plots",
+#   width = 10, height = 10
+# )
+
+ggplot(pred_max_ss, aes(x = x*30.63198, y = predicted)) + 
+  geom_line() +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = 0.2) +
+  labs(x = "Max Size Structure", y = "Nutrient Supply Stability (1/CV Nutrient Supply)") +
+  theme_classic() +
+  theme(panel.background = element_rect(fill = "white"),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.line = element_line("black"),
+        axis.text.x = element_text(face = "bold", size = 18),
+        axis.text.y = element_text(face = "bold", size = 18))
+
+# ggsave(
+#   filename = "max_ss_nut_supply_marginaleffect.tiff",
+#   path = "plots",
+#   width = 10, height = 10
+# )
+
+ggplot(pred_TrophInvSimpDivInd, aes(x = x*0.3784153, y = predicted)) + 
+  geom_line() +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = 0.2) +
+  labs(x = "Trophic Inverse Simpson Diversity Index", y = "Nutrient Supply Stability (1/CV Nutrient Supply)") +
+  theme_classic() +
+  theme(panel.background = element_rect(fill = "white"),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.line = element_line("black"),
+        axis.text.x = element_text(face = "bold", size = 18),
+        axis.text.y = element_text(face = "bold", size = 18))
+
+# ggsave(
+#   filename = "troph_invsimpdiv_nut_supply_marginaleffect.tiff",
+#   path = "plots",
+#   width = 10, height = 10
+# )
+
+ggplot(pred_mean_bm, aes(x = x*40.84087, y = predicted)) + 
+  geom_line() +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = 0.2) +
+  labs(x = "Mean Total Dry Biomass", y = "Nutrient Supply Stability (1/CV Nutrient Supply)") +
+  theme_classic() +
+  theme(panel.background = element_rect(fill = "white"),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.line = element_line("black"),
+        axis.text.x = element_text(face = "bold", size = 18),
+        axis.text.y = element_text(face = "bold", size = 18))
+
+ggsave(
+  filename = "mean_bm_nut_supply_marginaleffect.tiff",
+  path = "plots",
+  width = 10, height = 10
+)
+
+pred_biome |> 
+  mutate(x = factor(x, levels = x[order(predicted, decreasing = TRUE)])) |> 
+  na.omit() |> 
+  ggplot(aes(x = x, y = predicted)) + 
+  geom_point() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.5) +
+  labs(x = "Climate", y = "Nutrient Supply Stability (1/CV Nutrient Supply)") +
+  theme_classic() +
+  theme(panel.background = element_rect(fill = "white"),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.line = element_line("black"),
+        axis.text.x = element_text(face = "bold", size = 18),
+        axis.text.y = element_text(face = "bold", size = 18))
+
+ggsave(
+  filename = "biome_nut_supply_marginaleffect.tiff",
+  path = "plots",
+  width = 15, height = 10
+)
