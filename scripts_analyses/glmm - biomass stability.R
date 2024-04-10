@@ -249,11 +249,11 @@ ggplot(pred_spp_rich, aes(x = x*5.452757, y = predicted)) +
         axis.text.x = element_text(face = "bold", size = 18),
         axis.text.y = element_text(face = "bold", size = 18))
 
-# ggsave(
-#   filename = "spp_richness_bm_stability_marginaleffect.tiff",
-#   path = "plots",
-#   width = 10, height = 10
-# )
+ggsave(
+  filename = "spp_richness_bm_stability_marginaleffect.tiff",
+  path = "plots",
+  width = 10, height = 10
+)
 
 ggplot(pred_max_ss, aes(x = x*30.63198, y = predicted)) + 
   geom_line() +
@@ -303,11 +303,11 @@ ggplot(pred_mean_bm, aes(x = x*40.84087, y = predicted)) +
         axis.text.x = element_text(face = "bold", size = 18),
         axis.text.y = element_text(face = "bold", size = 18))
 
-# ggsave(
-#   filename = "mean_bm_bm_stability_marginaleffect.tiff",
-#   path = "plots",
-#   width = 10, height = 10
-# )
+ggsave(
+  filename = "mean_bm_bm_stability_marginaleffect.tiff",
+  path = "plots",
+  width = 10, height = 10
+)
 
 pred_biome |> 
   mutate(x = factor(x, levels = x[order(predicted, decreasing = TRUE)])) |> 
@@ -329,3 +329,9 @@ pred_biome |>
 #   path = "plots",
 #   width = 15, height = 10
 # )
+
+
+model_data |> 
+  ggplot(aes(x = bm_stability, y = n_stability)) +
+  geom_point() +
+  theme_classic()

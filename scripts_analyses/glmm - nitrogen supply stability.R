@@ -17,13 +17,13 @@ sc <- read_csv("local_data/site_characteristics.csv")
 
 ### join data for modeling with site characteristic information
 dt <- left_join(exc, sc) |> 
-  select(project, ecosystem, ocean, biome, site, year, month, vert, everything()) |> 
+  dplyr::select(project, ecosystem, ocean, biome, site, year, month, vert, everything()) |> 
   filter(vert == "vertebrate") |> 
   ### if species richness is important in models, remove CCE & NGA as they are not taxonomically resolved species, but instead "groups"
   filter(!project %in% c("CCE", "NGA")) |> 
   ### recalculated species richness in community dataset prep and wanted to ensure it matched up
   ### however, can remove now
-  select(-n_spp)
+  dplyr::select(-n_spp)
 
 ### read in community metrics for analysis
 comm <- read_csv("local_data/community_data_filtered.csv")
@@ -90,7 +90,7 @@ glimpse(data)
 
 model_data <- data |> 
   ### selection of variables we want for regression models
-  select(n_stability, p_stability, bm_stability, project, site, strata, ecosystem, ocean, biome, 
+  dplyr::select(n_stability, p_stability, bm_stability, project, site, strata, ecosystem, ocean, biome, 
          mean_bm, min_ss, mean_ss, max_ss,
          spp_rich, fam_richness, SppShDivInd, SppInvSimpDivInd,
          TrophShDivInd, TrophInvSimpDivInd)

@@ -81,26 +81,31 @@ rm(cce_plotting_annual, pisco_central_plotting_annual, pisco_south_plotting_annu
 
 # add labels and colors for figures ---------------------------------------
 
+unique(dt$projecthabitat)
 label_mapping <- data.frame(
   projecthabitat = unique(dt$projecthabitat),
-  Project = c("CCE", "FCE", "MCR", "PISCO-Central",
-              "PISCO-South", "SBC-Beach", "SBC-Ocean", "NGA", 
+  Project = c("CCE", "PISCO-Central", "PISCO-South", "FCE",
+              "MCR","SBC-Ocean", "SBC-Beach", "NGA", 
               "PIE", "VCR")) 
+print(label_mapping)
 
+unique(dt$color)
 habitat_mapping <- data.frame(
   color = unique(dt$color),
-  Habitat = c("Nearshore", "Offshore","Riverine", "Bay", "Back Reef", "Fore Reef", "Fringing Reef",
-              'Marine Protected Area', 'Reference', "Reference", "Seward", "Knight Island Passage",
+  Habitat = c("Nearshore", "Offshore", 'Marine Protected Area', 'Reference',
+              "Riverine", "Bay", "Back Reef", "Fore Reef", "Fringing Reef",
+              "Reference", "Seward", "Knight Island Passage",
               "Kodiak Island", "Middleton Island", "Prince William Sound", "Fertilized",
               "Natural", "Fertilized", "Natural", "Seagrass", "Sand")) 
+print(habitat_mapping)
 
 cols = c("CCE" = '#00008B',
-         "FCE" = '#3CB371',
-         "MCR" = '#FF7F50',
          "PISCO-Central" = '#708090',
          "PISCO-South" = '#B0C4DE', 
-         "SBC-Beach" = '#F4A460',
+         "FCE" = '#3CB371',
+         "MCR" = '#FF7F50',
          "SBC-Ocean" = '#004953',
+         "SBC-Beach" = '#F4A460',
          "NGA" = '#1E90FF',
          "PIE" = '#556B2F',
          "VCR" = '#7CFC00')
