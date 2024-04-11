@@ -10,14 +10,14 @@
 
 ### load necessary libraries
 ### install.packages("librarian")
-librarian::shelf(tidyverse, readxl, glmmTMB, MuMIn, corrplot, performance, ggeffects, sjlabelled)
+librarian::shelf(tidyverse, readxl, glmmTMB, MuMIn, corrplot, performance, ggeffects, parameters)
 
 exc <- read_csv("local_data/model_data_all.csv") #all sites, no 10 year cutoff
 sc <- read_csv("local_data/site_characteristics.csv")
 
 ### join data for modeling with site characteristic information
 dt <- left_join(exc, sc) |> 
-  dplyr::select(project, ecosystem, ocean, biome, site, year, month, vert, everything()) |> 
+  dplyr::select(project, ecosystem, ocean, climate, latitude, latitude_scaled, site, year, month, vert, everything()) |> 
   filter(vert == "vertebrate") |> 
   ### if species richness is important in models, remove CCE & NGA as they are not taxonomically resolved species, but instead "groups"
   filter(!project %in% c("CCE", "NGA")) |> 
@@ -43,7 +43,7 @@ print(na_count_per_column)
 
 ### summarize all sites measured within the dataset annualy
 model_dt <- dt2 |> 
-  group_by(project, ecosystem, ocean, biome, strata, site) |> 
+  group_by(project, ecosystem, climate, latitude, strata, site) |> 
   summarize(mean_n = mean(total_nitrogen),
             ### calculating coefficient of variation for nutrient supply across time for each site
             cv_n = (sd(total_nitrogen, na.rm = TRUE) / mean(total_nitrogen, na.rm = TRUE)),
@@ -81,7 +81,7 @@ glimpse(model_dt)
 
 data <- model_dt|>
   ### mutates character class columns as factors
-  mutate_at(c("project", "ecosystem", "ocean", "biome", "strata", "site"), as.factor)
+  mutate_at(c("project", "ecosystem", "climate", "strata", "site"), as.factor)
 glimpse(data)
 
 ###########################################################################
@@ -90,7 +90,7 @@ glimpse(data)
 
 model_data <- data |> 
   ### selection of variables we want for regression models
-  dplyr::select(n_stability, p_stability, bm_stability, project, site, strata, ecosystem, ocean, biome, 
+  dplyr::select(n_stability, p_stability, bm_stability, project, site, strata, ecosystem, climate, latitude,
          mean_bm, min_ss, mean_ss, max_ss,
          spp_rich, fam_richness, SppShDivInd, SppInvSimpDivInd,
          TrophShDivInd, TrophInvSimpDivInd)
@@ -109,19 +109,6 @@ cor_matrix <- cor(numeric_data)
 ### visually assess
 corrplot(cor_matrix, method = "number")
 
-# remove collinear variables and re-examine -------------------------------
-
-numeric_data2 <- model_data |> 
-  ### remove correlated numeric data
-  select(-mean_bm, -mean_ss) |> 
-  ### filter for only numeric data
-  select(where(is.numeric))
-
-### generate correlation matrix and visually assess collinearity
-cor_matrix2 <- cor(numeric_data2)
-### visually assess
-corrplot(cor_matrix2, method = "number")
-
 ### checking for normality in dependent variable - first pull out dependent variable
 normality_check <- model_data$n_stability
 ### run shapiro-wilks test
@@ -137,14 +124,15 @@ result <- shapiro.test(log(normality_check)) #use log link function
 
 model_data_scaled <- model_data |> 
   ### this is a function syntax
-  mutate(across(mean_bm:TrophInvSimpDivInd,\(x) scale(x, center = FALSE)))
+  mutate(across(latitude:TrophInvSimpDivInd,\(x) scale(x, center = FALSE)))
 
 glimpse(model_data_scaled)
 
 ### drop shannon diversity metrics and keep inv simp bc allgeier et al., 2014
 
 global_model_2_N <- glmmTMB(
-  n_stability ~ biome + ecosystem +
+  n_stability ~ ecosystem +
+    latitude +
     mean_bm + max_ss +
     fam_richness + spp_rich +
     SppInvSimpDivInd + TrophInvSimpDivInd + (1|project),
@@ -157,18 +145,18 @@ global_model_2_N <- glmmTMB(
 diagnose(global_model_2_N)
 performance::check_model(global_model_2_N)
 
-global_model_2_P <- glmmTMB(
-  p_stability ~ biome + ecosystem +
-    mean_bm + max_ss +
-    fam_richness + spp_rich +
-    SppInvSimpDivInd + TrophInvSimpDivInd + (1|project),
-  data = model_data_scaled,
-  na.action = "na.fail",
-  family = gaussian(link = "log"),
-  REML = FALSE
-)
-
-performance::check_model(global_model_2_P)
+# global_model_2_P <- glmmTMB(
+#   p_stability ~ biome + ecosystem +
+#     mean_bm + max_ss +
+#     fam_richness + spp_rich +
+#     SppInvSimpDivInd + TrophInvSimpDivInd + (1|project),
+#   data = model_data_scaled,
+#   na.action = "na.fail",
+#   family = gaussian(link = "log"),
+#   REML = FALSE
+# )
+# 
+# performance::check_model(global_model_2_P)
 
 ### added correlated terms for possible subsetting in dredge w WRJ - April 3 2024
 ### terms added are InvSimpDivInd for species and trophic group
@@ -194,12 +182,12 @@ model_set_N <- dredge(global_model_2_N,
 model_set_N$weight <- as.numeric(model_set_N$weight)
 glimpse(model_set_N)
 
-# write_csv(model_set_N, "tables/model_set_output.csv")
+# write_csv(model_set_N, "tables/model_set_output_nstability.csv")
 
 ###########################################################################
 # run models with delta AICc <4 -------------------------------------------
 ###########################################################################
-m1 <- glmmTMB(n_stability ~ biome + fam_richness + max_ss + mean_bm + TrophInvSimpDivInd + (1|project), data = model_data_scaled,
+m1 <- glmmTMB(n_stability ~ latitude + max_ss + mean_bm + spp_rich + TrophInvSimpDivInd + (1|project), data = model_data_scaled,
               family = gaussian(link = "log"),
               REML = FALSE)
 
@@ -207,6 +195,9 @@ m1 <- glmmTMB(n_stability ~ biome + fam_richness + max_ss + mean_bm + TrophInvSi
 ### REML chosen over ML as it maximizes variance
 
 summary(m1)
+performance::model_performance(m1)
+performance::r2(m1)
+parameters::model_parameters(m1)
 ###########################################################################
 # plot marginal effects ---------------------------------------------------
 ###########################################################################
@@ -214,17 +205,19 @@ summary(m1)
 ### type = "re" incorporates variance from random effects
 
 ### can't use average model because then no variance incorporated?
-pred_fam_rich <- ggeffect(m1, "fam_richness[0:1.6 by=0.1]", type = "re")
+pred_latitude <- ggeffect(m1, "latitude[-0.52:1.27 by=0.1", type = "re")
 pred_max_ss <- ggeffect(m1, "max_ss[0:3 by=0.1]", type = "re")
-pred_TrophInvSimpDivInd <- ggeffect(m1, "TrophInvSimpDivInd[0:1.4 by=0.1]", type = "re")
 pred_mean_bm <- ggeffect(m1, "mean_bm[0:3 by=0.1]", type = "re")
-pred_biome <- ggeffect(m1, "biome", type = "re")
+pred_spp_rich <- ggeffect(m1, "spp_rich[0:2.5 by=0.1]", type = "re")
+pred_TrophInvSimpDivInd <- ggeffect(m1, "TrophInvSimpDivInd[0:1.4 by=0.1]", type = "re")
 
-plot(pred_fam_rich)
+
+plot(pred_latitude)
 plot(pred_max_ss)
-plot(pred_TrophInvSimpDivInd)
 plot(pred_mean_bm)
-plot(pred_biome)
+plot(pred_spp_rich)
+plot(pred_TrophInvSimpDivInd)
+
 
 ### worth re-scaling (i.e., reverting back to raw values for plotting)
 ### how does it know how to scale??? - original scaling divided column by st. dev.
@@ -232,15 +225,18 @@ plot(pred_biome)
 
 ### pull st. dev for each covariate in model_data df (i.e., dataset before scaling)
 
-sd(model_data$fam_richness)#1.84905
+# sd(model_data$fam_richness)#1.84905
+sd(model_data$latitude)#17.56555
 sd(model_data$max_ss)#30.63198
-sd(model_data$TrophInvSimpDivInd)#0.3784153
 sd(model_data$mean_bm)#40.84087
+sd(model_data$spp_rich)#5.452757
+sd(model_data$TrophInvSimpDivInd)#0.3784153
 
-ggplot(pred_fam_rich, aes(x = x*1.84905, y = predicted)) + 
+
+ggplot(pred_latitude, aes(x = x*17.56555, y = predicted)) + 
   geom_line() +
   geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = 0.2) +
-  labs(x = "Family Richness", y = "Nutrient Supply Stability (1/CV Nutrient Supply)") +
+  labs(x = "Latitude", y = "Nutrient Supply Stability (1/CV Nutrient Supply)") +
   theme_classic() +
   theme(panel.background = element_rect(fill = "white"),
         axis.title.x = element_blank(),
@@ -250,7 +246,7 @@ ggplot(pred_fam_rich, aes(x = x*1.84905, y = predicted)) +
         axis.text.y = element_text(face = "bold", size = 18))
 
 # ggsave(
-#   filename = "fam_richness_nut_supply_marginaleffect.tiff",
+#   filename = "latitude_nut_supply_marginaleffect.tiff",
 #   path = "plots",
 #   width = 10, height = 10
 # )
@@ -309,13 +305,31 @@ ggsave(
   width = 10, height = 10
 )
 
-pred_biome |> 
-  mutate(x = factor(x, levels = x[order(predicted, decreasing = TRUE)])) |> 
-  na.omit() |> 
-  ggplot(aes(x = x, y = predicted)) + 
-  geom_point() +
-  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.5) +
-  labs(x = "Climate", y = "Nutrient Supply Stability (1/CV Nutrient Supply)") +
+# pred_biome |> 
+#   mutate(x = factor(x, levels = x[order(predicted, decreasing = TRUE)])) |> 
+#   na.omit() |> 
+#   ggplot(aes(x = x, y = predicted)) + 
+#   geom_point() +
+#   geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.5) +
+#   labs(x = "Climate", y = "Nutrient Supply Stability (1/CV Nutrient Supply)") +
+#   theme_classic() +
+#   theme(panel.background = element_rect(fill = "white"),
+#         axis.title.x = element_blank(),
+#         axis.title.y = element_blank(),
+#         axis.line = element_line("black"),
+#         axis.text.x = element_text(face = "bold", size = 18),
+#         axis.text.y = element_text(face = "bold", size = 18))
+# 
+# ggsave(
+#   filename = "biome_nut_supply_marginaleffect.tiff",
+#   path = "plots",
+#   width = 15, height = 10
+# )
+
+ggplot(pred_spp_rich, aes(x = x*5.452757, y = predicted)) + 
+  geom_line() +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = 0.2) +
+  labs(x = "Mean Species Richness", y = "Nutrient Supply Stability (1/CV Nutrient Supply)") +
   theme_classic() +
   theme(panel.background = element_rect(fill = "white"),
         axis.title.x = element_blank(),
@@ -324,8 +338,8 @@ pred_biome |>
         axis.text.x = element_text(face = "bold", size = 18),
         axis.text.y = element_text(face = "bold", size = 18))
 
-ggsave(
-  filename = "biome_nut_supply_marginaleffect.tiff",
-  path = "plots",
-  width = 15, height = 10
-)
+# ggsave(
+#   filename = "mean_spp_rich_marginaleffect.tiff",
+#   path = "plots",
+#   width = 10, height = 10
+# )
