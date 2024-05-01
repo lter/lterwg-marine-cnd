@@ -9,7 +9,7 @@
 ###########################################################################
 
 ### load necessary libraries
-### install.packages("librarian")
+# install.packages("librarian")
 librarian::shelf(tidyverse, readxl, glmmTMB, MuMIn, corrplot, performance, ggeffects, parameters)
 
 exc <- read_csv("local_data/model_data_all.csv") #all sites, no 10 year cutoff
@@ -171,6 +171,10 @@ performance::check_model(global_model_2_N)
 ###########################################################################
 # create model set --------------------------------------------------------
 ###########################################################################
+
+### make sure to drop correlated predictors
+### can set threshold to like 0.8 - look into thresholds, something like that
+### check VIF on backend
 
 model_set_N <- dredge(global_model_2_N,
                     subset = !(`cond(fam_richness)`&&`cond(spp_rich)`)) |> 
