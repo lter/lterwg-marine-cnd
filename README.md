@@ -3,9 +3,10 @@
 
 ## PIs: 
 
-- Joseph Peters, Graduate Student, UCSB
 - Mack White, Graduate Student, FIU
+- Joseph Peters, Graduate Student, UCSB
 - Bradley Strickland, Postdoctoral Research Associate, VIMS
+- Deron Burkepile, Professor, FIU
 - Jennifer Rehage, Associate Professor, FIU
 
 
