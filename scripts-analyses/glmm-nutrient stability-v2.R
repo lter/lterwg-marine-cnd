@@ -181,3 +181,6 @@ r.squaredGLMM(m2)
 r.squaredGLMM(m3)
 r.squaredGLMM(m4)
 # r.squaredGLMM(m5)
+
+# rerun models with replacing na's + removing na's - dig a little deeper here
+# model output table with all models delta aicc <4
