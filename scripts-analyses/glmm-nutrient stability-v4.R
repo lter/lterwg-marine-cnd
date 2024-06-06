@@ -221,7 +221,7 @@ sd(model_data$TrophInvSimpDivInd)#0.3127963
 max_ss <- ggplot(pred_max_ss, aes(x = x*30.85014, y = predicted)) + 
   geom_line() +
   geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = 0.2) +
-  labs(x = "Size Structure", y = "Consumer Nitrogen Supply Stability (1/CV Nitrogen Supply)") +
+  labs(x = "Max Size", y = "Consumer Nitrogen Supply Stability (1/CV Nitrogen Supply)") +
   theme_classic() +
   theme(panel.background = element_rect(fill = "white"),
         axis.title.x = element_blank(),
@@ -268,10 +268,14 @@ ggsave("output/ms first round/plots/combined_me.tiff", units = "in", width = 6,
 #1 - Review and finalize GLLMs + ME Plots + Tables
 #2 - Review and revise interpretation of GLMM outputs
 #3 - Review final figure/table list
+#4 - Discuss Ryan feelings on outline - discussion points think we should hit?
+#5 - Special Issue Conversation
 
 ### Questions for WRJ 
 #1 - Does marginal effect plot code look solid?
 #2 - Why does marginal effect plot have different y axes?
 #3 - Marginal Effect plot formatting suggestions?
-#4 - Review my interpretation of the figure
-#5 - 
+#4 - Review my interpretation of the outputs
+#5 - Review final figure/table list - any thoughts or additional?
+#6 - Review outline and have WRJ add thoughts since won't be there
+#7 - Special Issue Conversation
