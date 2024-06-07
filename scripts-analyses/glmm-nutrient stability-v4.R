@@ -10,7 +10,7 @@
 
 ### load necessary libraries
 ### install.packages("librarian")
-librarian::shelf(tidyverse, readxl, glmmTMB, MuMIn, corrplot, performance, ggeffects, ggpubr, parameters)
+librarian::shelf(tidyverse, readxl, glmmTMB, MuMIn, sjPlot, corrplot, performance, ggeffects, ggpubr, parameters)
 
 exc <- read_csv("local_data/model_data_all.csv") #all sites, no 10 year cutoff
 sc <- read_csv("local_data/site_characteristics.csv")
@@ -195,14 +195,14 @@ m9 <- glmmTMB(n_stability ~ 1 + (1|project), data = model_data_scaled,
               REML = FALSE)
 performance::check_model(m9)
 
-### compare models and save for publication
-model_table <- performance::compare_performance(m1,m2,m3,m4,m5,m6,m7,m8,m9)
-write_csv(model_table, "output/ms first round/tables/stability_model_comparison.csv")
+# ### compare models and save for publication
+# model_table <- performance::compare_performance(m1,m2,m3,m4,m5,m6,m7,m8,m9)
+# write_csv(model_table, "output/ms first round/tables/stability_model_comparison.csv")
 
-### compare models and save for publication
-model_set_N$weight <- as.numeric(model_set_N$weight)
-glimpse(model_set_N)
-write_csv(model_set_N, "output/ms first round/tables/stability_model_set_N.csv")
+# ### compare models and save for publication
+# model_set_N$weight <- as.numeric(model_set_N$weight)
+# glimpse(model_set_N)
+# write_csv(model_set_N, "output/ms first round/tables/stability_model_set_N.csv")
 
 ###########################################################################
 # plot marginal effects ---------------------------------------------------
@@ -272,10 +272,28 @@ ggsave("output/ms first round/plots/combined_me.tiff", units = "in", width = 6,
 #5 - Special Issue Conversation
 
 ### Questions for WRJ 
-#1 - Does marginal effect plot code look solid?
+#1a - stability/n question - show WRJ tables
+#1b - Does marginal effect plot code look solid?
 #2 - Why does marginal effect plot have different y axes?
 #3 - Marginal Effect plot formatting suggestions?
-#4 - Review my interpretation of the outputs
+#4 - Review outline and have WRJ add thoughts since won't be there
 #5 - Review final figure/table list - any thoughts or additional?
-#6 - Review outline and have WRJ add thoughts since won't be there
-#7 - Special Issue Conversation
+#6 - Special Issue Conversation
+
+# exploratory analysis ----------------------------------------------------
+
+plot_model(m1, type = 'pred', terms = c('max_ss', "project"),
+           pred.type = "re", ci.lvl = NA)
+
+model_data |> 
+  filter(project %in% c("PISCO-Central", "PISCO-South")) |> 
+  ggplot(aes(strata, n_stability, group = strata, color = strata))+
+  geom_boxplot() + 
+  facet_wrap(~project)
+
+test <- model_data |> 
+  filter(project %in% c("MCR")) |> 
+  separate(site, into = c("Habitat", "SiteNumber"), sep = "-")
+
+ggplot(test, aes(Habitat, n_stability)) +
+  geom_boxplot()
