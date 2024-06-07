@@ -218,17 +218,18 @@ sd(model_data$max_ss)#30.85014
 sd(model_data$TrophInvSimpDivInd)#0.3127963
 
 ### plotting predicted effects of size structure
-max_ss <- ggplot(pred_max_ss, aes(x = x*30.85014, y = predicted)) + 
+max_ss <- ggplot(pred_max_ss, aes(x = x*48.09204, y = predicted)) + 
   geom_line() +
   geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = 0.2) +
-  labs(x = "Max Size", y = "Consumer Nitrogen Supply Stability (1/CV Nitrogen Supply)") +
+  labs(x = "Max Size", y = "Nitrogen Supply Stability") +
+  scale_x_continuous(limits = c(0,135), breaks = c(0,25,50,75,100,125))+
   theme_classic() +
   theme(panel.background = element_rect(fill = "white"),
-        axis.title.x = element_blank(),
-        axis.title.y = element_blank(),
+        axis.title.x = element_text(face = "bold", size = 14),
+        axis.title.y = element_text(face = "bold", size = 14),
         axis.line = element_line("black"),
-        axis.text.x = element_text(face = "bold", size = 18),
-        axis.text.y = element_text(face = "bold", size = 18))
+        axis.text.x = element_text(face = "bold", size = 14),
+        axis.text.y = element_text(face = "bold", size = 14))
 
 # ggsave(
 #   filename = "size_structure_me.tiff",
@@ -237,18 +238,19 @@ max_ss <- ggplot(pred_max_ss, aes(x = x*30.85014, y = predicted)) +
 # )
 
 ### plotting predicted effects of trophic inverse simpson diversity
-troph_simp <- ggplot(pred_TrophInvSimpDivInd, aes(x = x*0.3127963, y = predicted)) + 
+troph_simp <- ggplot(pred_TrophInvSimpDivInd, aes(x = x*2.020464, y = predicted)) +
   geom_line() +
   geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = 0.2) +
-  labs(x = "Trophic Inverse Simpson Diversity Index", y = "Nitrogen Supply Stability (1/CV Nitrogen Supply)") +
+  labs(x = "Trophic Diversity", y = "Nitrogen Supply Stability") +
+  scale_x_continuous(limits = c(0,2.7), breaks = c(0,0.5,1,1.5,2,2.5))+
   theme_classic() +
   theme(panel.background = element_rect(fill = "white"),
-        axis.title.x = element_blank(),
-        axis.title.y = element_blank(),
+        axis.title.x = element_text(face = "bold", size = 14),
+        axis.title.y = element_text(face = "bold", size = 14),
         axis.line = element_line("black"),
-        axis.text.x = element_text(face = "bold", size = 18),
-        axis.text.y = element_text(face = "bold", size = 18))
-
+        axis.text.x = element_text(face = "bold", size = 14),
+        axis.text.y = element_text(face = "bold", size = 14))
+### clearly label x
 # ggsave(
 #   filename = "trophic_inv_simp_me.tiff",
 #   path = "output/ms first round/plots/",
@@ -258,11 +260,12 @@ troph_simp <- ggplot(pred_TrophInvSimpDivInd, aes(x = x*0.3127963, y = predicted
 #Plot of fitted model q1.m1
 ggarrange(max_ss, troph_simp,
           labels = c('a)','b)'),
-          ncol = 1, vjust = 1, align = "v")
+          ncol = 2, vjust = 1, align = "h")
+### make this a horizontal figure
 
 #saving for publication
-ggsave("output/ms first round/plots/combined_me.tiff", units = "in", width = 6,
-       height = 10, dpi =  600, compression = "lzw")
+ggsave("output/ms first round/plots/combined_me.tiff", units = "in", width = 10,
+       height = 6, dpi =  600, compression = "lzw")
 
 ### Goals of Meeting with WRJ 
 #1 - Review and finalize GLLMs + ME Plots + Tables
@@ -273,8 +276,11 @@ ggsave("output/ms first round/plots/combined_me.tiff", units = "in", width = 6,
 
 ### Questions for WRJ 
 #1a - stability/n question - show WRJ tables
+### accounting for it in standard deviation calculation nested within cv calculation
+### could account for, if necessary/want, by sampling with replacement subsample of lowest years (i.e., n)
 #1b - Does marginal effect plot code look solid?
 #2 - Why does marginal effect plot have different y axes?
+### this is just predicated value - trend when holding something constant
 #3 - Marginal Effect plot formatting suggestions?
 #4 - Review outline and have WRJ add thoughts since won't be there
 #5 - Review final figure/table list - any thoughts or additional?
