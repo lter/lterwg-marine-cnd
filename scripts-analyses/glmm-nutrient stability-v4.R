@@ -264,8 +264,8 @@ ggarrange(max_ss, troph_simp,
 ### make this a horizontal figure
 
 #saving for publication
-ggsave("output/ms first round/plots/combined_me.tiff", units = "in", width = 10,
-       height = 6, dpi =  600, compression = "lzw")
+# ggsave("output/ms first round/plots/combined_me.tiff", units = "in", width = 10,
+#        height = 6, dpi =  600, compression = "lzw")
 
 ### Goals of Meeting with WRJ 
 #1 - Review and finalize GLLMs + ME Plots + Tables
@@ -304,5 +304,147 @@ test <- model_data |>
 ggplot(test, aes(Habitat, n_stability)) +
   geom_boxplot()
 
+model_data |> 
+  ggplot(aes(project, n_stability)) + 
+  geom_boxplot()
+
+
+### join data for modeling with site characteristic information
+dt <- left_join(exc, sc) |> 
+  select(project, ecosystem, ocean, climate, latitude, site, vert, year, month, vert, everything()) |> 
+  # filter(vert == "vertebrate") |> 
+  ### if species richness is important in models, remove CCE & NGA as they are not taxonomically resolved species, but instead "groups"
+  # filter(!project %in% c("CCE", "NGA")) |> 
+  ### recalculated species richness in community dataset prep and wanted to ensure it matched up
+  ### however, can remove now
+  select(-n_spp)
+
+na_count_per_column <- sapply(dt1, function(x) sum(is.na(x)))
+print(na_count_per_column) 
+### 195 NAs within community dataset - because I removed sites instances where nothing was caught
+### set community metrics to zero here, since it represents periods of time where nothing was collected
+
+dt2 <- na.omit(dt1)
+
+na_count_per_column <- sapply(dt2, function(x) sum(is.na(x)))
+print(na_count_per_column) 
+
+### summarize all sites measured within the dataset annualy
+model_dt <- dt |> 
+  group_by(project, ecosystem, climate, latitude, strata, site, vert) |> 
+  summarize(mean_n = mean(total_nitrogen),
+            ### calculating coefficient of variation for nutrient supply across time for each site
+            cv_n = (sd(total_nitrogen, na.rm = TRUE) / mean(total_nitrogen, na.rm = TRUE)),
+            ### calculating stability of nutrient supply (i.e., 1/cv)
+            n_stability = 1/cv_n,
+            mean_p = mean(total_phosphorus),
+            ### calculating coefficient of variation for nutrient supply across time for each site
+            cv_p = (sd(total_nitrogen, na.rm = TRUE) / mean(total_nitrogen, na.rm = TRUE)),
+            ### calculating stability of nutrient supply (i.e., 1/cv)
+            p_stability = 1/cv_p,
+            mean_bm = mean(total_biomass),
+            ### calculating coefficient of variation for biomass across time for each site
+            cv_bm = (sd(total_biomass, na.rm = TRUE) / mean(total_biomass, na.rm = TRUE)),
+            ### calculating stability of biomass (i.e., 1/cv)
+            bm_stability = 1/cv_bm,
+            min_ss = mean(mean_min_size),
+            mean_ss = mean(mean_mean_size),
+            max_ss = mean(mean_max_size)) |> 
+  ### omit three sites with NA here - it appears because there was no replication of the sites (i.e., one-offs in datasets)
+  na.omit() |> 
+  ungroup()
+
+glimpse(model_dt)
+###########################################################################
+# recode factors as such --------------------------------------------------
+###########################################################################
+
+data <- model_dt|>
+  ### mutates character class columns as factors
+  mutate_at(c("project", "ecosystem", "climate", "strata", "site"), as.factor)
+glimpse(data)
+
+###########################################################################
+# select covariates -------------------------------------------------------
+###########################################################################
+
+model_data <- data |> 
+  ### selection of variables we want for regression models
+  select(n_stability, p_stability, bm_stability, project, site, vert, strata, ecosystem, climate, 
+         latitude, mean_bm, min_ss, mean_ss, max_ss)
+glimpse(model_data)
+
+
+
+one <- model_data |> 
+  filter(n_stability <= 3) |> 
+  ggplot(aes(project, n_stability)) + 
+  geom_boxplot() +
+  labs(x = "LTER Program", y = "Nitrogen Supply Stability") +
+  # scale_x_continuous(limits = c(0,2.7), breaks = c(0,0.5,1,1.5,2,2.5))+
+  theme_classic() +
+  theme(panel.background = element_rect(fill = "white"),
+        axis.title.x = element_text(face = "bold", size = 18),
+        axis.title.y = element_text(face = "bold", size = 18),
+        axis.line = element_line("black"),
+        axis.text.x = element_text(face = "bold", size = 18),
+        axis.text.y = element_text(face = "bold", size = 18))
+
+# ggsave(
+#   filename = "project_n_stability.tiff",
+#   path = "output/ms first round/plots/",
+#   width = 22, height = 10
+# )
+
+three <- model_data |> 
+  filter(n_stability <= 3) |> 
+  ggplot(aes(vert, n_stability)) + 
+  geom_boxplot() +
+  labs(x = "Community", y = "Nitrogen Supply Stability") +
+  # scale_x_continuous(limits = c(0,2.7), breaks = c(0,0.5,1,1.5,2,2.5))+
+  theme_classic() +
+  theme(panel.background = element_rect(fill = "white"),
+        axis.title.x = element_text(face = "bold", size = 14),
+        axis.title.y = element_text(face = "bold", size = 14),
+        axis.line = element_line("black"),
+        axis.text.x = element_text(face = "bold", size = 14),
+        axis.text.y = element_text(face = "bold", size = 14))
+
+# ggsave(
+#   filename = "vertebrate_vs_invertebrate_n_stability.tiff",
+#   path = "output/ms first round/plots/",
+#   width = 10, height = 10
+# )
+
+two<- model_data |> 
+  filter(n_stability <= 3) |> 
+  filter(ecosystem != "onshore") |> 
+  ggplot(aes(ecosystem, n_stability)) + 
+  geom_boxplot() +
+  labs(x = "Ecosystem", y = "Nitrogen Supply Stability") +
+  # scale_x_continuous(limits = c(0,2.7), breaks = c(0,0.5,1,1.5,2,2.5))+
+  theme_classic() +
+  theme(panel.background = element_rect(fill = "white"),
+        axis.title.x = element_text(face = "bold", size = 14),
+        axis.title.y = element_text(face = "bold", size = 14),
+        axis.line = element_line("black"),
+        axis.text.x = element_text(face = "bold", size = 14),
+        axis.text.y = element_text(face = "bold", size = 14))
+
+# ggsave(
+#   filename = "vertebrate_vs_invertebrate_n_stability.tiff",
+#   path = "output/ms first round/plots/",
+#   width = 10, height = 10
+# )
 ###rerun biomass stability - see if it is showing same thing or not
 ###two types of nutrient dynamics - supply and storage
+
+#Plot of fitted model q1.m1
+ggarrange(two,three,
+          labels = c('a)','b)'),
+          ncol = 2, vjust = 1, align = "h")
+### make this a horizontal figure
+
+#saving for publication
+ggsave("output/ms first round/plots/supp_plot.tiff", units = "in", width = 10,
+       height = 6, dpi =  600, compression = "lzw")
