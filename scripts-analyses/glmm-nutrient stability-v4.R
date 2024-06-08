@@ -303,3 +303,6 @@ test <- model_data |>
 
 ggplot(test, aes(Habitat, n_stability)) +
   geom_boxplot()
+
+###rerun biomass stability - see if it is showing same thing or not
+###two types of nutrient dynamics - supply and storage
