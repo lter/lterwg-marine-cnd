@@ -398,8 +398,8 @@ one <- model_data |>
 
 three <- model_data |> 
   filter(n_stability <= 3) |> 
-  ggplot(aes(vert, n_stability)) + 
-  geom_boxplot() +
+  ggplot(aes(vert, n_stability, fill = vert)) + 
+  geom_boxplot(show.legend = FALSE) +
   labs(x = "Community", y = "Nitrogen Supply Stability") +
   # scale_x_continuous(limits = c(0,2.7), breaks = c(0,0.5,1,1.5,2,2.5))+
   theme_classic() +
@@ -419,8 +419,8 @@ three <- model_data |>
 two<- model_data |> 
   filter(n_stability <= 3) |> 
   filter(ecosystem != "onshore") |> 
-  ggplot(aes(ecosystem, n_stability)) + 
-  geom_boxplot() +
+  ggplot(aes(ecosystem, n_stability, fill = ecosystem)) + 
+  geom_boxplot(show.legend = FALSE) +
   labs(x = "Ecosystem", y = "Nitrogen Supply Stability") +
   # scale_x_continuous(limits = c(0,2.7), breaks = c(0,0.5,1,1.5,2,2.5))+
   theme_classic() +
