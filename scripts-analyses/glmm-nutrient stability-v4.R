@@ -264,7 +264,7 @@ ggarrange(max_ss, troph_simp,
 ### make this a horizontal figure
 
 #saving for publication
-# ggsave("output/ms first round/plots/combined_me.tiff", units = "in", width = 10,
+# ggsave("output/ms first round/plots/combined_me.tiff", units = "in", width = 12,
 #        height = 6, dpi =  600, compression = "lzw")
 
 ### Goals of Meeting with WRJ 

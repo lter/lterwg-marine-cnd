@@ -31,28 +31,33 @@ dt1 <- left_join(dt, add, by = "project")
 #   select(project, units, ecosystem) |> 
 #   distinct()
 
+vert_colors <- c("vertebrate" = "black", "invertebrate" = "grey")
+ecosystem_colors <- c("Coastal" = "#7fcdff", "Pelagic" = "#064273", "Estuarine" = "#76b6c4")
+
+
 dt1 |> 
-  group_by(axis_name_2, ecosystem_2, vert, site, year) |> 
+  group_by(axis_name_4, ecosystem_2, vert, site, year) |> 
   summarize(mean_n = mean(total_nitrogen)) |> 
-  mutate(axis_name_2 = reorder(axis_name_2, ecosystem_2)) |> 
+  mutate(axis_name_2 = reorder(axis_name_4, ecosystem_2)) |> 
   ggplot(aes(y = axis_name_2, x = log1p(mean_n), fill = ecosystem_2)) +
-  geom_boxplot(show.legend = FALSE, outlier.shape = NA) +
-  geom_jitter(aes(color = vert), position = position_jitter(width = 0.2), size = 1.0, alpha = 0.25) +
-  labs(title = "Total Nitrogen Supply (ug/hr)", x = "Total Nitrogen Supply", y = "Project") +
+  geom_jitter(aes(color = vert), position = position_jitter(width = 0.2), size = 1.0) +
+  geom_boxplot(show.legend = FALSE, outlier.shape = NA,  alpha = 0.75) +
+  scale_fill_manual(values = ecosystem_colors) + # Apply the color palette
+  scale_color_manual(values = vert_colors) + # Apply the color palette for jitter
+  labs(title = "Community Nitrogen Supply", x = "Log Total Nitrogen Supply (ug/hr/m-m2-m3)", y = "Project") +
   theme_classic() +
   theme(panel.background = element_rect(fill = "white"),
-        axis.title.x = element_blank(),
+        axis.title.x = element_text(face = "bold", size = 18),
         axis.title.y = element_blank(),
         axis.line = element_line("black"),
         axis.text.x = element_text(face = "bold", size = 18),
         axis.text.y = element_text(face = "bold", size = 18),
-        plot.title = element_text(face = "bold", size = 18),
+        plot.title = element_text(face = "bold", size = 18, hjust = 0.5),
         legend.position = "none")
 
 # ggsave(
-#   filename = "total_n_jitter_boxplot_log_short.tiff",
-#   path = "plots",
-#   width = 15, height = 8
+#   filename = "output/ms first round/plots/total_n_jitter_boxplot_log_short.tiff",
+#   width = 16, height = 8
 # )
 
 dt_n <- dt |> group_by(project, site, year) |> summarize(mean_n = mean(total_nitrogen))
