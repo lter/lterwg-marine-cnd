@@ -1,3 +1,4 @@
+library(librarian)
 librarian::shelf(tidyverse, readxl, glmmTMB, MuMIn, sjPlot, ggpmisc, corrplot, performance, ggeffects, ggpubr, parameters)
 
 ###########################################################################
@@ -13,12 +14,11 @@ inds <- all |>
   filter(measurement_type == "count") |> 
   mutate(measurement_value = as.numeric(measurement_value)) |> 
   summarize(sum = sum(measurement_value, na.rm = TRUE)) #2,864,931 individuals
-
 ###########################################################################
 # summary stats from  excretion dataset -----------------------------------
 ###########################################################################
 
-all_exc <- read_csv("local_data/harmonized_consumer_excretion_CLEAN.csv")
+all_exc <- read_csv("../local_data/harmonized_consumer_excretion_CLEAN.csv")
 colnames(all_exc)
 unique(all_exc$family)#242 families
 
@@ -49,6 +49,20 @@ size_info <- all_exc_filtered|>
 #max - 126518.4 (Muraenidae @ )
 #25% - 1.954415
 #75% - 40.97594
+test <- all_exc_filtered |> filter(project == "CoastalCA") |> 
+  group_by(site) |> 
+  summarize(n = n_distinct(scientific_name),
+            min = min(year),
+            max = max(year),
+            years = max-min)
+test1 <- all_exc_filtered |> filter(project == "NGA") |> 
+  summarize(n = n_distinct(sp_code))
+
+site_species <- all_exc_filtered |> 
+  group_by(project, habitat) |> 
+  summarize(species = n_distinct(scientific_name))
+
+
 
 ###########################################################################
 # summary stats from summarized excretion dataset -------------------------

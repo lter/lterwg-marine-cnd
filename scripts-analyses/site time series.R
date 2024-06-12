@@ -2,9 +2,9 @@
 ### install.packages("librarian")
 librarian::shelf(tidyverse, readxl, glmmTMB, MuMIn, corrplot, performance, ggeffects, sjlabelled)
 
-exc <- read_csv("local_data/model_data_all.csv") #all sites, no 10 year cutoff
-sc <- read_csv("local_data/site_characteristics.csv")
-add <- read_csv("local_data/timeseries_axis_titles.csv")
+exc <- read_csv("../local_data/model_data_all.csv") #all sites, no 10 year cutoff
+sc <- read_csv("../local_data/site_characteristics.csv")
+add <- read_csv("../local_data/timeseries_axis_titles.csv")
 ### join data for modeling with site characteristic information
 dt <- left_join(exc, sc) |> 
   dplyr::select(project, ecosystem, ocean, latitude, site, year, month, vert, everything()) |> 
@@ -19,6 +19,8 @@ dt1$axis_name_5 <- factor(dt1$axis_name_5,
                                      "PISCO Southern", "PISCO Central", "MCR",
                                      "PIE", "FCE",
                                      "NGA", "CCE"))
+sbc_beach <- dt1 |> 
+  filter(axis_name_5 == "SBC Beach")
 
 ### summarize all sites measured within the dataset annualy
 plot_dt <- dt1 |> 
@@ -72,7 +74,16 @@ plot_dt |>
         strip.background = element_blank(),
         strip.text = element_text(face = "bold", size = 11, color = "black"))  # Customize facet label text)
 
-ggsave(
-  filename = "output/ms first round/plots/timeseries_sites_habitats.tiff",
-  width = 12, height = 12
-)
+# ggsave(
+#   filename = "output/ms first round/plots/timeseries_sites_habitats.tiff",
+#   width = 12, height = 12
+# )
+
+summary_info <- dt1 |> 
+  group_by(axis_name_5, ecosystem_2, units) |> 
+  summarize(Start = min(year),
+            End = max(year),
+            Length = End - Start) |> 
+  rename(Project = axis_name_5,
+         Ecosystem = ecosystem_2,
+         Spatial_Resolution = units)
