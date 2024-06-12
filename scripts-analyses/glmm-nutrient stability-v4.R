@@ -221,7 +221,7 @@ sd(model_data$TrophInvSimpDivInd)#0.3127963
 max_ss <- ggplot(pred_max_ss, aes(x = x*48.09204, y = predicted)) + 
   geom_line() +
   geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = 0.2) +
-  labs(x = "Max Size", y = "Nitrogen Supply Stability") +
+  labs(x = "Max Size", y = "Predicted Nitrogen Supply Stability") +
   scale_x_continuous(limits = c(0,135), breaks = c(0,25,50,75,100,125))+
   theme_classic() +
   theme(panel.background = element_rect(fill = "white"),
@@ -241,7 +241,7 @@ max_ss <- ggplot(pred_max_ss, aes(x = x*48.09204, y = predicted)) +
 troph_simp <- ggplot(pred_TrophInvSimpDivInd, aes(x = x*2.020464, y = predicted)) +
   geom_line() +
   geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = 0.2) +
-  labs(x = "Trophic Diversity", y = "Nitrogen Supply Stability") +
+  labs(x = "Trophic Diversity", y = "Predicted Nitrogen Supply Stability") +
   scale_x_continuous(limits = c(0,2.7), breaks = c(0,0.5,1,1.5,2,2.5))+
   theme_classic() +
   theme(panel.background = element_rect(fill = "white"),
@@ -264,7 +264,7 @@ ggarrange(max_ss, troph_simp,
 ### make this a horizontal figure
 
 #saving for publication
-# ggsave("output/ms first round/plots/combined_me.tiff", units = "in", width = 12,
+# ggsave("output/ms first round/plots/combined_me.tiff", units = "in", width = 15,
 #        height = 6, dpi =  600, compression = "lzw")
 
 ### Goals of Meeting with WRJ 
