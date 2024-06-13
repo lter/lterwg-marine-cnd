@@ -316,6 +316,7 @@ mcr_ready <-mcr_all_dm1 %>%
 # GCE start ---------------------------------------------------------------
 ## touched base w Amanda Spivak & Jimmy Nelson re: data questions and have yet
 ### to hear back from them.. move forward without them for time being
+### reviewed data submitted and does not fit criteria of working group data needs
 # GCE end -----------------------------------------------------------------
 
 # NGA start ---------------------------------------------------------------
@@ -387,7 +388,7 @@ na_coeff_result <- which(is.na(nga_dm_coeff$dm_coeff))
 ### for small number of NAs take average coefficient
 nga_dm <- nga_dm_coeff |> 
   mutate(dm_coeff = replace(dm_coeff, is.na(dm_coeff), 0.1916655))
-# na_coeff_result <- which(is.na(nga_dm$dm_coeff)) 
+# na_coeff_result <- which(is.na(nga_dm$dm_coeff))
 
 nga_all_dm <- nga_dm |> 
   mutate(`dmperind_g/ind` = ind_bio*dm_coeff,
@@ -453,19 +454,37 @@ glimpse(expand_PIE_biomass_new_col) #missing small # of ind_bio estimates
 pie_sp_avg_ind_bio <- expand_PIE_biomass_new_col |> 
   filter(!is.na(ind_bio)) |> 
   group_by(scientific_name) |> 
-  summarize(avg_bio = mean(ind_bio, na.rm = TRUE))
+  summarize(avg_bio = mean(ind_bio, na.rm = TRUE),
+            sd_bio = sd(ind_bio, na.rm = TRUE))
 
 ###replace zeros with average and rename similar to mcr dataset
-expand_PIE_biomass_new_col <- expand_PIE_biomass_new_col |> 
+expand_PIE_biomass_new_col1 <- expand_PIE_biomass_new_col |> 
   mutate(count = count_num) |> 
   dplyr::select(-count_num) |> 
   left_join(pie_sp_avg_ind_bio, by = "scientific_name") |> 
   mutate(ind_bio = ifelse(is.na(ind_bio), avg_bio, ind_bio)) |> 
-  dplyr::select(-avg_bio)
-glimpse(expand_PIE_biomass_new_col)
+  dplyr::select(-avg_bio, -sd_bio)
+glimpse(expand_PIE_biomass_new_col1)
+
+### start of new code (June 13 2024) to handle major outliers (e.g., 30lb grass shrimp)
+expand_PIE_biomass_new_col2 <- expand_PIE_biomass_new_col1 |> 
+  left_join(pie_sp_avg_ind_bio, by = "scientific_name")
+
+expand_PIE_biomass_new_col3 <- expand_PIE_biomass_new_col2 |> 
+  mutate(ind_bio = ifelse(abs(ind_bio - avg_bio) > 3 * sd_bio, avg_bio, ind_bio))  |> 
+  select(-avg_bio, -sd_bio)
+
+test <- expand_PIE_biomass_new_col3 |> 
+  filter(!is.na(ind_bio)) |> 
+  group_by(scientific_name) |> 
+  summarize(avg_bio = mean(ind_bio, na.rm = TRUE),
+            sd_bio = sd(ind_bio, na.rm = TRUE),
+            max_bio = max(ind_bio, na.rm = TRUE))
+
+### end of new code (June 13 2024) to handle major outliers (e.g., 30lb grass shrimp)
 
 ###zero-fill the data
-pie_zero_fill <- expand_PIE_biomass_new_col |> 
+pie_zero_fill <- expand_PIE_biomass_new_col3 |> 
   complete(nesting(scientific_name, species, sp_code),
            nesting(project, habitat, raw_filename, year, month, 
                    day, date, site, subsite_level1, subsite_level2),
@@ -474,7 +493,8 @@ pie_zero_fill <- expand_PIE_biomass_new_col |>
 
 ###join with species list
 pie_diet <- species_list |> 
-  filter(project == "PIE")
+  filter(project == "PIE") |> 
+  filter(scientific_name != "Syngnathus fuscus") #one estimate on record
 
 pie_diet_cat <- merge(pie_zero_fill, pie_diet, 
                       by= c("scientific_name", "species", "sp_code", "project"))
@@ -566,6 +586,14 @@ expand_VCR_biomass_new_col <- vcr_d2 %>%
                 scientific_name = ifelse(is.na(scientific_name), "Gerreidae", scientific_name)) #fill in w real species so we dont lose true zeros in dataset
 glimpse(expand_VCR_biomass_new_col) #missing small # of ind_bio estimates
 
+### species weight check - new - June 13 2024
+test <- expand_VCR_biomass_new_col |> 
+  filter(!is.na(ind_bio)) |> 
+  group_by(scientific_name) |> 
+  summarize(avg_bio = mean(ind_bio, na.rm = TRUE),
+            sd_bio = sd(ind_bio, na.rm = TRUE))
+### everything checks out
+
 ###zero-fill the data
 vcr_zerofill <- expand_VCR_biomass_new_col |> 
   complete(nesting(scientific_name, species, sp_code),
@@ -653,12 +681,40 @@ cce <- dt %>%
   mutate(`dmperind_g/ind`=ifelse(`density_num/m2`>0,`drymass_g/m2`/`density_num/m2`,0),
          temp_c = cce_mean_temp) 
 
-cce_ready<- cce %>%
+### species weight check - new - June 13 2024
+na_count_per_column <- sapply(cce, function(x) sum(is.na(x)))
+print(na_count_per_column)
+
+### replace all the missing copepoda values with the average dm per ind
+cce1 <- cce |> 
+  mutate(`dmperind_g/ind` = ifelse(`density_num/m2` > 0 & is.na(`dmperind_g/ind`), 2.51332e-10, `dmperind_g/ind`))
+
+na_count_per_column <- sapply(cce1, function(x) sum(is.na(x)))
+print(na_count_per_column)
+
+### backfill the drymass for those that have values for all other columns
+cce2 <- cce1 |> 
+  mutate(`drymass_g/m2` = ifelse(`dmperind_g/ind`>0 & is.na(`drymass_g/m2`),
+                                 `dmperind_g/ind`*`density_num/m2`,
+         `drymass_g/m2`))
+
+na_count_per_column <- sapply(cce2, function(x) sum(is.na(x)))
+print(na_count_per_column)
+
+### replace remainder with zeros - these are the "zero-filled" observations that just have NAs
+
+cce3 <- cce2 |>
+  mutate(`drymass_g/m2` = ifelse(is.na(`drymass_g/m2`), 0, `drymass_g/m2`))
+
+na_count_per_column <- sapply(cce3, function(x) sum(is.na(x)))
+print(na_count_per_column)
+### everything checks out
+
+cce_ready<- cce3 %>%
   pivot_longer(cols = `density_num/m2`:temp_c, 
                names_to = "measurement_type",
                values_to = "measurement_value") %>%
   separate(measurement_type, into = c("measurement_type", "measurement_unit"), sep = "_",remove = FALSE) 
-
 
 #### CCE end
 
@@ -702,11 +758,13 @@ value_nas <- harmonized_clean |>
   filter(is.na(measurement_value)) |> 
   group_by(measurement_type) |> 
   summarize(n = n())
-### check to see what dmperind data we are missing (missing total of 1002)
-value_nas <- harmonized_clean |> 
-  filter(is.na(measurement_value)) |> 
-  filter(measurement_type == "dmperind")
-### missing 1002, all from CCE, which I have already talked to them about
+
+###### no longer missing as of June 13 2024 - MW fixed
+# ### check to see what dmperind data we are missing (missing total of 1002)
+# value_nas <- harmonized_clean |> 
+#   filter(is.na(measurement_value)) |> 
+#   filter(measurement_type == "dmperind")
+# ### missing 1002, all from CCE, which I have already talked to them about
 
 # # check to see the measurement type and unit are the same
 # peace <- harmonized_clean %>%
