@@ -10,7 +10,7 @@
 
 ### load necessary libraries
 ### install.packages("librarian")
-librarian::shelf(tidyverse, readxl, glmmTMB, MuMIn, corrplot, performance, ggeffects, sjlabelled)
+librarian::shelf(tidyverse, readxl, glmmTMB, MuMIn, corrplot, performance, ggeffects, sjlabelled, ggpubr)
 
 exc <- read_csv("local_data/model_data_all.csv") #all sites, no 10 year cutoff
 sc <- read_csv("local_data/site_characteristics.csv")

@@ -200,7 +200,7 @@ write_csv(model_table, "output/ms first round/tables/stability_model_comparison.
 # ### compare models and save for publication
 model_set_N$weight <- as.numeric(model_set_N$weight)
 glimpse(model_set_N)
-# write_csv(model_set_N, "output/ms first round/tables/stability_model_set_N.csv")
+write_csv(model_set_N, "output/ms first round/tables/stability_model_set_N.csv")
 
 ###########################################################################
 # plot marginal effects ---------------------------------------------------
