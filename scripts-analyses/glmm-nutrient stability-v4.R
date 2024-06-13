@@ -23,7 +23,7 @@ dt <- left_join(exc, sc) |>
   filter(!project %in% c("CCE", "NGA")) |> 
   ### recalculated species richness in community dataset prep and wanted to ensure it matched up
   ### however, can remove now
-  select(-n_spp)
+  select(-n_spp, -date)
 
 ### read in community metrics for analysis
 comm <- read_csv("local_data/community_data_filtered.csv")
@@ -32,9 +32,7 @@ dt1 <- left_join(dt, comm, relationship = "many-to-many")
 
 na_count_per_column <- sapply(dt1, function(x) sum(is.na(x)))
 print(na_count_per_column) 
-### 195 NAs within community dataset - because I removed sites instances where nothing was caught
-### set community metrics to zero here, since it represents periods of time where nothing was collected
-
+### omit NAs
 dt2 <- na.omit(dt1)
 
 na_count_per_column <- sapply(dt2, function(x) sum(is.na(x)))
@@ -175,12 +173,12 @@ m5 <- glmmTMB(n_stability ~ max_ss + SppInvSimpDivInd + TrophInvSimpDivInd + (1|
               REML = FALSE)
 performance::check_model(m5) 
 
-m6 <- glmmTMB(n_stability ~ fam_richness + max_ss + SppInvSimpDivInd + TrophInvSimpDivInd + (1|project), data = model_data_scaled,
+m6 <- glmmTMB(n_stability ~ max_ss + spp_rich + (1|project), data = model_data_scaled,
               family = gaussian(link = "log"),
               REML = FALSE)
 performance::check_model(m6) 
 
-m7 <- glmmTMB(n_stability ~ max_ss + spp_rich + (1|project), data = model_data_scaled,
+m7 <- glmmTMB(n_stability ~ fam_richness + max_ss + spp_rich + TrophInvSimpDivInd + (1|project), data = model_data_scaled,
               family = gaussian(link = "log"),
               REML = FALSE)
 performance::check_model(m7) 
@@ -196,12 +194,12 @@ m9 <- glmmTMB(n_stability ~ 1 + (1|project), data = model_data_scaled,
 performance::check_model(m9)
 
 # ### compare models and save for publication
-# model_table <- performance::compare_performance(m1,m2,m3,m4,m5,m6,m7,m8,m9)
-# write_csv(model_table, "output/ms first round/tables/stability_model_comparison.csv")
+model_table <- performance::compare_performance(m1,m2,m3,m4,m5,m6,m7,m8,m9)
+write_csv(model_table, "output/ms first round/tables/stability_model_comparison.csv")
 
 # ### compare models and save for publication
-# model_set_N$weight <- as.numeric(model_set_N$weight)
-# glimpse(model_set_N)
+model_set_N$weight <- as.numeric(model_set_N$weight)
+glimpse(model_set_N)
 # write_csv(model_set_N, "output/ms first round/tables/stability_model_set_N.csv")
 
 ###########################################################################
@@ -250,7 +248,7 @@ troph_simp <- ggplot(pred_TrophInvSimpDivInd, aes(x = x*2.020464, y = predicted)
         axis.line = element_line("black"),
         axis.text.x = element_text(face = "bold", size = 14),
         axis.text.y = element_text(face = "bold", size = 14))
-### clearly label x
+
 # ggsave(
 #   filename = "trophic_inv_simp_me.tiff",
 #   path = "output/ms first round/plots/",
@@ -263,8 +261,8 @@ ggarrange(max_ss, troph_simp,
           ncol = 2, vjust = 1, align = "h")
 ### make this a horizontal figure
 
-#saving for publication
-# ggsave("output/ms first round/plots/combined_me.tiff", units = "in", width = 15,
+# saving for publication
+# ggsave("output/ms first round/plots/combined_me.tiff", units = "in", width = 12,
 #        height = 6, dpi =  600, compression = "lzw")
 
 ### Goals of Meeting with WRJ 
@@ -286,7 +284,9 @@ ggarrange(max_ss, troph_simp,
 #5 - Review final figure/table list - any thoughts or additional?
 #6 - Special Issue Conversation
 
+###########################################################################
 # exploratory analysis ----------------------------------------------------
+###########################################################################
 
 plot_model(m1, type = 'pred', terms = c('max_ss', "project"),
            pred.type = "re", ci.lvl = NA)

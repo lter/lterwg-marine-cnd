@@ -15,12 +15,10 @@ dt1 <- left_join(dt, add, by = "project")
 vert_colors <- c("vertebrate" = "black", "invertebrate" = "darkgrey")
 ecosystem_colors <- c("Coastal" = "#7fcdff", "Pelagic" = "#064273", "Estuarine" = "#76b6c4")
 dt1$axis_name_5 <- factor(dt1$axis_name_5, 
-                          levels = c("VCR", "SBC Ocean", "SBC Beach",
-                                     "PISCO Southern", "PISCO Central", "MCR",
+                          levels = c("VCR", "SBCO", "SBCB",
+                                     "PCCS", "PCCC", "MCR",
                                      "PIE", "FCE",
                                      "NGA", "CCE"))
-sbc_beach <- dt1 |> 
-  filter(axis_name_5 == "SBC Beach")
 
 ### summarize all sites measured within the dataset annualy
 plot_dt <- dt1 |> 
@@ -44,16 +42,6 @@ plot_dt <- dt1 |>
 glimpse(plot_dt)
 
 ecosystem_colors <- c("Coastal" = "#7fcdff", "Pelagic" = "#064273", "Estuarine" = "#76b6c4")
-project_habitat_colors <-c("VCR Seagrass" = "#7fcdff", "VCR Sand" = "#7fcdff", 
-                           "SBC Ocean MPA" = "#7fcdff", "SBC Ocean Reference"= "#7fcdff",
-                           "SBC Beach MPA" = "#7fcdff", "SBC Beach Reference" = "#7fcdff",
-                           "PISCO Southern MPA" = "#7fcdff", "PISCO Southern Reference" = "#7fcdff",
-                           "PISCO Central MPA" = "#7fcdff", "PISCO Central Reference" = "#7fcdff",
-                           "MCR Back Reef" = "#7fcdff","MCR Fore Reef" = "#7fcdff", "MCR Fringing Reef" = "#7fcdff",
-                           "PIE Fertilized" = "#76b6c4", "PIE Natural" = "#76b6c4", 
-                           "FCE Bay" = "#76b6c4","FCE Riverine" = "#76b6c4",
-                           "NGA Prince William Sound" = "#064273", "NGA Seward" = "#064273", 
-                           "CCE Nearshore" = "#064273", "CCE Offshore" = "#064273")
 
 plot_dt |> 
   group_by(project_habitat, vert, year, site, site_vert) |> 
@@ -75,15 +63,6 @@ plot_dt |>
         strip.text = element_text(face = "bold", size = 11, color = "black"))  # Customize facet label text)
 
 # ggsave(
-#   filename = "output/ms first round/plots/timeseries_sites_habitats.tiff",
+#   filename = "output/ms first round/plots/program_habitat_ts_multipanel.tiff",
 #   width = 12, height = 12
 # )
-
-summary_info <- dt1 |> 
-  group_by(axis_name_5, ecosystem_2, units) |> 
-  summarize(Start = min(year),
-            End = max(year),
-            Length = End - Start) |> 
-  rename(Project = axis_name_5,
-         Ecosystem = ecosystem_2,
-         Spatial_Resolution = units)

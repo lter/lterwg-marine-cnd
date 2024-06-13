@@ -1,6 +1,6 @@
 ###project: LTER Marine Consumer Nutrient Dynamic Synthesis Working Group
-###author(s): Mack White, Li Kui, Angel Chen
-###goal(s): nutrient supply stability models
+###author(s): Mack White
+###goal(s): jitterbox plot(s) summmarizing program-level data
 ###date(s): March-April 2024
 ###note(s): 
 
@@ -25,11 +25,10 @@ dt1 <- left_join(dt, add, by = "project")
 vert_colors <- c("vertebrate" = "black", "invertebrate" = "darkgrey")
 ecosystem_colors <- c("Coastal" = "#7fcdff", "Pelagic" = "#064273", "Estuarine" = "#76b6c4")
 dt1$axis_name_5 <- factor(dt1$axis_name_5, 
-                          levels = c("VCR", "SBC Ocean", "SBC Beach",
-                                     "PISCO Southern", "PISCO Central", "MCR",
+                          levels = c("VCR", "SBCO", "SBCB",
+                                     "PCCS", "PCCC", "MCR",
                                      "PIE", "FCE",
                                      "NGA", "CCE"))
-
 
 # nitrogen jitterbox ------------------------------------------------------
 
@@ -129,8 +128,8 @@ a <- dt1 |>
         axis.title.y = element_blank(),
         axis.line = element_line("black"),
         axis.text.x = element_text(color = "black", face = "bold", size = 18),
-        axis.text.y = element_blank(),
-        # axis.text.y = element_text(color = "black", face = "bold", size = 18),
+        # axis.text.y = element_blank(),
+        axis.text.y = element_text(color = "black", face = "bold", size = 18),
         plot.title = element_text(color = "black", face = "bold", size = 18, hjust = 0.5),
         legend.position = "none")
 
@@ -139,53 +138,72 @@ a <- dt1 |>
 #   width = 16, height = 8
 # )
 
+###########################################################################
+
 ### saving three-panel figure
 # #Plot of biomass, N supply, and P supply
-# ggarrange(a,b,c,
-#           labels = c('a)', 'b)', 'c)'),
-#           ncol = 3, vjust = 1, align = "h")
+ggarrange(a,b,c,
+          labels = c('a)', 'b)', 'c)'),
+          ncol = 3, vjust = 1, align = "h")
 
-# 
 # #saving for publication - the meat of the figure
 # ggsave("output/ms first round/plots/combined_jitterbox.tiff", units = "in", width = 18,
 #        height = 6, dpi =  600, compression = "lzw")
 
+###########################################################################
+
 ### saving four-panel figure
 # #Plot of biomass, N supply, and P supply, and size structure
-# ggarrange(a,d,b,c,
-#           labels = c('a)', 'b)', 'c)', 'd)',
-#           ncol = 2, vjust = 1, align = "hv"))
+ggarrange(a,d,b,c,
+          labels = c('a)', 'b)', 'c)', 'd)',
+          ncol = 2, vjust = 1, align = "hv"))
 
 #saving for publication - the meat of the figure
 # ggsave("output/ms first round/plots/combined_jitterbox_fourpanel.tiff", units = "in", width = 12,
 #        height = 10, dpi =  600, compression = "lzw")
 
-dt1 |> 
-  rename(Community = vert,
-         Ecosystem = ecosystem_2) |> 
-  group_by(axis_name_5, Ecosystem, Community, site, year) |> 
-  summarize(mean_bm = mean(total_biomass)) |> 
-  ggplot(aes(y = axis_name_5, x = log1p(mean_bm), fill = Ecosystem)) +
-  geom_jitter(aes(color = Community), position = position_jitter(width = 0.2), size = 1.0) +
-  geom_boxplot(outlier.shape = NA,  alpha = 0.75) +
-  scale_fill_manual(values = ecosystem_colors) + # Apply the color palette
-  scale_color_manual(values = vert_colors) + # Apply the color palette for jitter
-  labs(title = "Total Biomass", x = "log+1(g dry biomass/per unit area)", y = "Project") +
-  theme_classic() +
-  theme(panel.background = element_rect(fill = "white"),
-        axis.title.x = element_text(face = "italic", size = 16),
-        axis.title.y = element_blank(),
-        axis.line = element_line("black"),
-        axis.text.x = element_text(color = "black", face = "bold", size = 18),
-        # axis.text.y = element_blank(),
-        axis.text.y = element_text(color = "black", face = "bold", size = 18),
-        plot.title = element_text(color = "black", face = "bold", size = 18, hjust = 0.5),
-        legend.position = "right",
-        legend.spacing.x = unit(0.25, "cm"), # Horizontal spacing between legend items
-        legend.spacing.y = unit(0.25, "cm"), # Vertical spacing between legend items
-        legend.text = element_text(color = "black", face = "bold", size = 12), # Font size of legend text
-        legend.title = element_text(color = "black", face = "bold", size = 14)) # Font size and style of legend title)
+###########################################################################
 
-#saving for publication - the y axis title + legend
-ggsave("output/ms first round/plots/combined_jitterbox_ADD.tiff", units = "in", width = 6,
-       height = 6, dpi =  600, compression = "lzw")
+### saving two-panel figure
+# #Plot of biomass and N supply
+ggarrange(a,b,
+          labels = c('a)', 'b)',
+          ncol = 2, vjust = 1, align = "hv"))
+
+#saving two=panel figure
+# ggsave("output/ms first round/plots/combined_jitterbox_twopanel.tiff", units = "in", width = 16,
+#        height = 10, dpi =  600, compression = "lzw")
+
+###########################################################################
+# additional plotting code for reference ----------------------------------
+###########################################################################
+
+# dt1 |> 
+#   rename(Community = vert,
+#          Ecosystem = ecosystem_2) |> 
+#   group_by(axis_name_5, Ecosystem, Community, site, year) |> 
+#   summarize(mean_bm = mean(total_biomass)) |> 
+#   ggplot(aes(y = axis_name_5, x = log1p(mean_bm), fill = Ecosystem)) +
+#   geom_jitter(aes(color = Community), position = position_jitter(width = 0.2), size = 1.0) +
+#   geom_boxplot(outlier.shape = NA,  alpha = 0.75) +
+#   scale_fill_manual(values = ecosystem_colors) + # Apply the color palette
+#   scale_color_manual(values = vert_colors) + # Apply the color palette for jitter
+#   labs(title = "Total Biomass", x = "log+1(g dry biomass/per unit area)", y = "Project") +
+#   theme_classic() +
+#   theme(panel.background = element_rect(fill = "white"),
+#         axis.title.x = element_text(face = "italic", size = 16),
+#         axis.title.y = element_blank(),
+#         axis.line = element_line("black"),
+#         axis.text.x = element_text(color = "black", face = "bold", size = 18),
+#         # axis.text.y = element_blank(),
+#         axis.text.y = element_text(color = "black", face = "bold", size = 18),
+#         plot.title = element_text(color = "black", face = "bold", size = 18, hjust = 0.5),
+#         legend.position = "right",
+#         legend.spacing.x = unit(0.25, "cm"), # Horizontal spacing between legend items
+#         legend.spacing.y = unit(0.25, "cm"), # Vertical spacing between legend items
+#         legend.text = element_text(color = "black", face = "bold", size = 12), # Font size of legend text
+#         legend.title = element_text(color = "black", face = "bold", size = 14)) # Font size and style of legend title)
+
+# #saving for publication - the y axis title + legend
+# ggsave("output/ms first round/plots/combined_jitterbox_ADD.tiff", units = "in", width = 6,
+#        height = 6, dpi =  600, compression = "lzw")
