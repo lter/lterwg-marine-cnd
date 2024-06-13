@@ -2,9 +2,9 @@
 ### install.packages("librarian")
 librarian::shelf(tidyverse, readxl, glmmTMB, MuMIn, corrplot, performance, ggeffects, sjlabelled)
 
-exc <- read_csv("../local_data/model_data_all.csv") #all sites, no 10 year cutoff
-sc <- read_csv("../local_data/site_characteristics.csv")
-add <- read_csv("../local_data/timeseries_axis_titles.csv")
+exc <- read_csv("local_data/model_data_all.csv") #all sites, no 10 year cutoff
+sc <- read_csv("local_data/site_characteristics.csv")
+add <- read_csv("local_data/timeseries_axis_titles.csv")
 ### join data for modeling with site characteristic information
 dt <- left_join(exc, sc) |> 
   dplyr::select(project, ecosystem, ocean, latitude, site, year, month, vert, everything()) |> 
@@ -12,7 +12,7 @@ dt <- left_join(exc, sc) |>
 
 dt1 <- left_join(dt, add, by = "project")
 
-vert_colors <- c("vertebrate" = "black", "invertebrate" = "darkgrey")
+vert_colors <- c("vertebrate" = "black", "invertebrate" = "#ED6464")
 ecosystem_colors <- c("Coastal" = "#7fcdff", "Pelagic" = "#064273", "Estuarine" = "#76b6c4")
 dt1$axis_name_5 <- factor(dt1$axis_name_5, 
                           levels = c("VCR", "SBCO", "SBCB",
@@ -62,7 +62,7 @@ plot_dt |>
         strip.background = element_blank(),
         strip.text = element_text(face = "bold", size = 11, color = "black"))  # Customize facet label text)
 
-# ggsave(
-#   filename = "output/ms first round/plots/program_habitat_ts_multipanel.tiff",
-#   width = 12, height = 12
-# )
+ggsave(
+  filename = "output/ms first round/plots/program_habitat_ts_multipanel.tiff",
+  width = 12, height = 12
+)

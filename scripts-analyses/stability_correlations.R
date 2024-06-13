@@ -47,7 +47,7 @@ glimpse(model_dt)
 
 dat <- left_join(model_dt, add, relationship = "many-to-many")
 
-vert_colors <- c("vertebrate" = "black", "invertebrate" = "darkgrey")
+vert_colors <- c("vertebrate" = "black", "invertebrate" = "#ED6464")
 ecosystem_colors <- c("Coastal" = "#7fcdff", "Pelagic" = "#064273", "Estuarine" = "#76b6c4")
 
 # Generate the scatter plot with separate regression lines for 'vertebrate' and 'invertebrate'

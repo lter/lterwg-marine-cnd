@@ -140,7 +140,7 @@ b <- pdat |>
   geom_hline(yintercept = 0, color = "black", size = 1.5) +
   # geom_violin(trim = FALSE, alpha = 1.0) +  # Draw violin plots with some transparency
   geom_boxplot() +
-  stat_summary(fun = median, geom = "point", shape = 18, size = 3, color = "darkgrey") +  # Diamond shape for medians
+  stat_summary(fun = median, geom = "point", shape = 18, size = 3, color = "black") +  # Diamond shape for medians
   scale_fill_manual(values = ecosystem_colors) + # Apply the color palette
   labs(y = "Nitrogen Supply Trend") +
   scale_y_continuous(limits = c(-0.04,0.04), breaks = c(-0.03,-0.02,-0.01,0,0.01,0.02,0.03)) +

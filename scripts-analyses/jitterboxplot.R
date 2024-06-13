@@ -22,7 +22,7 @@ dt <- left_join(exc, sc) |>
 
 dt1 <- left_join(dt, add, by = "project")
 
-vert_colors <- c("vertebrate" = "black", "invertebrate" = "darkgrey")
+vert_colors <- c("vertebrate" = "black", "invertebrate" = "#ED6464")
 ecosystem_colors <- c("Coastal" = "#7fcdff", "Pelagic" = "#064273", "Estuarine" = "#76b6c4")
 dt1$axis_name_5 <- factor(dt1$axis_name_5, 
                           levels = c("VCR", "SBCO", "SBCB",
