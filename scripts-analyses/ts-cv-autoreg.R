@@ -1,6 +1,6 @@
 ###project: LTER Marine Consumer Nutrient Dynamic Synthesis Working Group
 ###author(s): Mack White
-###goal(s): TREND AR time series models using restricted maximum likelihood
+###goal(s): CV trend: AR time series models using restricted maximum likelihood
 ###date(s): May 2024
 ###note(s): 
 
@@ -113,7 +113,7 @@ pdat <- ar_trends |>
 
 ecosystem_colors <- c("Coastal" = "#7fcdff", "Pelagic" = "#064273", "Estuarine" = "#76b6c4")
 
-pdat |> 
+a <- pdat |> 
   rename(Ecosystem = ecosystem_2) |> 
   filter(vert == "vertebrate") |> 
   ggplot(aes(x = axis_name_5, y = trend, fill = Ecosystem)) +
@@ -123,6 +123,7 @@ pdat |>
   stat_summary(fun = median, geom = "point", shape = 18, size = 3, color = "black") +  # Diamond shape for medians
   scale_fill_manual(values = ecosystem_colors) + # Apply the color palette
   labs(y = "Nitrogen Supply Trend") +
+  scale_y_continuous(limits = c(-0.04,0.04), breaks = c(-0.03,-0.02,-0.01,0,0.01,0.02,0.03)) +
   theme_classic() +
   theme(axis.text.x = element_text(face = "bold", color = "black"),
         axis.text.y = element_text(face = "bold", color = "black"),
@@ -132,7 +133,7 @@ pdat |>
         legend.text = element_text(face = "bold", color = "black"),
         legend.title = element_text(face = "bold", color = "black"))
 
-pdat |> 
+b <- pdat |> 
   rename(Ecosystem = ecosystem_2) |> 
   filter(vert == "invertebrate") |> 
   ggplot(aes(x = axis_name_5, y = trend, fill = Ecosystem)) +
@@ -142,6 +143,7 @@ pdat |>
   stat_summary(fun = median, geom = "point", shape = 18, size = 3, color = "darkgrey") +  # Diamond shape for medians
   scale_fill_manual(values = ecosystem_colors) + # Apply the color palette
   labs(y = "Nitrogen Supply Trend") +
+  scale_y_continuous(limits = c(-0.04,0.04), breaks = c(-0.03,-0.02,-0.01,0,0.01,0.02,0.03)) +
   theme_classic() +
   theme(axis.text.x = element_text(face = "bold", color = "black"),
         axis.text.y = element_text(face = "bold", color = "black"),
@@ -151,3 +153,11 @@ pdat |>
         legend.text = element_text(face = "bold", color = "black"),
         legend.title = element_text(face = "bold", color = "black"))
 
+### plot of supply trends by community
+ggarrange(a, b,
+          labels = c('a)','b)'),
+          ncol = 2, vjust = 1, align = "h")
+
+# saving for publication
+# ggsave("output/ms first round/plots/combined_nitrogen_supply_CV_trend_boxplot.tiff", units = "in", width = 10,
+#        height = 6, dpi =  600, compression = "lzw")

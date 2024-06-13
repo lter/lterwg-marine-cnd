@@ -255,7 +255,7 @@ troph_simp <- ggplot(pred_TrophInvSimpDivInd, aes(x = x*2.020464, y = predicted)
 #   width = 10, height = 10
 # )
 
-#Plot of fitted model q1.m1
+#Plot of predicted stability~fixed effects
 ggarrange(max_ss, troph_simp,
           labels = c('a)','b)'),
           ncol = 2, vjust = 1, align = "h")
@@ -264,25 +264,6 @@ ggarrange(max_ss, troph_simp,
 # saving for publication
 # ggsave("output/ms first round/plots/combined_me.tiff", units = "in", width = 12,
 #        height = 6, dpi =  600, compression = "lzw")
-
-### Goals of Meeting with WRJ 
-#1 - Review and finalize GLLMs + ME Plots + Tables
-#2 - Review and revise interpretation of GLMM outputs
-#3 - Review final figure/table list
-#4 - Discuss Ryan feelings on outline - discussion points think we should hit?
-#5 - Special Issue Conversation
-
-### Questions for WRJ 
-#1a - stability/n question - show WRJ tables
-### accounting for it in standard deviation calculation nested within cv calculation
-### could account for, if necessary/want, by sampling with replacement subsample of lowest years (i.e., n)
-#1b - Does marginal effect plot code look solid?
-#2 - Why does marginal effect plot have different y axes?
-### this is just predicated value - trend when holding something constant
-#3 - Marginal Effect plot formatting suggestions?
-#4 - Review outline and have WRJ add thoughts since won't be there
-#5 - Review final figure/table list - any thoughts or additional?
-#6 - Special Issue Conversation
 
 ###########################################################################
 # exploratory analysis ----------------------------------------------------
