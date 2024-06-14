@@ -43,6 +43,10 @@ glimpse(plot_dt)
 
 ecosystem_colors <- c("Coastal" = "#7fcdff", "Pelagic" = "#064273", "Estuarine" = "#76b6c4")
 
+# number_of_ts <- plot_dt |> 
+#   group_by(axis_name_5) |> 
+#   summarize(ts_trends = n_distinct(site_vert))
+
 plot_dt |> 
   group_by(project_habitat, vert, year, site, site_vert) |> 
   summarise(mean_nitrogen = mean(mean_n, na.rm = TRUE)) |> 

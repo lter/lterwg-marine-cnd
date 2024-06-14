@@ -18,9 +18,11 @@ inds <- all |>
 # summary stats from  excretion dataset -----------------------------------
 ###########################################################################
 
-all_exc <- read_csv("../local_data/harmonized_consumer_excretion_CLEAN.csv")
-colnames(all_exc)
+all_exc <- read_csv("local_data/harmonized_consumer_excretion_CLEAN.csv")
+colnames(all_exc) 
+unique(all_exc$year)#years 1999-2023
 unique(all_exc$family)#242 families
+unique(all_exc$scientific_name)#894 species
 
 all_exc_filtered <- all_exc |> 
   group_by(project, habitat) |> 
