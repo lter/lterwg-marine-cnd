@@ -37,18 +37,9 @@ model_dt <- dt1 |>
                               "MPA" = "Marine Protected Area")) |> 
   filter(!habitat %in% c("Kodiak Island", "Middleton Island")) |> 
   group_by(project, ecosystem, vert, habitat, site, year) |> 
-  summarize(mean_n = mean(total_nitrogen),
-            cv_n = (sd(total_nitrogen, na.rm = TRUE) / mean(total_nitrogen, na.rm = TRUE)),
-            sd_n = sd(total_nitrogen, na.rm = TRUE),
-            mean_p = mean(total_phosphorus),
-            cv_p = (sd(total_nitrogen, na.rm = TRUE) / mean(total_nitrogen, na.rm = TRUE)),
-            sd_p = sd(total_phosphorus, na.rm = TRUE),
-            mean_bm = mean(total_biomass),
-            cv_bm = (sd(total_biomass, na.rm = TRUE) / mean(total_biomass, na.rm = TRUE)),
-            sd_bm = sd(total_biomass, na.rm = TRUE)) |> 
-  na.omit() |> 
+  summarize(mean_max_size = mean(mean_max_size)) |> 
   ungroup()
-  
+
 glimpse(model_dt)
 
 dat <- left_join(model_dt, add, relationship = "many-to-many")
@@ -64,15 +55,7 @@ dat_ts <- dat |>
   filter(count > 10) |> 
   # group_by(vert) |> 
   group_by(axis_name_5, ecosystem_2, vert, site) |>
-  mutate(z_mean_n = scale(mean_n, center = TRUE, scale = TRUE),
-         z_mean_p = scale(mean_p, center = TRUE, scale = TRUE),
-         z_mean_bm = scale(mean_bm, center = TRUE, scale = TRUE),
-         log_z_mean_n = scale(log1p(mean_n), center = TRUE, scale = TRUE),
-         log_z_mean_p = scale(log1p(mean_p), center = TRUE, scale = TRUE),
-         log_z_mean_bm = scale(log1p(mean_bm), center = TRUE, scale = TRUE),
-         log_cv_mean_n = log1p(cv_n),
-         log_cv_mean_p = log1p(cv_p),
-         log_cv_mean_bm = log1p(cv_bm)) |> 
+  mutate(log_z_mean_max_size = scale(log1p(mean_max_size), center = TRUE, scale = TRUE)) |> 
   ungroup()
 
 glimpse(dat_ts)
@@ -92,7 +75,7 @@ dat_ts$site <- as.factor(dat_ts$site)
 ### fit AR model across all individual sites
 ar_results <- dat_ts |> 
   group_by(axis_name_5, ecosystem_2, vert, habitat, site) |> 
-  do(model = fitAR(.data$log_z_mean_n~.data$year))
+  do(model = fitAR(.data$log_z_mean_max_size~.data$year))
 
 ### pull coefficients of interest out of model
 ar_trends <- ar_results |> 
@@ -122,7 +105,7 @@ a <- pdat |>
   geom_boxplot() +
   stat_summary(fun = median, geom = "point", shape = 18, size = 3, color = "black") +  # Diamond shape for medians
   scale_fill_manual(values = ecosystem_colors) + # Apply the color palette
-  labs(y = "Aggregate Nitrogen Supply Rate Trend") +
+  labs(y = "Max Size Trend") +
   scale_y_continuous(limits = c(-0.23,0.23), breaks = c(-0.2, -0.15, -0.1,-0.05,0,0.05,0.1,0.15,0.2))+
   theme_classic() +
   theme(axis.text.x = element_text(face = "bold", color = "black"),
@@ -142,7 +125,7 @@ b <- pdat |>
   geom_boxplot() +
   stat_summary(fun = median, geom = "point", shape = 18, size = 3, color = "black") +  # Diamond shape for medians
   scale_fill_manual(values = ecosystem_colors) + # Apply the color palette
-  labs(y = "Aggregate Nitrogen Supply Rate Trend") +
+  labs(y = "Max Size Trend") +
   scale_y_continuous(limits = c(-0.23,0.23), breaks = c(-0.2, -0.15, -0.1,-0.05,0,0.05,0.1,0.15,0.2))+
   theme_classic() +
   theme(axis.text.x = element_text(face = "bold", color = "black"),
@@ -159,5 +142,5 @@ ggarrange(a, b,
           ncol = 2, vjust = 1, align = "h")
 
 # saving for publication
-# ggsave("output/ms first round/plots/combined_nitrogen_supply_trend_boxplot.tiff", units = "in", width = 10,
+# ggsave("output/ms first round/plots/combined_max_size_trend_boxplot.tiff", units = "in", width = 10,
 #        height = 6, dpi =  600, compression = "lzw")
