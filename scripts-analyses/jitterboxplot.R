@@ -40,7 +40,7 @@ b <- dt1 |>
   geom_boxplot(show.legend = FALSE, outlier.shape = NA,  alpha = 0.75) +
   scale_fill_manual(values = ecosystem_colors) + # Apply the color palette
   scale_color_manual(values = vert_colors) + # Apply the color palette for jitter
-  labs(title = "Total Nitrogen Supply", x = "log+1(μg/hr/per unit area)", y = "Project") +
+  labs(title = "Aggregate Nitrogen Supply Rate", x = "log+1(μg/hr/per unit area)", y = "Project") +
   theme_classic() +
   theme(panel.background = element_rect(fill = "white"),
         axis.title.x = element_text(face = "italic", size = 16),
@@ -67,7 +67,7 @@ c <- dt1 |>
   geom_boxplot(show.legend = FALSE, outlier.shape = NA,  alpha = 0.75) +
   scale_fill_manual(values = ecosystem_colors) + # Apply the color palette
   scale_color_manual(values = vert_colors) + # Apply the color palette for jitter
-  labs(title = "Total Phosphorus Supply", x = "log+1(μg/hr/per unit area)", y = "Project") +
+  labs(title = "Aggregate Phosphorus Supply Rate", x = "log+1(μg/hr/per unit area)", y = "Project") +
   theme_classic() +
   theme(panel.background = element_rect(fill = "white"),
         axis.title.x = element_text(face = "italic", size = 16),
@@ -121,7 +121,7 @@ a <- dt1 |>
   geom_boxplot(show.legend = FALSE, outlier.shape = NA,  alpha = 0.75) +
   scale_fill_manual(values = ecosystem_colors) + # Apply the color palette
   scale_color_manual(values = vert_colors) + # Apply the color palette for jitter
-  labs(title = "Total Biomass", x = "log+1(g dry biomass/per unit area)", y = "Project") +
+  labs(title = "Aggregate Biomass", x = "log+1(g dry biomass/per unit area)", y = "Project") +
   theme_classic() +
   theme(panel.background = element_rect(fill = "white"),
         axis.title.x = element_text(face = "italic", size = 16),
@@ -171,8 +171,8 @@ ggarrange(a,b,
           ncol = 2, vjust = 1, align = "hv"))
 
 #saving two=panel figure
-# ggsave("output/ms first round/plots/combined_jitterbox_twopanel.tiff", units = "in", width = 16,
-#        height = 10, dpi =  600, compression = "lzw")
+ggsave("output/ms first round/plots/combined_jitterbox_twopanel.tiff", units = "in", width = 16,
+       height = 10, dpi =  600, compression = "lzw")
 
 ###########################################################################
 # additional plotting code for reference ----------------------------------

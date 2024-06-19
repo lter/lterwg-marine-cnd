@@ -26,13 +26,25 @@ dt <- left_join(exc, sc) |>
   select(-n_spp, -date)
 
 ### read in community metrics for analysis
-comm <- read_csv("local_data/community_data_filtered.csv")
+comm <- read_csv("local_data/community_data_filtered.csv") |> 
+  select(-date)
 
 dt1 <- left_join(dt, comm, relationship = "many-to-many")
 
 na_count_per_column <- sapply(dt1, function(x) sum(is.na(x)))
 print(na_count_per_column) 
-### omit NAs
+
+testna <- dt1 |> 
+  filter(is.na(Species_Richness))
+### these are instances where programs-sites observed zero fishes
+### do we keep these or get rid of them? I initially got rid of them since we are interested
+### in aspects of community but maybe should keep and make zeros?
+### omit NAs - ran both ways and doesn't change the story at all, just the coefficients slightly
+### the NAs make up ~1% of all data going into the models
+
+# dt1[is.na(dt1)] <- 0
+# dt2 <- dt1
+
 dt2 <- na.omit(dt1)
 
 na_count_per_column <- sapply(dt2, function(x) sum(is.na(x)))
@@ -195,12 +207,12 @@ performance::check_model(m9)
 
 # ### compare models and save for publication
 model_table <- performance::compare_performance(m1,m2,m3,m4,m5,m6,m7,m8,m9)
-write_csv(model_table, "output/ms first round/tables/stability_model_comparison.csv")
+# write_csv(model_table, "output/ms first round/tables/stability_model_comparison.csv")
 
 # ### compare models and save for publication
 model_set_N$weight <- as.numeric(model_set_N$weight)
 glimpse(model_set_N)
-write_csv(model_set_N, "output/ms first round/tables/stability_model_set_N.csv")
+# write_csv(model_set_N, "output/ms first round/tables/stability_model_set_N.csv")
 
 ###########################################################################
 # plot marginal effects ---------------------------------------------------
@@ -212,14 +224,14 @@ pred_max_ss <- ggeffect(m1, "max_ss[0:2.7 by=0.1]", type = "re")
 pred_TrophInvSimpDivInd <- ggeffect(m1, "TrophInvSimpDivInd[0:1.3 by=0.1]", type = "re")
 
 ### rescale to original values for plotting
-sd(model_data$max_ss)#30.85014
-sd(model_data$TrophInvSimpDivInd)#0.3127963
+# sd(model_data$max_ss)#30.85014
+# sd(model_data$TrophInvSimpDivInd)#0.3127963
 
 ### plotting predicted effects of size structure
 max_ss <- ggplot(pred_max_ss, aes(x = x*48.09204, y = predicted)) + 
   geom_line() +
   geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = 0.2) +
-  labs(x = "Max Size", y = "Predicted Nitrogen Supply Stability") +
+  labs(x = "Max Size", y = "Predicted Aggregate Nitrogen Supply Rate Stability") +
   scale_x_continuous(limits = c(0,135), breaks = c(0,25,50,75,100,125))+
   theme_classic() +
   theme(panel.background = element_rect(fill = "white"),
@@ -239,7 +251,7 @@ max_ss <- ggplot(pred_max_ss, aes(x = x*48.09204, y = predicted)) +
 troph_simp <- ggplot(pred_TrophInvSimpDivInd, aes(x = x*2.020464, y = predicted)) +
   geom_line() +
   geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = 0.2) +
-  labs(x = "Trophic Diversity", y = "Predicted Nitrogen Supply Stability") +
+  labs(x = "Trophic Diversity", y = "Predicted Aggregate Nitrogen Supply Rate Stability") +
   scale_x_continuous(limits = c(0,2.7), breaks = c(0,0.5,1,1.5,2,2.5))+
   theme_classic() +
   theme(panel.background = element_rect(fill = "white"),

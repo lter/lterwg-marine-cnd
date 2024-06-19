@@ -37,9 +37,13 @@ plot_dt <- dt1 |>
   na.omit() |> 
   ungroup() |> 
   unite(project_habitat, c(axis_name_5, habitat), sep = " ", remove = FALSE) |> 
-  unite(site_vert, c(site, vert), sep = " ", remove = FALSE)
+  unite(site_vert, c(site, vert), sep = " ", remove = FALSE) |> 
+  filter(site != "RB-17")
 
 glimpse(plot_dt)
+
+test <- plot_dt |> 
+  filter(axis_name_5 == "FCE")
 
 ecosystem_colors <- c("Coastal" = "#7fcdff", "Pelagic" = "#064273", "Estuarine" = "#76b6c4")
 
@@ -54,19 +58,22 @@ plot_dt |>
   ggplot(aes(x = year, y = mean_nitrogen, group = site_vert, color = vert)) +
   geom_line(alpha = 0.8, linewidth = 0.3) +
   scale_color_manual(values = vert_colors) +
+  labs(y = "Aggregate Nitrogen Supply Rate Trend") +
   theme_classic() +
   facet_wrap(~project_habitat, scales = "free", ncol = 4) +
-  theme(axis.title = element_blank(),
+  theme(
         axis.text = element_text(face = "bold", size = 12, color = "black"),
+        axis.title.y = element_text(face = "bold", size = 18, color = "black"),
+        axis.title.x = element_blank(),
         axis.line = element_line("black"),
         legend.position = "none",
         legend.text = element_text(face = "bold", size = 14, color = "black"),
         legend.title = element_text(face = "bold", size = 14, color = "black"),
         panel.background = element_rect(fill = "white"),
         strip.background = element_blank(),
-        strip.text = element_text(face = "bold", size = 11, color = "black"))  # Customize facet label text)
+        strip.text = element_text(face = "bold", size = 12, color = "black"))  # Customize facet label text)
 
-ggsave(
-  filename = "output/ms first round/plots/program_habitat_ts_multipanel.tiff",
-  width = 12, height = 12
-)
+# ggsave(
+#   filename = "output/ms first round/plots/program_habitat_ts_multipanel.tiff",
+#   width = 12, height = 12
+# )

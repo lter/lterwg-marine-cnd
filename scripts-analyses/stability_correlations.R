@@ -58,10 +58,12 @@ ggplot(aes(x = bm_stability, y = n_stability, color = vert)) +
   geom_point(size = 4) +
   geom_smooth(data = dat[dat$vert == "vertebrate",], method = "lm", se = FALSE, size = 1.5) +
   geom_smooth(data = dat[dat$vert == "invertebrate",], method = "lm", se = FALSE, size = 1.5) +
-  stat_regline_equation(aes(label = ..rr.label..),
-    formula = my_formula) +
+  # stat_regline_equation(aes(label = ..rr.label..),
+  #   formula = my_formula) +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed",
+              color = "black", size = 2) +
   scale_color_manual(values = vert_colors) +
-  labs(x = "Biomass Stability", y = "Nitrogen Supply Stability") +
+  labs(x = "Aggregate Biomass Stability", y = "Aggregate Nitrogen Supply Rate Stability") +
   scale_x_continuous(limits = c(0.3,2.0), breaks = c(0.5,1,1.5,2))+
   scale_y_continuous(limits = c(0.3,2.5), breaks = c(0.5,1,1.5,2,2.5))+
   theme_classic() +

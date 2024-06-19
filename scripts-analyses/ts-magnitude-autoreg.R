@@ -122,7 +122,7 @@ a <- pdat |>
   geom_boxplot() +
   stat_summary(fun = median, geom = "point", shape = 18, size = 3, color = "black") +  # Diamond shape for medians
   scale_fill_manual(values = ecosystem_colors) + # Apply the color palette
-  labs(y = "Nitrogen Supply Trend") +
+  labs(y = "Aggregate Nitrogen Supply Rate Trend") +
   scale_y_continuous(limits = c(-0.23,0.23), breaks = c(-0.2, -0.15, -0.1,-0.05,0,0.05,0.1,0.15,0.2))+
   theme_classic() +
   theme(axis.text.x = element_text(face = "bold", color = "black"),
@@ -142,7 +142,7 @@ b <- pdat |>
   geom_boxplot() +
   stat_summary(fun = median, geom = "point", shape = 18, size = 3, color = "black") +  # Diamond shape for medians
   scale_fill_manual(values = ecosystem_colors) + # Apply the color palette
-  labs(y = "Nitrogen Supply Trend") +
+  labs(y = "Aggregate Nitrogen Supply Rate Trend") +
   scale_y_continuous(limits = c(-0.23,0.23), breaks = c(-0.2, -0.15, -0.1,-0.05,0,0.05,0.1,0.15,0.2))+
   theme_classic() +
   theme(axis.text.x = element_text(face = "bold", color = "black"),
@@ -159,5 +159,5 @@ ggarrange(a, b,
           ncol = 2, vjust = 1, align = "h")
 
 # saving for publication
-# ggsave("output/ms first round/plots/combined_nitrogen_supply_trend_boxplot.tiff", units = "in", width = 10,
-#        height = 6, dpi =  600, compression = "lzw")
+ggsave("output/ms first round/plots/combined_nitrogen_supply_trend_boxplot.tiff", units = "in", width = 10,
+       height = 6, dpi =  600, compression = "lzw")
