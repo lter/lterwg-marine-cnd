@@ -160,6 +160,9 @@ dt_total_strata_date <- dt_total_strata |>
   ### create date columns for timeseries plotting
   mutate(sdate = ymd(paste(year, month, "01", sep = "-"))) 
 
+na_count_per_column <- sapply(dt_total_strata_date, function(x) sum(is.na(x)))
+print(na_count_per_column) #yayay
+
 ###########################################################################
 # set up individual projects/habitats for analyses and plotting -----------
 ###########################################################################
@@ -318,4 +321,4 @@ dat_ready_2 <- dat_ready |>
          habitat = Habitat,
          date = sdate) |> 
   dplyr::select(project, habitat, year, month, date, vert, everything())
-write_csv(dat_ready_2, "local_data/community_data_filtered.csv")
+# write_csv(dat_ready_2, "local_data/community_data_filtered.csv")
