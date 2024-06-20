@@ -10,7 +10,7 @@
 
 ### load necessary libraries
 ### install.packages("librarian")
-librarian::shelf(tidyverse, readxl, forecast, tseries, remotePARTS)
+librarian::shelf(tidyverse, readxl, forecast, tseries, remotePARTS, ggpubr)
 
 ### read in csv/xlsx files
 exc <- read_csv("local_data/model_data_all.csv") #all sites, no 10 year cutoff
@@ -122,7 +122,7 @@ a <- pdat |>
   geom_boxplot() +
   stat_summary(fun = median, geom = "point", shape = 18, size = 3, color = "black") +  # Diamond shape for medians
   scale_fill_manual(values = ecosystem_colors) + # Apply the color palette
-  labs(y = "Nitrogen Supply Trend") +
+  labs(y = "Aggregate Nitrogen Supply Rate Trend") +
   scale_y_continuous(limits = c(-0.04,0.04), breaks = c(-0.03,-0.02,-0.01,0,0.01,0.02,0.03)) +
   theme_classic() +
   theme(axis.text.x = element_text(face = "bold", color = "black"),
@@ -142,7 +142,7 @@ b <- pdat |>
   geom_boxplot() +
   stat_summary(fun = median, geom = "point", shape = 18, size = 3, color = "black") +  # Diamond shape for medians
   scale_fill_manual(values = ecosystem_colors) + # Apply the color palette
-  labs(y = "Nitrogen Supply Trend") +
+  labs(y = "Aggregate Nitrogen Supply Rate Trend") +
   scale_y_continuous(limits = c(-0.04,0.04), breaks = c(-0.03,-0.02,-0.01,0,0.01,0.02,0.03)) +
   theme_classic() +
   theme(axis.text.x = element_text(face = "bold", color = "black"),
