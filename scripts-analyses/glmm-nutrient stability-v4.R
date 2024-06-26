@@ -68,9 +68,9 @@ model_dt <- dt2 |>
             cv_bm = (sd(total_biomass, na.rm = TRUE) / mean(total_biomass, na.rm = TRUE)),
             ### calculating stability of biomass (i.e., 1/cv)
             bm_stability = 1/cv_bm,
-            min_ss = mean(mean_min_size),
-            mean_ss = mean(mean_mean_size),
-            max_ss = mean(mean_max_size),
+            min_ss = mean(min_size),
+            mean_ss = mean(mean_size),
+            max_ss = mean(max_size),
             ### binned data from dives makes this metric hard to get after
             # size_skew = mean(mean_skew_size),
             spp_rich = mean(Species_Richness),
@@ -83,7 +83,9 @@ model_dt <- dt2 |>
   na.omit() |> 
   ungroup()
 
-glimpse(model_dt)
+# glimpse(model_dt)
+
+write_csv(model_dt, "local_data/model_data_clean.csv")
 ###########################################################################
 # recode factors as such --------------------------------------------------
 ###########################################################################
@@ -137,6 +139,8 @@ model_data_scaled <- model_data |>
 
 glimpse(model_data_scaled)
 
+### all variables
+
 global_model_N <- glmmTMB(
   n_stability ~ 
     # ecosystem +
@@ -155,6 +159,50 @@ performance::check_model(global_model_N)
 
 model_set_N <- dredge(global_model_N,
                       subset = !(`cond(SppInvSimpDivInd)`&&`cond(spp_rich)`) & !(`cond(mean_bm)` && `cond(max_ss)`) & !(`cond(spp_rich)` && `cond(fam_richness)`)) |>
+  filter(delta < 4)
+
+### removing mean_biomass and family_richness
+
+global_model_N3 <- glmmTMB(
+  n_stability ~ 
+    # ecosystem +
+    # latitude +
+    max_ss +
+    spp_rich +
+    SppInvSimpDivInd + TrophInvSimpDivInd + (1|project),
+  data = model_data_scaled,
+  na.action = "na.fail",
+  family = gaussian(link = "log"),
+  REML = FALSE
+)
+# 
+diagnose(global_model_N3)
+performance::check_model(global_model_N3)
+
+model_set_N3 <- dredge(global_model_N3,
+                      subset = !(`cond(SppInvSimpDivInd)`&&`cond(spp_rich)`)) |>
+  filter(delta < 4)
+
+### removing mean biomass
+
+global_model_N2 <- glmmTMB(
+  n_stability ~ 
+    # ecosystem +
+    # latitude +
+    max_ss +
+    fam_richness + spp_rich +
+    SppInvSimpDivInd + TrophInvSimpDivInd + (1|project),
+  data = model_data_scaled,
+  na.action = "na.fail",
+  family = gaussian(link = "log"),
+  REML = FALSE
+)
+# 
+diagnose(global_model_N2)
+performance::check_model(global_model_N2)
+
+model_set_N2 <- dredge(global_model_N2,
+                       subset = !(`cond(SppInvSimpDivInd)`&&`cond(spp_rich)`) & !(`cond(spp_rich)` && `cond(fam_richness)`)) |>
   filter(delta < 4)
 
 ###########################################################################

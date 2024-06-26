@@ -1,6 +1,6 @@
 ###project: LTER Marine Consumer Nutrient Dynamic Synthesis Working Group
 ###author(s): Mack White, Li Kui, Angel Chen
-###goal(s): Last Step Data Prep for Analyses & Figures
+###goal(s): Community calculations for stability GLMMs
 ###date(s): March 2024
 ###note(s): 
 
@@ -8,7 +8,7 @@
 
 ### load necessary libraries
 ### install.packages("librarian")
-librarian::shelf(tidyverse, googledrive, readxl, e1071)
+librarian::shelf(tidyverse, googledrive, readxl, taxize, vegan)
 
 ### set google drive path
 exc_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1VakpcnFVckAYNggv_zNyfDRfkcGTjZxX")) |> 
@@ -76,7 +76,7 @@ dt_og <- dt |>
          elasmo = class %in% c("Chondrichthyes", "Elasmobranchii")) |> 
   ungroup() |> 
   filter(!(outlier & sharkray & elasmo)) |> #lose 251 sharks and rays from MCR/PISCO datasets
-  dplyr::select(-lower_bound, -upper_bound, -outlier, -sharkray)
+  dplyr::select(-lower_bound, -elasmo, -upper_bound, -outlier, -sharkray)
 
 glimpse(dt_og)
 
@@ -92,61 +92,40 @@ dt_mutate <- dt_og |>
   dplyr::select(-vert_1, -vert2) |> 
   mutate(vertebrate_n = if_else(vert == "vertebrate" & dmperind_g_ind != 0, 1, 0),
          invertebrate_n = if_else(vert == "invertebrate" & dmperind_g_ind != 0, 1, 0))
-  ### calculate max size of community at this resolution so we can calculate mean max size of species within community
+  # ### calculate max size of community at this resolution so we can calculate mean max size of species within community
   # group_by(project, habitat, year, month, site, subsite_level1, subsite_level2, subsite_level3, scientific_name) |>
-  # # mutate(max_size = max(dmperind_g_ind, na.rm = TRUE),
-  # #        min_size = min(dmperind_g_ind, na.rm = TRUE),
-  # #        mean_size = mean(dmperind_g_ind, na.rm = TRUE)) |> 
-  # ### adjusted Fisher-Pearson standardized moment coefficient
-  # ### not enough individual observations for this metric to work...
-  # # skew_size = skewness(dmperind_g_ind, na.rm = TRUE, type = 3)) |> 
+  # mutate(max_size = max(dmperind_g_ind, na.rm = TRUE),
+  #        min_size = min(dmperind_g_ind, na.rm = TRUE),
+  #        mean_size = mean(dmperind_g_ind, na.rm = TRUE)) |> 
   # ungroup()
 
 ### remove all invertebrate data from FCE & VCR - makes up very small fraction and neither project poised at
 ### to monitor invertebrate populations/communities
 dt_mutate_filter <- dt_mutate |> 
-  filter(!(project %in% c("FCE", "VCR") & vert == "invertebrate")) |> 
-  mutate(vert = ifelse(project %in% c("CCE", "NGA"), "invertebrate", vert)) |> 
-  select(-elasmo)
+  ### remove invertebrate datae from FCE & VCR
+  filter(!(project %in% c("FCE", "VCR") & vert == "invertebrate")) |>
+  ### remove all invertebrate data because going to focus on vertebrates 
+  filter(!vert == "invertebrate") |> 
+  ### remove CCE and NGA as they are not taxonomically resolved
+  filter(!project %in% c("CCE", "NGA"))
 
-dt_total <- dt_mutate_filter |> 
-  group_by(project, habitat, vert, year, month, site, subsite_level1, subsite_level2, subsite_level3) |> 
-  summarise(### calculate total phosphorus supply at each sampling unit and then sum to get column with all totals
-    total_nitrogen_m = sum(nind_ug_hr * density_num_m, na.rm = TRUE),
-    total_nitrogen_m2 = sum(nind_ug_hr * density_num_m2, na.rm = TRUE),
-    total_nitrogen_m3 = sum(nind_ug_hr * density_num_m3, na.rm = TRUE),
-    total_nitrogen = sum(total_nitrogen_m + total_nitrogen_m2 + total_nitrogen_m3, na.rm = TRUE),
-    ### calculate total phosphorus supply at each sampling unit and then sum to get column with all totals
-    total_phosphorus_m = sum(pind_ug_hr * density_num_m, na.rm = TRUE),
-    total_phosphorus_m2 = sum(pind_ug_hr * density_num_m2, na.rm = TRUE),
-    total_phosphorus_m3 = sum(pind_ug_hr * density_num_m3, na.rm = TRUE),
-    total_phosphorus = sum(total_phosphorus_m + total_phosphorus_m2 + total_phosphorus_m3, na.rm = TRUE),
-    ### calculate total biomass at each sampling unit and then sum to get column with all totals
-    total_bm_m = sum(dmperind_g_ind*density_num_m, na.rm = TRUE),
-    total_bm_m2 = sum(dmperind_g_ind*density_num_m2, na.rm = TRUE),
-    total_bm_m3 = sum(dmperind_g_ind*density_num_m3, na.rm = TRUE),
-    total_biomass = sum(total_bm_m + total_bm_m2 + total_bm_m3, na.rm = TRUE),
-    ### calculate species richness
-    n_spp = n_distinct(scientific_name[dmperind_g_ind != 0]),
-    ### calculate average community size metrics
-    max_size = max(dmperind_g_ind, na.rm = TRUE)) |> 
-    # mean_size = mean(dmperind_g_ind[dmperind_g_ind > 0], na.rm = TRUE),
-    # skewness_size = skewness(dmperind_g_ind[dmperind_g_ind > 0], na.rm = TRUE)) |> 
-  # mean_skew_size = mean(skew_size)) |> 
-  ### calculate dispersion of community size metrics as coefficient of variation
-  ### determined calculate of cv metrics more appropriate at later step in workflow
-  # cv_min_size = (sd(min_size, na.rm = TRUE) / mean(min_size, na.rm = TRUE)) * 100,
-  # cv_mean_size = (sd(mean_size, na.rm = TRUE) / mean(mean_size, na.rm = TRUE)) * 100,
-  # cv_max_size = (sd(max_size, na.rm = TRUE) / mean(max_size, na.rm = TRUE)) * 100) |> 
-  ungroup() |>
-  dplyr::select(-total_nitrogen_m, -total_nitrogen_m2, -total_nitrogen_m3,
-                -total_phosphorus_m, -total_phosphorus_m2, -total_phosphorus_m3,
-                -total_bm_m, -total_bm_m2, -total_bm_m3) |> 
-  arrange(project, habitat, vert, year, month, site, subsite_level1, subsite_level2, subsite_level3)
-  
+glimpse(dt_mutate_filter)
 
-na_count_per_column <- sapply(dt_total, function(x) sum(is.na(x)))
-print(na_count_per_column) #yay
+# results <- dt_mutate_filter |> 
+#   filter(dmperind_g_ind != 0) |> 
+#   group_by(project, habitat, vert, year, month, site, subsite_level1, subsite_level2, subsite_level3) %>%
+#   summarize(
+#     Species_Richness = length(unique(scientific_name)),
+#     Family_Richness = length(unique(family)),
+#     Species_Shannon_Diversity_Index = diversity(x = table(scientific_name), index = "shannon"),
+#     Species_Inverse_Simpson_Diversity_Index = diversity(x = table(scientific_name), index = "invsimpson"),
+#     Trophic_Shannon_Diversity_Index = diversity(x = table(diet_cat), index = "shannon"),
+#     Trophic_Inverse_Simpson_Diversity_Index = diversity(x = table(diet_cat), index = "invsimpson")
+#   ) |> 
+#   ungroup()
+# 
+# na_count_per_column <- sapply(results, function(x) sum(is.na(x)))
+# print(na_count_per_column) #yay
 
 ###########################################################################
 # add strata of interest to each project ----------------------------------
@@ -157,7 +136,7 @@ strata_list1 <- strata_list %>%
          subsite_level2 = replace_na(subsite_level2, "Not Available"),
          subsite_level3 = replace_na(subsite_level3, "Not Available"))
 
-dt_total_strata <- left_join(dt_total, 
+dt_total_strata <- left_join(dt_mutate_filter, 
                              strata_list1, 
                              by = c("project", "habitat", "site",
                                     "subsite_level1", "subsite_level2",
@@ -170,6 +149,7 @@ dt_total_strata <- left_join(dt_total,
 na_count_per_column <- sapply(dt_total_strata, function(x) sum(is.na(x)))
 print(na_count_per_column) #yayay
 
+
 ###########################################################################
 # generate pseudo date column for each project ----------------------------
 ###########################################################################
@@ -179,6 +159,9 @@ dt_total_strata_date <- dt_total_strata |>
   unite("projecthabitat", project, habitat, sep = "-", remove = FALSE) |> 
   ### create date columns for timeseries plotting
   mutate(sdate = ymd(paste(year, month, "01", sep = "-"))) 
+
+na_count_per_column <- sapply(dt_total_strata_date, function(x) sum(is.na(x)))
+print(na_count_per_column) #yayay
 
 ###########################################################################
 # set up individual projects/habitats for analyses and plotting -----------
@@ -191,14 +174,14 @@ dt_total_strata_date <- dt_total_strata |>
 # an easy way to map plots across all unique projecthabitats, instead of doing them
 # individually
 
-### CCE-oceanic
-cce <- dt_total_strata_date |> 
-  filter(projecthabitat == "CCE-oceanic") |> 
-  mutate(group = site,
-         color = strata,
-         units = 'm2') |> 
-  ### added new resolution group wants considered for examination -> functionally the "site" for each project
-  unite(color2, c(site, color), sep = "-", remove = FALSE)
+# ### CCE-oceanic
+# cce <- dt_total_strata_date |> 
+#   filter(projecthabitat == "CCE-oceanic") |> 
+#   mutate(group = site,
+#          color = strata,
+#          units = 'm2') |> 
+#   ### added new resolution group wants considered for examination -> functionally the "site" for each project
+#   unite(color2, c(site, color), sep = "-", remove = FALSE)
 
 ### CoastalCA-ocean
 pisco_central <- dt_total_strata_date |> 
@@ -220,10 +203,10 @@ pisco_south <- dt_total_strata_date |>
          projecthabitat = "CoastalCA-ocean-SOUTH") |> 
   group_by(subsite_level2, year) |> 
   ### removing three insane outlier in dataset that wasn't capture by initial filtering
-  mutate(test = mean(total_nitrogen)) |>
-  ungroup() |> 
-  filter(!test > 75000) |> 
-  dplyr::select(-test) |> 
+  # mutate(test = mean(total_nitrogen)) |>
+  # ungroup() |> 
+  # filter(!test > 75000) |> 
+  # dplyr::select(-test) |> 
   ### added new resolution group wants considered for examination -> functionally the "site" for each project
   unite(color2, c(subsite_level2, color), sep = "-", remove = FALSE)
 
@@ -249,14 +232,14 @@ mcr <- dt_total_strata_date |>
   ### added new resolution group wants considered for examination -> functionally the "site" for each project
   unite(color2, c(subsite_level1, site), sep = "-", remove = FALSE)
 
-### NGA-oceanic
-nga <- dt_total_strata_date |> 
-  filter(projecthabitat == "NGA-oceanic") |> 
-  mutate(group = site,
-         color = strata,
-         units = 'm3') |> 
-  ### added new resolution group wants considered for examination -> functionally the "site" for each project
-  unite(color2, c(site, color), sep = "-", remove = FALSE)
+# ### NGA-oceanic
+# nga <- dt_total_strata_date |> 
+#   filter(projecthabitat == "NGA-oceanic") |> 
+#   mutate(group = site,
+#          color = strata,
+#          units = 'm3') |> 
+#   ### added new resolution group wants considered for examination -> functionally the "site" for each project
+#   unite(color2, c(site, color), sep = "-", remove = FALSE)
 
 ### PIE-estuary
 pie <- dt_total_strata_date |> 
@@ -268,13 +251,13 @@ pie <- dt_total_strata_date |>
   mutate(color2 = site) # no unite function needed here to generate new 'color2' column
 
 ### SBC-beach
-sbc_beach <- dt_total_strata_date |> 
-  filter(projecthabitat == "SBC-beach") |> 
-  mutate(group = site,
-         color = strata,
-         units = 'm') |> 
-  ### added new resolution group wants considered for examination -> functionally the "site" for each project
-  unite(color2, c(site, color), sep = "-", remove = FALSE)
+# sbc_beach <- dt_total_strata_date |> 
+#   filter(projecthabitat == "SBC-beach") |> 
+#   mutate(group = site,
+#          color = strata,
+#          units = 'm') |> 
+#   ### added new resolution group wants considered for examination -> functionally the "site" for each project
+#   unite(color2, c(site, color), sep = "-", remove = FALSE)
 
 ### SBC-ocean
 sbc_reef <- dt_total_strata_date |> 
@@ -296,14 +279,14 @@ vcr <- dt_total_strata_date |>
 
 ### binding everything back together, removing index row generated when saving out of R
 ## and arranging the data by date
-dat_ready <- bind_rows(cce, fce, mcr, pisco_central, pisco_south, sbc_beach, sbc_reef,
-                       nga, pie, vcr)
+dat_ready <- bind_rows(fce, mcr, pisco_central, pisco_south, sbc_reef,
+                       pie, vcr)
 
 na_count_per_column <- sapply(dat_ready, function(x) sum(is.na(x)))
 print(na_count_per_column) #yay
 
 ### tidy up working environment
-rm(cce, fce, mcr, pisco_central, pisco_south, sbc_beach, sbc_reef, nga, pie, vcr)
+rm(fce, mcr, pisco_central, pisco_south, sbc_reef, pie, vcr)
 
 ###########################################################################
 # clean up dataset names for plotting and analysis ------------------------
@@ -312,23 +295,23 @@ rm(cce, fce, mcr, pisco_central, pisco_south, sbc_beach, sbc_reef, nga, pie, vcr
 unique(dat_ready$projecthabitat)
 label_mapping <- data.frame(
   projecthabitat = unique(dat_ready$projecthabitat),
-  Project = c("CCE", "FCE", "MCR", "PISCO-Central", "PISCO-South", "SBC-Beach",
-              "SBC-Ocean", "NGA", "PIE", "VCR")) 
+  Project = c("FCE", "MCR", "PISCO-Central", "PISCO-South",
+              "SBC-Ocean", "PIE", "VCR")) 
 print(label_mapping) #looks good
 
 unique(dat_ready$color)
 habitat_mapping <- data.frame(
   color = unique(dat_ready$color),
-  Habitat = c("Nearshore", "Offshore", #CCE
-              "Riverine", "Bay", #FCE
-              "Back Reef", "Fore Reef", "Fringing Reef", #MCR
-              "Marine Protected Area", "Reference", 'Reference', #PISCO-Central, PISCO-South, SBC-Beach, & SBC-Ocean
-              "Seward", "Prince William Sound", "Kodiak Island", "Middleton Island", "Prince William Sound", #NGA
-              "Fertilized", "Natural", "Fertilized", "Natural", #PIE
-              "Seagrass", "Sand")) #VCR
+  Habitat = c(
+    "Riverine", "Bay", #FCE
+    "Fringing Reef", "Back Reef", "Fore Reef", #MCR
+    "Marine Protected Area", "Reference", #PISCO-Central, PISCO-South, & SBC-Ocean
+    "Fertilized", "Natural", "Fertilized", "Natural", #PIE
+    "Seagrass", "Sand")) #VCR
 print(habitat_mapping) #yayayay
 
 dat_ready_2 <- dat_ready |> 
+  select(-date) |> 
   left_join(label_mapping, by = "projecthabitat") |>
   left_join(habitat_mapping, by = "color") |>
   ### remove columns needed for joins up to this point
@@ -340,91 +323,80 @@ dat_ready_2 <- dat_ready |>
          date = sdate) |> 
   dplyr::select(project, habitat, year, month, date, vert, everything())
 
-glimpse(dat_ready_2)
-unique(dat_ready_2$habitat)
+na_count_per_column <- sapply(dat_ready_2, function(x) sum(is.na(x)))
+print(na_count_per_column) #yay
 
 dat_ready_3 <- dat_ready_2 |> 
-  filter(!habitat %in% c("Kodiak Island", "Middleton Island"))
+  mutate(
+    site = ifelse(site == "SW ", "SW", site),
+    site = ifelse(site == "WE ", "WE", site)
+  )
+unique(dat_ready_3$habitat)
+unique(dat_ready_3$site)
+# write_csv(dat_ready_2, "local_data/community_data_filtered.csv")
 
 glimpse(dat_ready_3)
-unique(dat_ready_3$habitat)
 
+# DIVERSITY METRICS -------------------------------------------------------
 
-# step 2 ------------------------------------------------------------------
+dat_ready_4 <- dat_ready_3 |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  select(year_month, everything())
 
-# exc <- read_csv("local_data/model_data_all.csv") #all sites, no 10 year cutoff
-sc <- read_csv("local_data/site_characteristics.csv")
-comm <- read_csv("local_data/community_data_filtered.csv") |> 
-  select(-date)
+step_1_div <- dat_ready_4 |>
+  filter(dmperind_g_ind != 0) |>
+  group_by(project, habitat, year_month, site) |> 
+  summarize(
+    Species_Richness = length(unique(scientific_name)),
+    Family_Richness = length(unique(family)),
+    Species_Shannon_Diversity_Index = diversity(x = table(scientific_name), index = "shannon"),
+    Species_Inverse_Simpson_Diversity_Index = diversity(x = table(scientific_name), index = "invsimpson"),
+    Trophic_Shannon_Diversity_Index = diversity(x = table(diet_cat), index = "shannon"),
+    Trophic_Inverse_Simpson_Diversity_Index = diversity(x = table(diet_cat), index = "invsimpson"),
+    Fisher_Alpha_Div = fisher.alpha(table(scientific_name))
+  ) |>
+  ungroup()
 
-### join data for modeling with site characteristic information
-dt <- left_join(dat_ready_3, sc, join_by(project)) |> 
-  select(project, ecosystem, ocean, climate, latitude, site, year, month, vert, everything()) |> 
-  filter(vert == "vertebrate") |> 
-  ### if species richness is important in models, remove CCE & NGA as they are not taxonomically resolved species, but instead "groups"
-  filter(!project %in% c("CCE", "NGA")) |> 
-  ### recalculated species richness in community dataset prep and wanted to ensure it matched up
-  ### however, can remove now
-  select(-n_spp, -date)
+na_count_per_column <- sapply(step_1_div, function(x) sum(is.na(x)))
+print(na_count_per_column) #yay
 
-glimpse(dt)
+gamma_diversity <- dat_ready_4 |> 
+  filter(dmperind_g_ind != 0) |> 
+  group_by(project, year_month) |> 
+  summarize(
+    gamma_div = length(unique(scientific_name))
+  )
 
-dt1 <- left_join(dt, comm, relationship = "many-to-many")
+na_count_per_column <- sapply(gamma_diversity, function(x) sum(is.na(x)))
+print(na_count_per_column) #yay
 
-na_count_per_column <- sapply(dt1, function(x) sum(is.na(x)))
-print(na_count_per_column) 
+test <- dat_ready_4 |> 
+  filter(project == "MCR")
 
-testna <- dt1 |> 
-  filter(is.na(Species_Richness))
-### these are instances where programs-sites observed zero fishes
-### do we keep these or get rid of them? I initially got rid of them since we are interested
-### in aspects of community but maybe should keep and make zeros?
-### omit NAs - ran both ways and doesn't change the story at all, just the coefficients slightly
-### the NAs make up ~1% of all data going into the models
-
-# dt1[is.na(dt1)] <- 0
-# dt2 <- dt1
-
-dt2 <- na.omit(dt1)
-
-na_count_per_column <- sapply(dt2, function(x) sum(is.na(x)))
-print(na_count_per_column) 
-
-### summarize all sites measured within the dataset annualy
-model_dt <- dt2 |> 
-  group_by(project, ecosystem, climate, latitude, habitat, site) |> 
-  summarize(mean_n = mean(total_nitrogen),
-            ### calculating coefficient of variation for nutrient supply across time for each site
-            cv_n = (sd(total_nitrogen, na.rm = TRUE) / mean(total_nitrogen, na.rm = TRUE)),
-            ### calculating stability of nutrient supply (i.e., 1/cv)
-            n_stability = 1/cv_n,
-            mean_p = mean(total_phosphorus),
-            ### calculating coefficient of variation for nutrient supply across time for each site
-            cv_p = (sd(total_nitrogen, na.rm = TRUE) / mean(total_nitrogen, na.rm = TRUE)),
-            ### calculating stability of nutrient supply (i.e., 1/cv)
-            p_stability = 1/cv_p,
-            mean_bm = mean(total_biomass),
-            ### calculating coefficient of variation for biomass across time for each site
-            cv_bm = (sd(total_biomass, na.rm = TRUE) / mean(total_biomass, na.rm = TRUE)),
-            ### calculating stability of biomass (i.e., 1/cv)
-            bm_stability = 1/cv_bm,
-            max_ss = mean(max_size),
-            spp_rich = mean(Species_Richness),
-            fam_richness = mean(Family_Richness),
-            SppShDivInd = mean(Species_Shannon_Diversity_Index),
-            SppInvSimpDivInd = mean(Species_Inverse_Simpson_Diversity_Index),
-            TrophShDivInd = mean(Trophic_Shannon_Diversity_Index),
-            TrophInvSimpDivInd = mean(Trophic_Inverse_Simpson_Diversity_Index))|> 
-  ### omit three sites with NA here - it appears because there was no replication of the sites (i.e., one-offs in datasets)
-  na.omit() |> 
+species_presence <- test |> 
+  filter(dmperind_g_ind != 0) |> 
+  group_by(year_month, habitat, site, scientific_name) |> 
+  summarise(count = n()) |> 
   ungroup() |> 
-  rename(program = project,
-         species_rich = spp_rich,
-         species_div = SppInvSimpDivInd,
-         family_rich = fam_richness,
-         trophic_div = TrophInvSimpDivInd) |> 
-  select(-SppShDivInd, -TrophShDivInd)
+  pivot_wider(names_from = scientific_name, 
+              values_from = count, 
+              values_fill = list(count = 0)) 
 
-glimpse(model_dt)
+# calculate Jaccard dissimilarities
+jaccard_diss <- vegdist(species_presence[, 4:ncol(species_presence)], method = "jaccard")
 
-# write_csv(model_dt, "local_data/model_data_clean.csv")
+# compute beta diversity
+beta_div <- betadisper(jaccard_diss, group = species_presence$habitat)
+
+distances <- beta_div$distances
+beta_df <- data.frame(year_month = species_presence$year_month,
+                      habitat = species_presence$habitat,
+                      dist = distances)
+
+join_test <- left_join(test, beta_df)
+
+beta_dftest <- data.frame(year_month = species_presence$year_month,
+                      habitat = species_presence$habitat,
+                      dist = distances) |> 
+  group_by(year_month, habitat) |> 
+  mutate(mean_dist = mean(dist))

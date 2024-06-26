@@ -6,9 +6,107 @@ librarian::shelf(tidyverse, readxl, glmmTMB, MuMIn, sjPlot, ggpmisc, corrplot, p
 ###########################################################################
 
 all <- read_csv("local_data/harmonized_consumer_ready_for_excretion.csv")
-colnames(all)
-unique(all$year) #years 1999-2023
-unique(all$scientific_name)#894 species
+species_list <- readxl::read_excel(path = file.path("tier1", "CNDWG_harmonized_consumer_species.xlsx"),na=".")
+
+#### read data end 
+  
+#### calculate excretion rate
+
+# take out the rows that are needed 
+
+df1 <- all %>%
+  filter(measurement_type == "count") 
+
+### pivot_wider indicates duplicates and generating lists instead of columns in dbl
+### check for replicates in data
+df1_replicates <- df1 |> 
+  group_by(across(everything())) |> 
+  filter(n() > 1) |> 
+  ungroup()
+
+unique(df1_replicates$project) #[1] "CoastalCA" "SBC"  
+unique(df1_replicates$habitat) #[1] "ocean"
+
+df1_replicates_distinct <- df1_replicates |> 
+  distinct()
+### appears that everything for for sbc-beach and CoastalCA are duplicated
+### df1_replicates = 4380336 obs.
+### df1_replicates_distinct = 2190168 obs.
+### > 2190168*2 = [1] 4380336
+
+### get rid of duplicates - but check out data first to make sure we aren't 
+### kicking anything we shouldn't
+
+rep <- mean(df1_replicates$measurement_value)
+rep_distinct <- mean(df1_replicates_distinct$measurement_value)
+
+df2 <- df1 |> 
+  distinct()
+
+df3 <- df2 |> 
+  filter(!project %in% c("SBC", "NGA", "CCE")) |> 
+  mutate(value = as.numeric(measurement_value)) |> 
+  filter(value > 0) |> 
+  filter(sp_code != "BAITBALL")
+
+test <- df3 |> 
+  filter(project == "PIE")
+
+df4 <- df3 |> 
+  filter(!scientific_name %in% c("Carcinus maenas",
+                                 "Carcinus septemspinosa",
+                                 "Palaemon pugio",
+                                 "Uca pugnax",
+                                 "Xanthidae"))
+
+write_csv(df4, "../../../../../../Downloads/ind_counts_minus_sbc.csv")
+unique(df4$scientific_name)
+# fix nas that dont make sense --------------------------------------------
+
+# check to see anything that don't have diet cat column
+# peace3<-df4 %>%
+#   filter(is.na(diet_cat)) %>%
+#   distinct(project,habitat,sp_code,scientific_name,species,diet_cat)
+na_count_per_column <- sapply(df4, function(x) sum(is.na(x)))
+print(na_count_per_column)
+
+### examine small # of data w missing scientific name column
+value_nas <- df4 |> 
+  filter(is.na(scientific_name)) #all from PISCO and are anchovies/sardines
+
+### fill NAs in scientific_name with order 'Clupeiformes' since most resolved portion of shared taxonomy
+
+df5 <- df4 |> 
+  mutate(scientific_name = ifelse(is.na(scientific_name), "Clupeiformes", scientific_name))
+
+na_count_per_column <- sapply(df5, function(x) sum(is.na(x)))
+print(na_count_per_column)
+
+### examine data without family classification
+
+## FCE 
+value_nas <- df5 |> 
+  filter(is.na(family)) |> 
+  filter(project == "FCE") 
+unique(value_nas$scientific_name)
+
+## VCR
+value_nas <- df5 |> 
+  filter(is.na(family)) |> 
+  filter(project == "VCR") 
+unique(value_nas$scientific_name)
+
+## CoastalCA
+value_nas <- df5 |> 
+  filter(is.na(family)) |> 
+  filter(project == "CoastalCA") 
+unique(value_nas$scientific_name)
+
+### tidy up environment
+rm(df, df1, df2, df3, df5, df1_replicates, 
+   df1_replicates_distinct, value_nas, na_count_per_column,
+   rep, rep_distinct)
+
 
 inds <- all |>
   filter(measurement_type == "count") |> 

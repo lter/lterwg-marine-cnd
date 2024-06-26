@@ -33,7 +33,7 @@ plot_dt <- dt1 |>
   summarize(mean_n = mean(total_nitrogen),
             mean_p = mean(total_phosphorus),
             mean_bm = mean(total_biomass),
-            mean_max_ss = mean(mean_max_size)) |> 
+            mean_max_ss = mean(max_size)) |> 
   na.omit() |> 
   ungroup() |> 
   unite(project_habitat, c(axis_name_5, habitat), sep = " ", remove = FALSE) |> 

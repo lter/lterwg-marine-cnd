@@ -76,9 +76,67 @@ dt_og <- dt |>
          elasmo = class %in% c("Chondrichthyes", "Elasmobranchii")) |> 
   ungroup() |> 
   filter(!(outlier & sharkray & elasmo)) |> #lose 251 sharks and rays from MCR/PISCO datasets
-  dplyr::select(-lower_bound, -upper_bound, -outlier, -sharkray)
+  dplyr::select(-lower_bound, -elasmo, -upper_bound, -outlier, -sharkray)
 
 glimpse(dt_og)
+
+###########################################################################
+# add strata of interest to each project ----------------------------------
+###########################################################################
+
+strata_list1 <- dt_og |> 
+  mutate(subsite_level1 = replace_na(subsite_level1, "Not Available"),
+         subsite_level2 = replace_na(subsite_level2, "Not Available"),
+         subsite_level3 = replace_na(subsite_level3, "Not Available"))
+
+dt_total_strata <- left_join(results, 
+                             strata_list1, 
+                             by = c("project", "habitat", "site",
+                                    "subsite_level1", "subsite_level2",
+                                    "subsite_level3")) |> 
+  mutate(strata = if_else(is.na(ecoregion_habitat), site, ecoregion_habitat)) |> 
+  dplyr::select(-ecoregion_habitat) |> 
+  ### remove 172 duplicated rows since dt_total_strata should not be longer than dt_total
+  distinct() 
+
+na_count_per_column <- sapply(dt_total_strata, function(x) sum(is.na(x)))
+print(na_count_per_column) #yayay
+
+
+###########################################################################
+# generate pseudo date column for each project ----------------------------
+###########################################################################
+
+dt_total_strata_date <- dt_total_strata |>
+  ### create project-habitat column since some projects sample multiple habitats (i.e., SBC ocean & beach)
+  unite("projecthabitat", project, habitat, sep = "-", remove = FALSE) |> 
+  ### create date columns for timeseries plotting
+  mutate(sdate = ymd(paste(year, month, "01", sep = "-"))) 
+
+na_count_per_column <- sapply(dt_total_strata_date, function(x) sum(is.na(x)))
+print(na_count_per_column) #yayay
+
+###########################################################################
+# clean up dataset names for plotting and analysis ------------------------
+###########################################################################
+
+unique(dat_ready$projecthabitat)
+label_mapping <- data.frame(
+  projecthabitat = unique(dat_ready$projecthabitat),
+  Project = c("FCE", "MCR", "PISCO-Central", "PISCO-South",
+              "SBC-Ocean", "PIE", "VCR")) 
+print(label_mapping) #looks good
+
+unique(dat_ready$color)
+habitat_mapping <- data.frame(
+  color = unique(dat_ready$color),
+  Habitat = c(
+    "Riverine", "Bay", #FCE
+    "Back Reef", "Fore Reef", "Fringing Reef", #MCR
+    "Marine Protected Area", "Reference", #PISCO-Central, PISCO-South, & SBC-Ocean
+    "Fertilized", "Natural", "Fertilized", "Natural", #PIE
+    "Seagrass", "Sand")) #VCR
+print(habitat_mapping) #yayayay
 
 ###########################################################################
 # add vertebrate and invertebrate column ~ phylum -------------------------
@@ -94,9 +152,9 @@ dt_mutate <- dt_og |>
          invertebrate_n = if_else(vert == "invertebrate" & dmperind_g_ind != 0, 1, 0)) |> 
   ### calculate max size of community at this resolution so we can calculate mean max size of species within community
   group_by(project, habitat, year, month, site, subsite_level1, subsite_level2, subsite_level3, scientific_name) |>
-  mutate(max_size = max(dmperind_g_ind, na.rm = TRUE),
-         min_size = min(dmperind_g_ind, na.rm = TRUE),
-         mean_size = mean(dmperind_g_ind, na.rm = TRUE)) |> 
+  # mutate(max_size = max(dmperind_g_ind, na.rm = TRUE),
+  #        min_size = min(dmperind_g_ind, na.rm = TRUE),
+  #        mean_size = mean(dmperind_g_ind, na.rm = TRUE)) |> 
   ungroup()
 
 ### remove all invertebrate data from FCE & VCR - makes up very small fraction and neither project poised at
@@ -111,21 +169,60 @@ dt_mutate_filter <- dt_mutate |>
 
 glimpse(dt_mutate_filter)
 
+rm(dt, dt_mutate, dt_og)
+
 results <- dt_mutate_filter |> 
   filter(dmperind_g_ind != 0) |> 
-  group_by(project, habitat, vert, year, month, site, subsite_level1, subsite_level2, subsite_level3) %>%
+  # group_by(project, habitat, vert, year, month, site, subsite_level1, subsite_level2, subsite_level3) |> 
+  group_by(project, habitat, vert, year, month, site) |> 
   summarize(
     Species_Richness = length(unique(scientific_name)),
     Family_Richness = length(unique(family)),
     Species_Shannon_Diversity_Index = diversity(x = table(scientific_name), index = "shannon"),
     Species_Inverse_Simpson_Diversity_Index = diversity(x = table(scientific_name), index = "invsimpson"),
     Trophic_Shannon_Diversity_Index = diversity(x = table(diet_cat), index = "shannon"),
-    Trophic_Inverse_Simpson_Diversity_Index = diversity(x = table(diet_cat), index = "invsimpson")
+    Trophic_Inverse_Simpson_Diversity_Index = diversity(x = table(diet_cat), index = "invsimpson"),
+    Fisher_Alpha_Div = fisher.alpha(table(scientific_name))
   ) |> 
   ungroup()
 
 na_count_per_column <- sapply(results, function(x) sum(is.na(x)))
 print(na_count_per_column) #yay
+
+gamma_diversity <- dt_mutate_filter |> 
+  filter(dmperind_g_ind != 0) |> 
+  group_by(project, vert, year, month) %>%
+  summarize(
+    gamma_div = length(unique(scientific_name))
+  )
+
+na_count_per_column <- sapply(gamma_diversity, function(x) sum(is.na(x)))
+print(na_count_per_column) #yay
+
+# Calculating Beta Diversity (β) using Bray-Curtis method
+beta_diversity <- dt_mutate_filter |> 
+  filter(dmperind_g_ind != 0) |> 
+  group_by(project, habitat, vert, year, month) |> 
+  summarise(
+    beta_jaccard_div = betadiver(as.matrix(table(site, scientific_name)), method = "jaccard"),
+    beta_gower_div = betadiver(as.matrix(table(site, scientific_name)), method = "Gower")
+  )
+
+test <- dt_mutate_filter |> 
+  filter(project == "MCR")
+
+bdt <- test |> 
+  mutate(site_full = paste(subsite_level1, site, sep = "")) |> 
+  group_by(site_full, habitat, year, scientific_name) |> 
+  summarise(count = n()) |> 
+  ungroup()
+
+matrix_view <- bdt |> 
+  unite("site_habitat_year", site_full, strata, year, sep = "") |> 
+  pivot_wider(names_from = scientific_name, values_from = count, values_fill = list(count = 0))
+
+final_matrix <- as.matrix(matrix_view[-1])
+rownames(final_matrix) <- matrix_view$site_habitat_year
 
 ###########################################################################
 # add strata of interest to each project ----------------------------------
@@ -162,131 +259,6 @@ dt_total_strata_date <- dt_total_strata |>
 
 na_count_per_column <- sapply(dt_total_strata_date, function(x) sum(is.na(x)))
 print(na_count_per_column) #yayay
-
-###########################################################################
-# set up individual projects/habitats for analyses and plotting -----------
-###########################################################################
-
-### Below I have separated each unique projecthabitat out to mutate new columns based on either
-# the strata they want their data colored by (i.e., color = XXXX)and the level to which they want
-# their data summarized (i.e., for FCE-estuary, I want summarized at subsite_level1..
-# whereas SBC wants their data summarized at the site level. This approach sets up
-# an easy way to map plots across all unique projecthabitats, instead of doing them
-# individually
-
-# ### CCE-oceanic
-# cce <- dt_total_strata_date |> 
-#   filter(projecthabitat == "CCE-oceanic") |> 
-#   mutate(group = site,
-#          color = strata,
-#          units = 'm2') |> 
-#   ### added new resolution group wants considered for examination -> functionally the "site" for each project
-#   unite(color2, c(site, color), sep = "-", remove = FALSE)
-
-### CoastalCA-ocean
-pisco_central <- dt_total_strata_date |> 
-  filter(projecthabitat == "CoastalCA-ocean",
-         site == "CENTRAL") |> #split pisco into central and southern
-  mutate(group = subsite_level2,
-         color = strata,
-         units = 'm2',
-         projecthabitat = "CoastalCA-ocean-CENTRAL") |> 
-  ### added new resolution group wants considered for examination -> functionally the "site" for each project
-  unite(color2, c(subsite_level2, color), sep = "-", remove = FALSE)
-
-pisco_south <- dt_total_strata_date |> 
-  filter(projecthabitat == "CoastalCA-ocean",
-         site == "SOUTH") |> #split pisco into central and southern
-  mutate(group = subsite_level2,
-         color = strata,
-         units = 'm2',
-         projecthabitat = "CoastalCA-ocean-SOUTH") |> 
-  group_by(subsite_level2, year) |> 
-  ### removing three insane outlier in dataset that wasn't capture by initial filtering
-  # mutate(test = mean(total_nitrogen)) |>
-  # ungroup() |> 
-  # filter(!test > 75000) |> 
-  # dplyr::select(-test) |> 
-  ### added new resolution group wants considered for examination -> functionally the "site" for each project
-  unite(color2, c(subsite_level2, color), sep = "-", remove = FALSE)
-
-### FCE-estuary
-fce <- dt_total_strata_date |> 
-  filter(projecthabitat == "FCE-estuary") |>
-  mutate(group = subsite_level1,
-         color = strata,
-         units = 'm') |> #grouped at subsite_level1
-  ### added new resolution group wants considered for examination -> functionally the "site" for each project
-  unite(color2, c(site, subsite_level1), sep = "-", remove = FALSE) |> 
-  ### reverts back to hydrologic year to make more sense of dataset - data is collected across calendar years but considered sequential (i.e., November - June)
-  mutate(year = if_else(project == "FCE" & month < 10, year - 1, year))
-
-### MCR-ocean
-mcr <- dt_total_strata_date |> 
-  filter(projecthabitat == "MCR-ocean") |> 
-  ### join site and subsite_level1 according DB request for grouping variable
-  unite("group", site, subsite_level1, sep = "-", remove = FALSE) |>
-  mutate(group = group,
-         color = subsite_level1,
-         units = 'm2') |> 
-  ### added new resolution group wants considered for examination -> functionally the "site" for each project
-  unite(color2, c(subsite_level1, site), sep = "-", remove = FALSE)
-
-# ### NGA-oceanic
-# nga <- dt_total_strata_date |> 
-#   filter(projecthabitat == "NGA-oceanic") |> 
-#   mutate(group = site,
-#          color = strata,
-#          units = 'm3') |> 
-#   ### added new resolution group wants considered for examination -> functionally the "site" for each project
-#   unite(color2, c(site, color), sep = "-", remove = FALSE)
-
-### PIE-estuary
-pie <- dt_total_strata_date |> 
-  filter(projecthabitat == "PIE-estuary") |> 
-  mutate(group = site,
-         color = strata,
-         units = 'm2')  |> 
-  ### added new resolution group wants considered for examination -> functionally the "site" for each project
-  mutate(color2 = site) # no unite function needed here to generate new 'color2' column
-
-### SBC-beach
-# sbc_beach <- dt_total_strata_date |> 
-#   filter(projecthabitat == "SBC-beach") |> 
-#   mutate(group = site,
-#          color = strata,
-#          units = 'm') |> 
-#   ### added new resolution group wants considered for examination -> functionally the "site" for each project
-#   unite(color2, c(site, color), sep = "-", remove = FALSE)
-
-### SBC-ocean
-sbc_reef <- dt_total_strata_date |> 
-  filter(projecthabitat == "SBC-ocean") |> 
-  mutate(group = site,
-         color = strata,
-         units = 'm2') |> 
-  ### added new resolution group wants considered for examination -> functionally the "site" for each project
-  unite(color2, c(site, color), sep = "-", remove = FALSE)
-
-### VCR-estuary
-vcr <- dt_total_strata_date |> 
-  filter(projecthabitat == "VCR-estuary") |> 
-  mutate(group = subsite_level1,
-         color = strata,
-         units = 'm2') |> 
-  ### added new resolution group wants considered for examination -> functionally the "site" for each project
-  unite(color2, c(subsite_level1, color), sep = "-", remove = FALSE)
-
-### binding everything back together, removing index row generated when saving out of R
-## and arranging the data by date
-dat_ready <- bind_rows(fce, mcr, pisco_central, pisco_south, sbc_reef,
-                       pie, vcr)
-
-na_count_per_column <- sapply(dat_ready, function(x) sum(is.na(x)))
-print(na_count_per_column) #yay
-
-### tidy up working environment
-rm(fce, mcr, pisco_central, pisco_south, sbc_reef, pie, vcr)
 
 ###########################################################################
 # clean up dataset names for plotting and analysis ------------------------
