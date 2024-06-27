@@ -8,7 +8,7 @@
 
 ### load necessary libraries
 ### install.packages("librarian")
-librarian::shelf(tidyverse, googledrive, readxl, taxize, vegan)
+librarian::shelf(tidyverse, googledrive, readxl, taxize, vegan, codyn)
 
 ### set google drive path
 exc_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1VakpcnFVckAYNggv_zNyfDRfkcGTjZxX")) |> 
@@ -148,7 +148,6 @@ dt_total_strata <- left_join(dt_mutate_filter,
 
 na_count_per_column <- sapply(dt_total_strata, function(x) sum(is.na(x)))
 print(na_count_per_column) #yayay
-
 
 ###########################################################################
 # generate pseudo date column for each project ----------------------------
@@ -360,6 +359,105 @@ step_1_div <- dat_ready_4 |>
 na_count_per_column <- sapply(step_1_div, function(x) sum(is.na(x)))
 print(na_count_per_column) #yay
 
+# turnover metrics --------------------------------------------------------
+
+species_presence <- dat_ready_4 |> 
+  filter(site != "RB-17") |> 
+  group_by(project, habitat, year, month, site, subsite_level1, subsite_level2, subsite_level3, scientific_name) |> 
+  mutate(total_bm_m = sum(dmperind_g_ind*density_num_m, na.rm = TRUE),
+    total_bm_m2 = sum(dmperind_g_ind*density_num_m2, na.rm = TRUE),
+    total_bm_m3 = sum(dmperind_g_ind*density_num_m3, na.rm = TRUE),
+    total_biomass = sum(total_bm_m + total_bm_m2 + total_bm_m3, na.rm = TRUE),
+    total_density_m = sum(density_num_m, na.rm = TRUE),
+    total_density_m2 = sum(density_num_m2, na.rm = TRUE),
+    total_density_m3 = sum(density_num_m3, na.rm = TRUE),
+    total_density = sum(total_density_m + total_density_m2 + total_density_m3, na.rm = TRUE)) |> 
+  ungroup() |>
+  dplyr::select(
+                -total_bm_m, -total_bm_m2, -total_bm_m3) |> 
+  arrange(project, habitat, vert, year, month, site, subsite_level1, subsite_level2, subsite_level3, scientific_name) |> 
+  group_by(project, habitat, year, site, scientific_name) |> 
+  summarize(mean_total_bm = mean(total_biomass),
+            mean_total_dens = mean(total_density)) |> 
+  ungroup() |> 
+  mutate(mean_total_dens_1p = ifelse(
+    mean_total_dens > 0, mean_total_dens + 1, 0), 
+    incidence = ifelse(
+    mean_total_dens > 0, 1, 0))
+
+test_2006 <- species_presence |> 
+  filter(project == "MCR",
+         habitat == "Fore Reef",
+         site == "FO-1",
+         year == 2006)
+
+test_wider2006 <- test_2006 |> 
+  select(scientific_name, incidence) |> 
+  pivot_wider(names_from = "scientific_name", values_from = "incidence")
+
+test_2007 <- species_presence |> 
+  filter(project == "MCR",
+         habitat == "Fore Reef",
+         site == "FO-1",
+         year == 2007)
+
+sync_test <- synchrony (df=test,
+                        time.var="year",
+                        species.var="scientific_name",
+                        abundance.var ="mean_total_bm",
+                        metric = "Loreau",
+                        replicate.var=NA)
+
+test_wider2007 <- test_2007 |> 
+  select(scientific_name, incidence) |> 
+  pivot_wider(names_from = "scientific_name", values_from = "incidence")
+
+mcr20062007 <- rbind(test_wider2006,test_wider2007)
+beta <- vegdist(mcr20062007, method = 'jaccard')
+
+turnover_test <- turnover(df = test, time.var = "year", 
+                          abundance.var = "mean_total_dens_1p", 
+                          species.var = "scientific_name",
+                          metric = "total")
+
+testy <- species_presence |> 
+  mutate(psh = paste(project, habitat, site, sep = "-")) |> 
+  filter(site != "TB-5")
+
+psh_vec = unique(testy$psh)
+df_temp <- data.frame(matrix(ncol=3,nrow=length(psh_vec)))
+df_temp[,1] <- psh_vec
+names(df_temp)<-c("psh_vec","beta_time","synch")
+
+for (i in 1:length(psh_vec)){
+  temp <- testy |> 
+  filter(psh == psh_vec[i])
+  beta_temp <- turnover(df = temp, time.var = "year", 
+           abundance.var = "mean_total_dens_1p", 
+           species.var = "scientific_name",
+           metric = "total")
+  
+  df_temp[i,2]<-mean(beta_temp[,1])
+  
+  
+  synch_temp <- synchrony (df=temp,
+             time.var="year",
+             species.var="scientific_name",
+             abundance.var ="mean_total_bm",
+             metric = "Loreau",
+             replicate.var=NA)
+  df_temp[i,3]<-synch_temp
+}
+
+df_temp_final <- df_temp |> 
+  separate(col = psh_vec, into = c("program", "habitat", "site", "number"), sep = "-")
+  
+  
+
+write_csv(df_temp, "local_data/beta_synchrony_table.csv")
+
+
+
 gamma_diversity <- dat_ready_4 |> 
   filter(dmperind_g_ind != 0) |> 
   group_by(project, year_month) |> 
@@ -370,33 +468,34 @@ gamma_diversity <- dat_ready_4 |>
 na_count_per_column <- sapply(gamma_diversity, function(x) sum(is.na(x)))
 print(na_count_per_column) #yay
 
-test <- dat_ready_4 |> 
-  filter(project == "MCR")
-
-species_presence <- test |> 
-  filter(dmperind_g_ind != 0) |> 
-  group_by(year_month, habitat, site, scientific_name) |> 
-  summarise(count = n()) |> 
-  ungroup() |> 
-  pivot_wider(names_from = scientific_name, 
-              values_from = count, 
-              values_fill = list(count = 0)) 
-
-# calculate Jaccard dissimilarities
-jaccard_diss <- vegdist(species_presence[, 4:ncol(species_presence)], method = "jaccard")
-
-# compute beta diversity
-beta_div <- betadisper(jaccard_diss, group = species_presence$habitat)
-
-distances <- beta_div$distances
-beta_df <- data.frame(year_month = species_presence$year_month,
-                      habitat = species_presence$habitat,
-                      dist = distances)
-
-join_test <- left_join(test, beta_df)
-
-beta_dftest <- data.frame(year_month = species_presence$year_month,
-                      habitat = species_presence$habitat,
-                      dist = distances) |> 
-  group_by(year_month, habitat) |> 
-  mutate(mean_dist = mean(dist))
+# ### beta diversity - got it working, but how do I get tied back in now?
+# test <- dat_ready_4 |> 
+#   filter(project == "MCR")
+# 
+# species_presence <- test |> 
+#   filter(dmperind_g_ind != 0) |> 
+#   group_by(year_month, habitat, site, scientific_name) |> 
+#   summarise(count = n()) |> 
+#   ungroup() |> 
+#   pivot_wider(names_from = scientific_name, 
+#               values_from = count, 
+#               values_fill = list(count = 0)) 
+# 
+# # calculate Jaccard dissimilarities
+# jaccard_diss <- vegdist(species_presence[, 4:ncol(species_presence)], method = "jaccard")
+# 
+# # compute beta diversity
+# beta_div <- betadisper(jaccard_diss, group = species_presence$habitat)
+# 
+# distances <- beta_div$distances
+# beta_df <- data.frame(year_month = species_presence$year_month,
+#                       habitat = species_presence$habitat,
+#                       dist = distances)
+# 
+# join_test <- left_join(test, beta_df)
+# 
+# beta_dftest <- data.frame(year_month = species_presence$year_month,
+#                       habitat = species_presence$habitat,
+#                       dist = distances) |> 
+#   group_by(year_month, habitat) |> 
+#   mutate(mean_dist = mean(dist))

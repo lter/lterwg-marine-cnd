@@ -85,7 +85,7 @@ model_dt <- dt2 |>
 
 # glimpse(model_dt)
 
-write_csv(model_dt, "local_data/model_data_clean.csv")
+# write_csv(model_dt, "local_data/model_data_clean.csv")
 ###########################################################################
 # recode factors as such --------------------------------------------------
 ###########################################################################

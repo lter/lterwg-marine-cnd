@@ -52,7 +52,7 @@ strata_list <- readxl::read_excel(path = file.path("tier2", "strata_class.xlsx")
 ### to allow group_by function to go as far in sequence as it can for 
 ### each project without throwing NAs
 
-dt <- dt %>%
+dt <- dt |> 
   mutate(subsite_level1 = replace_na(subsite_level1, "Not Available"),
          subsite_level2 = replace_na(subsite_level2, "Not Available"),
          subsite_level3 = replace_na(subsite_level3, "Not Available"))
@@ -76,7 +76,7 @@ dt_og <- dt |>
          elasmo = class %in% c("Chondrichthyes", "Elasmobranchii")) |> 
   ungroup() |> 
   filter(!(outlier & sharkray & elasmo)) |> #lose 251 sharks and rays from MCR/PISCO datasets
-  dplyr::select(-lower_bound, -upper_bound, -outlier, -sharkray)
+  dplyr::select(-lower_bound, -upper_bound, -outlier, -sharkray, -elasmo)
 
 glimpse(dt_og)
 
@@ -91,23 +91,22 @@ dt_mutate <- dt_og |>
   mutate(vert = ifelse(is.na(vert2), "invertebrate", vert2)) |> 
   dplyr::select(-vert_1, -vert2) |> 
   mutate(vertebrate_n = if_else(vert == "vertebrate" & dmperind_g_ind != 0, 1, 0),
-         invertebrate_n = if_else(vert == "invertebrate" & dmperind_g_ind != 0, 1, 0))
-  ### calculate max size of community at this resolution so we can calculate mean max size of species within community
-  # group_by(project, habitat, year, month, site, subsite_level1, subsite_level2, subsite_level3, scientific_name) |>
-  # # mutate(max_size = max(dmperind_g_ind, na.rm = TRUE),
-  # #        min_size = min(dmperind_g_ind, na.rm = TRUE),
-  # #        mean_size = mean(dmperind_g_ind, na.rm = TRUE)) |> 
-  # ### adjusted Fisher-Pearson standardized moment coefficient
-  # ### not enough individual observations for this metric to work...
-  # # skew_size = skewness(dmperind_g_ind, na.rm = TRUE, type = 3)) |> 
-  # ungroup()
+         invertebrate_n = if_else(vert == "invertebrate" & dmperind_g_ind != 0, 1, 0)) |> 
+  ## calculate max size of community at this resolution so we can calculate mean max size of species within community
+  group_by(project, habitat, vert, year, month, site, subsite_level1, subsite_level2, subsite_level3, scientific_name) |>
+  mutate(max_size = max(dmperind_g_ind, na.rm = TRUE),
+         min_size = min(dmperind_g_ind, na.rm = TRUE),
+         mean_size = mean(dmperind_g_ind, na.rm = TRUE))
+
+# test <- dt_mutate |>
+#   filter(project == "FCE",
+#          dmperind_g_ind > 0)
 
 ### remove all invertebrate data from FCE & VCR - makes up very small fraction and neither project poised at
 ### to monitor invertebrate populations/communities
 dt_mutate_filter <- dt_mutate |> 
   filter(!(project %in% c("FCE", "VCR") & vert == "invertebrate")) |> 
-  mutate(vert = ifelse(project %in% c("CCE", "NGA"), "invertebrate", vert)) |> 
-  select(-elasmo)
+  mutate(vert = ifelse(project %in% c("CCE", "NGA"), "invertebrate", vert))
 
 dt_total <- dt_mutate_filter |> 
   group_by(project, habitat, vert, year, month, site, subsite_level1, subsite_level2, subsite_level3) |> 
@@ -129,15 +128,9 @@ dt_total <- dt_mutate_filter |>
     ### calculate species richness
     n_spp = n_distinct(scientific_name[dmperind_g_ind != 0]),
     ### calculate average community size metrics
-    max_size = max(dmperind_g_ind, na.rm = TRUE)) |> 
-    # mean_size = mean(dmperind_g_ind[dmperind_g_ind > 0], na.rm = TRUE),
-    # skewness_size = skewness(dmperind_g_ind[dmperind_g_ind > 0], na.rm = TRUE)) |> 
-  # mean_skew_size = mean(skew_size)) |> 
-  ### calculate dispersion of community size metrics as coefficient of variation
-  ### determined calculate of cv metrics more appropriate at later step in workflow
-  # cv_min_size = (sd(min_size, na.rm = TRUE) / mean(min_size, na.rm = TRUE)) * 100,
-  # cv_mean_size = (sd(mean_size, na.rm = TRUE) / mean(mean_size, na.rm = TRUE)) * 100,
-  # cv_max_size = (sd(max_size, na.rm = TRUE) / mean(max_size, na.rm = TRUE)) * 100) |> 
+    max_size = mean(max_size, na.rm = TRUE),
+    mean_size = mean(mean_size, na.rm = TRUE),
+    min_size = mean(min_size, na.rm = TRUE)) |> 
   ungroup() |>
   dplyr::select(-total_nitrogen_m, -total_nitrogen_m2, -total_nitrogen_m3,
                 -total_phosphorus_m, -total_phosphorus_m2, -total_phosphorus_m3,
@@ -335,10 +328,10 @@ dat_ready_2 <- dat_ready |>
   select(-projecthabitat, -habitat, -project, -color, -site) |> 
   ### rename columns to be more representative/clean
   rename(site = color2,
-         project = Project, 
+         program = Project, 
          habitat = Habitat,
          date = sdate) |> 
-  dplyr::select(project, habitat, year, month, date, vert, everything())
+  dplyr::select(program, habitat, year, month, date, vert, everything())
 
 glimpse(dat_ready_2)
 unique(dat_ready_2$habitat)
@@ -349,6 +342,7 @@ dat_ready_3 <- dat_ready_2 |>
 glimpse(dat_ready_3)
 unique(dat_ready_3$habitat)
 
+# write_csv(dat_ready_3, "local_data/model_data_all_final.csv")
 
 # step 2 ------------------------------------------------------------------
 
@@ -386,45 +380,45 @@ testna <- dt1 |>
 # dt2 <- dt1
 
 dt2 <- na.omit(dt1)
+dt3 <- dt2 |> 
+  filter(total_nitrogen > 0)
 
-na_count_per_column <- sapply(dt2, function(x) sum(is.na(x)))
+
+na_count_per_column <- sapply(dt3, function(x) sum(is.na(x)))
 print(na_count_per_column) 
 
 ### summarize all sites measured within the dataset annualy
-model_dt <- dt2 |> 
+model_dt <- dt3 |> 
   group_by(project, ecosystem, climate, latitude, habitat, site) |> 
   summarize(mean_n = mean(total_nitrogen),
-            ### calculating coefficient of variation for nutrient supply across time for each site
             cv_n = (sd(total_nitrogen, na.rm = TRUE) / mean(total_nitrogen, na.rm = TRUE)),
-            ### calculating stability of nutrient supply (i.e., 1/cv)
             n_stability = 1/cv_n,
             mean_p = mean(total_phosphorus),
-            ### calculating coefficient of variation for nutrient supply across time for each site
-            cv_p = (sd(total_nitrogen, na.rm = TRUE) / mean(total_nitrogen, na.rm = TRUE)),
-            ### calculating stability of nutrient supply (i.e., 1/cv)
+            cv_p = (sd(total_phosphorus, na.rm = TRUE) / mean(total_phosphorus, na.rm = TRUE)),
             p_stability = 1/cv_p,
             mean_bm = mean(total_biomass),
-            ### calculating coefficient of variation for biomass across time for each site
             cv_bm = (sd(total_biomass, na.rm = TRUE) / mean(total_biomass, na.rm = TRUE)),
-            ### calculating stability of biomass (i.e., 1/cv)
             bm_stability = 1/cv_bm,
-            max_ss = mean(max_size),
-            spp_rich = mean(Species_Richness),
-            fam_richness = mean(Family_Richness),
-            SppShDivInd = mean(Species_Shannon_Diversity_Index),
-            SppInvSimpDivInd = mean(Species_Inverse_Simpson_Diversity_Index),
-            TrophShDivInd = mean(Trophic_Shannon_Diversity_Index),
-            TrophInvSimpDivInd = mean(Trophic_Inverse_Simpson_Diversity_Index))|> 
+            mean_max_ss = mean(max_size),
+            cv_max_ss = (sd(max_size, na.rm = TRUE) / mean(max_size, na.rm = TRUE)),
+            max_size_stability = 1/cv_max_ss,
+            mean_spp_rich = mean(Species_Richness),
+            cv_spp_rich = (sd(Species_Richness, na.rm = TRUE) / mean(Species_Richness, na.rm = TRUE)),
+            spp_rich_stability = 1/cv_spp_rich,
+            mean_fam_rich = mean(Family_Richness),
+            cv_fam_rich = (sd(Family_Richness, na.rm = TRUE) / mean(Family_Richness, na.rm = TRUE)),
+            fam_rich_stability = 1/cv_fam_rich,
+            mean_SppInvSimpDivInd = mean(Species_Inverse_Simpson_Diversity_Index),
+            cv_SppInvSimpDivInd = (sd(Species_Inverse_Simpson_Diversity_Index, na.rm = TRUE) / mean(Species_Inverse_Simpson_Diversity_Index, na.rm = TRUE)),
+            SppInvSimpDivInd_stability = 1/cv_SppInvSimpDivInd,
+            mean_TrophInvSimpDivInd = mean(Trophic_Inverse_Simpson_Diversity_Index),
+            cv_TrophInvSimpDivInd = (sd(Trophic_Inverse_Simpson_Diversity_Index, na.rm = TRUE) / mean(Trophic_Inverse_Simpson_Diversity_Index, na.rm = TRUE)),
+            TrophInvSimpDivInd_stability = 1/cv_TrophInvSimpDivInd)|> 
   ### omit three sites with NA here - it appears because there was no replication of the sites (i.e., one-offs in datasets)
   na.omit() |> 
   ungroup() |> 
-  rename(program = project,
-         species_rich = spp_rich,
-         species_div = SppInvSimpDivInd,
-         family_rich = fam_richness,
-         trophic_div = TrophInvSimpDivInd) |> 
-  select(-SppShDivInd, -TrophShDivInd)
+  rename(program = project)
 
 glimpse(model_dt)
 
-# write_csv(model_dt, "local_data/model_data_clean.csv")
+write_csv(model_dt, "local_data/model_data_clean_final.csv")

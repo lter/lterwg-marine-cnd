@@ -2,23 +2,13 @@
 ### install.packages("librarian")
 librarian::shelf(tidyverse, readxl, glmmTMB, MuMIn, corrplot, performance, ggeffects, sjlabelled)
 
-exc <- read_csv("local_data/model_data_all.csv") #all sites, no 10 year cutoff
-sc <- read_csv("local_data/site_characteristics.csv")
-add <- read_csv("local_data/timeseries_axis_titles.csv")
-### join data for modeling with site characteristic information
-dt <- left_join(exc, sc) |> 
-  dplyr::select(project, ecosystem, ocean, latitude, site, year, month, vert, everything()) |> 
-  dplyr::select(-n_spp)
+exc <- read_csv("local_data/model_data_clean.csv") #all sites, no 10 year cutoff
 
-dt1 <- left_join(dt, add, by = "project")
+dt <- exc |> 
+  filter(site != "RB-17",
+         program != "PIE")
 
-vert_colors <- c("vertebrate" = "black", "invertebrate" = "#ED6464")
-ecosystem_colors <- c("Coastal" = "#7fcdff", "Pelagic" = "#064273", "Estuarine" = "#76b6c4")
-dt1$axis_name_5 <- factor(dt1$axis_name_5, 
-                          levels = c("VCR", "SBCO", "SBCB",
-                                     "PCCS", "PCCC", "MCR",
-                                     "PIE", "FCE",
-                                     "NGA", "CCE"))
+
 
 ### summarize all sites measured within the dataset annualy
 plot_dt <- dt1 |> 
@@ -38,7 +28,7 @@ plot_dt <- dt1 |>
   ungroup() |> 
   unite(project_habitat, c(axis_name_5, habitat), sep = " ", remove = FALSE) |> 
   unite(site_vert, c(site, vert), sep = " ", remove = FALSE) |> 
-  filter(site != "RB-17")
+  
 
 glimpse(plot_dt)
 
