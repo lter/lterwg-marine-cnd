@@ -424,6 +424,138 @@ testy <- species_presence |>
   mutate(psh = paste(project, habitat, site, sep = "-")) |> 
   filter(site != "TB-5")
 
+#try to make accumulation curves
+
+#for each phs randomly pull 1 through n species 
+#for each random pull, calculate the stability of that comm
+#replicate 1000 times 
+
+mcr_test <- species_presence |> 
+  mutate(psh = paste(project, habitat, site, sep = "-")) |> 
+  filter(
+    project == "MCR",
+    habitat == "Fore Reef",
+    site == "FO-1",
+    mean_total_bm > 0
+  )
+
+
+unique(mcr_test$scientific_name)
+
+library(dplyr)
+library(purrr)
+
+library(dplyr)
+library(dplyr)
+
+# Assume 'mcr_test' is your dataset already loaded into R
+# Parameters for the analysis
+num_replicates = 100
+
+# Initialize a data frame to store issues
+issues <- data.frame(site = character(), habitat = character(), num_species = integer(), replicate = integer(), count = integer())
+
+# Function to perform the analysis for a given site and habitat
+perform_analysis <- function(data) {
+  results <- list()
+  all_species <- unique(data$scientific_name)
+  num_species <- length(all_species)
+  
+  for (replicate in 1:num_replicates) {
+    replicate_results <- list()
+    
+    for (num_sampled in 1:num_species) {
+      sampled_species <- sample(all_species, size = num_sampled)
+      species_data <- data %>% filter(scientific_name %in% sampled_species)
+      
+      yearly_data <- species_data %>%
+        group_by(year) %>%
+        summarise(total_biomass = sum(mean_total_bm, na.rm = TRUE)) %>%
+        pull(total_biomass)
+      
+      # Calculate stability as 1/CV
+      tryCatch({
+        mean_biomass <- mean(yearly_data)
+        sd_biomass <- sd(yearly_data)
+        if(mean_biomass > 0 && !is.na(sd_biomass)) {
+          cv_biomass <- sd_biomass / mean_biomass
+          if(cv_biomass > 0) {
+            stability_score <- 1 / cv_biomass
+          } else {
+            stability_score <- NA
+          }
+        } else {
+          stability_score <- NA
+        }
+      }, error = function(e) {
+        stability_score <- NA
+        issues <<- rbind(issues, data.frame(site = unique(data$site), habitat = unique(data$habitat), num_species = num_sampled, replicate = replicate, count = 1))
+      })
+      
+      replicate_results[[num_sampled]] <- list(
+        num_species = num_sampled,
+        stability = stability_score,
+        sampled_species = sampled_species
+      )
+    }
+    
+    results[[replicate]] <- replicate_results
+  }
+  
+  return(results)
+}
+
+# Filter data for the project "MCR" and iterate over each site and habitat combination
+project_data <- mcr_test %>% filter(project == "MCR")
+unique_sites_habitats <- unique(project_data %>% select(site, habitat))
+
+# Process each site and habitat
+all_results <- list()
+for (i in seq_along(unique_sites_habitats$site)) {
+  site_data <- project_data %>% filter(site == unique_sites_habitats$site[i], habitat == unique_sites_habitats$habitat[i])
+  all_results[[paste(unique_sites_habitats$site[i], unique_sites_habitats$habitat[i], sep = "_")]] <- perform_analysis(site_data)
+}
+
+# View issues
+print(issues)
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+# Assuming 'all_results' is your final output containing all the replicate lists
+results_df <- data.frame(site_habitat = character(), replicate = integer(), num_species = integer(), stability = numeric())
+
+for (site_habitat in names(all_results)) {
+  site_habitat_results <- all_results[[site_habitat]]
+  
+  for (replicate in seq_along(site_habitat_results)) {
+    replicate_data <- site_habitat_results[[replicate]]
+    
+    for (num_sampled in seq_along(replicate_data)) {
+      species_data <- replicate_data[[num_sampled]]
+      
+      results_df <- rbind(results_df, data.frame(
+        site_habitat = site_habitat,
+        replicate = replicate,
+        num_species = species_data$num_species,
+        stability = species_data$stability
+      ))
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
 psh_vec = unique(testy$psh)
 df_temp <- data.frame(matrix(ncol=3,nrow=length(psh_vec)))
 df_temp[,1] <- psh_vec
