@@ -8,7 +8,7 @@
 
 ### load necessary libraries
 ### install.packages("librarian")
-librarian::shelf(tidyverse, googledrive, readxl, e1071)
+librarian::shelf(tidyverse, googledrive, vegan, readxl, e1071)
 
 ### set google drive path
 exc_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1VakpcnFVckAYNggv_zNyfDRfkcGTjZxX")) |> 
@@ -382,7 +382,6 @@ testna <- dt1 |>
 dt2 <- na.omit(dt1)
 dt3 <- dt2 |> 
   filter(total_nitrogen > 0)
-
 
 na_count_per_column <- sapply(dt3, function(x) sum(is.na(x)))
 print(na_count_per_column) 
