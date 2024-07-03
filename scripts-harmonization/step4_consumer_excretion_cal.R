@@ -67,6 +67,14 @@ df <- read.csv(file.path("tier1", "harmonized_consumer_ready_for_excretion.csv")
 #df <- harmonized_clean
 species_list <- readxl::read_excel(path = file.path("tier1", "CNDWG_harmonized_consumer_species.xlsx"),na=".")
 
+# peacek<-df6%>%
+#   filter(project=="NGA")%>%
+#   select(sp_code,scientific_name,species)
+# #check to see if there is repeated species
+# peace1 <- species_list %>%
+#   group_by(project,sp_code,scientific_name,species) %>%
+#   summarise(freq=n(),.groups='drop') %>%
+#   ungroup()
 #### read data end 
 
 
@@ -78,38 +86,26 @@ df1 <-df %>%
   filter(measurement_type %in% c("dmperind","density","temp")) 
 
 # #check the unit that match with the measurement, good to go
-# peace <- df1 %>%
-#   distinct(project,habitat,measurement_type,measurement_unit)
-glimpse(df1)
+ # peace <- df1 %>%
+ #   distinct(project,habitat,measurement_type,measurement_unit)
+#glimpse(df1)
 
 ### pivot_wider indicates duplicates and generating lists instead of columns in dbl
-### check for replicates in data
-df1_replicates <- df1 |> 
-  group_by(across(everything())) |> 
-  filter(n() > 1) |> 
-  ungroup()
-
-unique(df1_replicates$project) #[1] "CoastalCA" "SBC"  
-unique(df1_replicates$habitat) #[1] "ocean"
-
-df1_replicates_distinct <- df1_replicates |> 
-  distinct()
-### appears that everything for for sbc-beach and CoastalCA are duplicated
-### df1_replicates = 4380336 obs.
-### df1_replicates_distinct = 2190168 obs.
-### > 2190168*2 = [1] 4380336
-
-### get rid of duplicates - but check out data first to make sure we aren't 
-### kicking anything we shouldn't
-
-rep <- mean(df1_replicates$measurement_value)
-rep_distinct <- mean(df1_replicates_distinct$measurement_value)
+### check for replicates in data. fixed the issue because it was concat twice in the earlier codes
+# df1_replicates <- df1 |> 
+#   group_by(across(everything())) |> 
+#   filter(n() > 1) |> 
+#   ungroup()
+# 
+# unique(df1_replicates$project) #[1] "CoastalCA" "SBC"  
+# unique(df1_replicates$habitat) #[1] "ocean"
+# 
+# df1_replicates_distinct <- df1_replicates |> 
+#   distinct()
 
 df2 <- df1 |> 
   distinct()
-#> 7783290 (data with replicates) - 5593122 (data w/o replicates) 
-#> = [1] 2190168 (data with distinct replicates)
-### everything makes sense
+
 
 df3 <- df2 %>%
   pivot_wider(names_from = c(measurement_type,measurement_unit), values_from = measurement_value) 
@@ -122,11 +118,11 @@ glimpse(df3)
 #   summarise(n=n(),.groups='drop') %>%
 #   ungroup() 
 
-# there is duplicate, we need to select the first one, temporally solution
-spe2 <- species_list %>%
-  group_by(project,sp_code,scientific_name,species) %>%
-  slice(1) %>%
-  ungroup()
+# there is duplicate, we need to select the first one; FCE fixed the issue, we are good now. but keep here in case
+ spe2 <- species_list %>%
+   group_by(project,sp_code,scientific_name,species) %>%
+   slice(1) %>%
+   ungroup()
 
 # merge with the species list
 df4 <- df3 %>%
@@ -136,9 +132,10 @@ df4 <- df3 %>%
 # fix nas that dont make sense --------------------------------------------
 
 # check to see anything that don't have diet cat column
-# peace3<-df4 %>%
-#   filter(is.na(diet_cat)) %>%
-#   distinct(project,habitat,sp_code,scientific_name,species,diet_cat)
+ peace3<-df4 %>%
+   filter(is.na(diet_cat)) %>%
+   distinct(project,habitat,sp_code,scientific_name,species,diet_cat)
+
 na_count_per_column <- sapply(df4, function(x) sum(is.na(x)))
 print(na_count_per_column)
 
@@ -156,23 +153,23 @@ print(na_count_per_column)
 
 ### examine data without family classification
 
-## FCE 
-value_nas <- df5 |> 
-  filter(is.na(family)) |> 
-  filter(project == "FCE") 
-unique(value_nas$scientific_name)
+# ## FCE 
+# value_nas <- df5 |> 
+#   filter(is.na(family)) |> 
+#   filter(project == "FCE") 
+# unique(value_nas$scientific_name)
+# 
+# ## VCR
+# value_nas <- df5 |> 
+#   filter(is.na(family)) |> 
+#   filter(project == "VCR") 
+# unique(value_nas$scientific_name)
 
-## VCR
-value_nas <- df5 |> 
-  filter(is.na(family)) |> 
-  filter(project == "VCR") 
-unique(value_nas$scientific_name)
-
-## CoastalCA
-value_nas <- df5 |> 
-  filter(is.na(family)) |> 
-  filter(project == "CoastalCA") 
-unique(value_nas$scientific_name)
+# ## CoastalCA
+# value_nas <- df5 |> 
+#   filter(is.na(family)) |> 
+#   filter(project == "CoastalCA") 
+# unique(value_nas$scientific_name)
 
 df6 <- df5 %>%
   mutate(family = case_when(
@@ -185,16 +182,16 @@ df6 <- df5 %>%
     TRUE ~ family  # Keep the existing family if none of the above conditions are met
   ))
 
-value_nas <- df6 |> 
-  filter(is.na(family)) |> 
-  filter(project == "FCE") 
-unique(value_nas$scientific_name)
-glimpse(df6)
+# value_nas <- df6 |> 
+#   filter(is.na(family)) |> 
+#   filter(project == "FCE") 
+# unique(value_nas$scientific_name)
+# glimpse(df6)
 
 ### tidy up environment
-rm(df, df1, df2, df3, df4, df5, df1_replicates, 
-   df1_replicates_distinct, value_nas, na_count_per_column,
-   rep, rep_distinct)
+ rm(df1_replicates, 
+    df1_replicates_distinct, value_nas, na_count_per_column,
+    rep, rep_distinct)
 
 ###########################
 #using bradley's code below for excretion calculation

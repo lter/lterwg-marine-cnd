@@ -17,7 +17,7 @@
 
 # Does the species table need to be updated? 
 # Put 0 for no, 1 for yes
-species_update_flag <- 1
+species_update_flag <- 0
 
 ## ------------------------------------------ ##
 #            Housekeeping -----
@@ -29,6 +29,7 @@ librarian::shelf(tidyverse, googledrive, readxl, taxize, stringr)
 
 # Create necessary sub-folder(s)
 dir.create(path = file.path("tier0"), showWarnings = F)
+dir.create(path = file.path("tier1"), showWarnings = F)
 dir.create(path = file.path("tier0", "raw_data"), showWarnings = F)
 dir.create(path = file.path("tier0", "raw_data", "consumer"), showWarnings = F)
 
@@ -63,7 +64,7 @@ raw_CCE_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.co
   dplyr::filter(name %in% c("cce_wdrymass.csv"))
 
 raw_NGA_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1j8QGQR6_vD1SQnFwVnaAy0W-1c_owCRv")) %>%
-  dplyr::filter(name %in% c("nga_combined_clean.csv"))
+  dplyr::filter(name %in% c("Excretion_update_1997-2021.csv"))
 
 # Combine file IDs
 raw_ids <- rbind(raw_SBC_ids, raw_FCE_ids, raw_VCR_ids, raw_coastal_ids, raw_MCR_ids, raw_PIE_ids, raw_CCE_ids, raw_NGA_ids)
@@ -225,6 +226,9 @@ MLPA_p1 <- df_list[["MLPA_benthic_site_means.csv"]] %>%
   # Extract the species code
   dplyr::mutate(sp_code = stringr::str_extract(sp_code, "[A-Z]+"))
 
+#peace <- df_list[["Excretion_update_1997-2021.csv"]]
+
+
 MLPA_p2 <- df_list[["MLPA_benthic_site_means.csv"]] %>%
   # Select all relevant columns
   dplyr::select(project, habitat, raw_filename, row_num, year, site, dplyr::starts_with("wide_COVER")) %>%
@@ -275,7 +279,7 @@ tidy_v1a <- tidy_v0 %>%
     raw_filename == "VCR14232_2.csv" ~ "MM/DD/YY",
     raw_filename == "cce_wdrymass.csv" ~ "MM/DD/YYYY",
     raw_filename == "map_revised02052024.csv" ~ "NA", # only has year and month
-    raw_filename == "nga_combined_clean.csv" ~ "YYYY-MM-DDTHH:MM:SS-0800",
+    raw_filename == "Excretion_update_1997-2021.csv" ~ "YYYY-MM-DDTHH:MM:SS-0800",
     # raw_filename == "" ~ "",
     T ~ "UNKNOWN"))
 
@@ -497,8 +501,14 @@ tidy_v2b <- tidy_v2a %>%
     scientific_name == "Mullets" ~ "Mugil",
     scientific_name == "No fish observed" ~ NA,
     scientific_name == "Sciaenid" ~ "Sciaenidae",
+    # for NGA case, miss spell
+    scientific_name == "Squid" ~ "Teuthida",
+    scientific_name == "Anthoathecatae" ~ "Anthoathecata",
+    scientific_name == "Sarsia principes" ~ "Sarsia princeps",
     T ~ scientific_name
-  )) 
+  ), 
+  # one fix for the NGA data
+  sp_code = ifelse(scientific_name == "Sarsia princeps"&project=="NGA", "CNID", sp_code))
 
 # Check unique scientific names
 unique(tidy_v2b$scientific_name)
@@ -853,11 +863,9 @@ tidy_v3 <- tidy_v2h %>%
   dplyr::relocate(dmperind.g_ind, .after = density.num_m3) %>%
   dplyr::relocate(drymass.g_m, .after = dmperind.g_ind) %>% 
   dplyr::relocate(drymass.g_m2, .after = drymass.g_m) %>%  
-  dplyr::relocate(excretion_egestion.ug_m3, .after = drymass.g_m2) %>%  
-  dplyr::relocate(length.cm, .after = excretion_egestion.ug_m3) %>%  
+  dplyr::relocate(length.cm, .after = drymass.g_m2) %>% 
   dplyr::relocate(length.mm, .after = length.cm) %>%  
-  dplyr::relocate(length.um, .after = length.mm) %>%  
-  dplyr::relocate(sfdrymass.g_m2, .after = length.um) %>%  
+  dplyr::relocate(sfdrymass.g_m2, .after = length.mm) %>%  
   dplyr::relocate(temp.c, .after = sfdrymass.g_m2) %>%  
   dplyr::relocate(transectarea.m, .after = temp.c) %>%  
   dplyr::relocate(transectarea.m2, .after = transectarea.m) %>% 
@@ -910,17 +918,18 @@ date <- gsub(pattern = "-", replacement = "", x = Sys.Date())
 ( tidy_filename <- paste0("harmonized_consumer_", date, ".csv") )
 
 # Create necessary sub-folder(s)
-dir.create(path = file.path("tidy"), showWarnings = F)
+dir.create(path = file.path("tier1"), showWarnings = F)
 
 # Export locally
-write.csv(x = tidy_final, file = file.path("tidy", tidy_filename), na = '.', row.names = F)
+write.csv(x = tidy_final, file = file.path("tier1", tidy_filename), na = '.', row.names = F)
+write.csv(x = tidy_final, file = file.path("tier1", "harmonized_consumer.csv"), na = '.', row.names = F)
 
 # Export harmonized dataset to Drive
-googledrive::drive_upload(media = file.path("tidy", tidy_filename), overwrite = T,
+googledrive::drive_upload(media = file.path("tier1", tidy_filename), overwrite = T,
                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1A-DCrOlyq6IZKvN9d3OHFXj_XFJ5L7HN"))
 
 # Export harmonized dataset to Drive under the general dataset name
-googledrive::drive_upload(media = file.path("tidy", tidy_filename), overwrite = T,
+googledrive::drive_upload(media = file.path("tier1", tidy_filename), overwrite = T,
                           name = "harmonized_consumer.csv",
                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
 
@@ -929,14 +938,14 @@ if (species_update_flag == 1){
   ( species_filename <- paste0("harmonized_consumer_species_", date, ".csv") )
   
   # Also export species table
-  write.csv(x = species_table, file = file.path("tidy", species_filename), na = '.', row.names = F)
+  write.csv(x = species_table, file = file.path("tier1", species_filename), na = '.', row.names = F)
   
   # Export species table to Drive
-  googledrive::drive_upload(media = file.path("tidy", species_filename), overwrite = T,
+  googledrive::drive_upload(media = file.path("tier1", species_filename), overwrite = T,
                             path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1A-DCrOlyq6IZKvN9d3OHFXj_XFJ5L7HN"))
   
   # Export species table to Drive under the general dataset name
-  googledrive::drive_upload(media = file.path("tidy", species_filename), overwrite = T,
+  googledrive::drive_upload(media = file.path("tier1", species_filename), overwrite = T,
                             name = "harmonized_consumer_species.csv",
                             path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
 
