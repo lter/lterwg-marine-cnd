@@ -103,6 +103,8 @@ dt_mutate_filter_2 <- dt_mutate_filter |>
   filter(vert == "vertebrate",
          !project %in% c("NGA", "CCE", "PIE"))
 
+# write_csv(dt_mutate_filter_2, "local_data/filtered_dataset.csv")
+
 ### calculate max size of community at this resolution so we can calculate mean max size of species within community
 dt_mutate_filter_3 <- dt_mutate_filter_2 |>   
   group_by(project, habitat, vert, year, month, site, subsite_level1, subsite_level2, subsite_level3, scientific_name) |>
@@ -342,7 +344,7 @@ dat_ready_3 <- dat_ready_2 |>
 
 # step 2 ------------------------------------------------------------------
 
-# exc <- read_csv("local_data/model_data_all.csv") #all sites, no 10 year cutoff
+# exc <- read_csv("local_data/model_data_all_final_07032024.csv") #all sites, no 10 year cutoff
 sc <- read_csv("local_data/site_characteristics.csv") |> 
   rename(program = project)
 comm <- read_csv("local_data/community_data_filtered.csv") |> 
