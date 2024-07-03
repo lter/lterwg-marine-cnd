@@ -108,7 +108,11 @@ dt_mutate_filter <- dt_mutate |>
   filter(!(project %in% c("FCE", "VCR") & vert == "invertebrate")) |> 
   mutate(vert = ifelse(project %in% c("CCE", "NGA"), "invertebrate", vert))
 
-dt_total <- dt_mutate_filter |> 
+dt_mutate_filter_2 <- dt_mutate_filter |> 
+  filter(vert == "vertebrate",
+         !project %in% c("NGA", "CCE", "PIE"))
+
+dt_total <- dt_mutate_filter_2 |> 
   group_by(project, habitat, vert, year, month, site, subsite_level1, subsite_level2, subsite_level3) |> 
   summarise(### calculate total phosphorus supply at each sampling unit and then sum to get column with all totals
     total_nitrogen_m = sum(nind_ug_hr * density_num_m, na.rm = TRUE),
@@ -184,14 +188,14 @@ dt_total_strata_date <- dt_total_strata |>
 # an easy way to map plots across all unique projecthabitats, instead of doing them
 # individually
 
-### CCE-oceanic
-cce <- dt_total_strata_date |> 
-  filter(projecthabitat == "CCE-oceanic") |> 
-  mutate(group = site,
-         color = strata,
-         units = 'm2') |> 
-  ### added new resolution group wants considered for examination -> functionally the "site" for each project
-  unite(color2, c(site, color), sep = "-", remove = FALSE)
+### CCE-oceanic - NOT IN FIRST MANUSCRIPT
+# cce <- dt_total_strata_date |> 
+#   filter(projecthabitat == "CCE-oceanic") |> 
+#   mutate(group = site,
+#          color = strata,
+#          units = 'm2') |> 
+#   ### added new resolution group wants considered for examination -> functionally the "site" for each project
+#   unite(color2, c(site, color), sep = "-", remove = FALSE)
 
 ### CoastalCA-ocean
 pisco_central <- dt_total_strata_date |> 
@@ -242,32 +246,32 @@ mcr <- dt_total_strata_date |>
   ### added new resolution group wants considered for examination -> functionally the "site" for each project
   unite(color2, c(subsite_level1, site), sep = "-", remove = FALSE)
 
-### NGA-oceanic
-nga <- dt_total_strata_date |> 
-  filter(projecthabitat == "NGA-oceanic") |> 
-  mutate(group = site,
-         color = strata,
-         units = 'm3') |> 
-  ### added new resolution group wants considered for examination -> functionally the "site" for each project
-  unite(color2, c(site, color), sep = "-", remove = FALSE)
+### NGA-oceanic - NOT IN FIRST MANUSCRIPT
+# nga <- dt_total_strata_date |> 
+#   filter(projecthabitat == "NGA-oceanic") |> 
+#   mutate(group = site,
+#          color = strata,
+#          units = 'm3') |> 
+#   ### added new resolution group wants considered for examination -> functionally the "site" for each project
+#   unite(color2, c(site, color), sep = "-", remove = FALSE)
 
-### PIE-estuary
-pie <- dt_total_strata_date |> 
-  filter(projecthabitat == "PIE-estuary") |> 
-  mutate(group = site,
-         color = strata,
-         units = 'm2')  |> 
-  ### added new resolution group wants considered for examination -> functionally the "site" for each project
-  mutate(color2 = site) # no unite function needed here to generate new 'color2' column
+### PIE-estuary - NOT IN FIRST MANUSCRIPT
+# pie <- dt_total_strata_date |> 
+#   filter(projecthabitat == "PIE-estuary") |> 
+#   mutate(group = site,
+#          color = strata,
+#          units = 'm2')  |> 
+#   ### added new resolution group wants considered for examination -> functionally the "site" for each project
+#   mutate(color2 = site) # no unite function needed here to generate new 'color2' column
 
-### SBC-beach
-sbc_beach <- dt_total_strata_date |> 
-  filter(projecthabitat == "SBC-beach") |> 
-  mutate(group = site,
-         color = strata,
-         units = 'm') |> 
-  ### added new resolution group wants considered for examination -> functionally the "site" for each project
-  unite(color2, c(site, color), sep = "-", remove = FALSE)
+### SBC-beach - NOT IN FIRST MANUSCRIPT
+# sbc_beach <- dt_total_strata_date |> 
+#   filter(projecthabitat == "SBC-beach") |> 
+#   mutate(group = site,
+#          color = strata,
+#          units = 'm') |> 
+#   ### added new resolution group wants considered for examination -> functionally the "site" for each project
+#   unite(color2, c(site, color), sep = "-", remove = FALSE)
 
 ### SBC-ocean
 sbc_reef <- dt_total_strata_date |> 
@@ -289,14 +293,13 @@ vcr <- dt_total_strata_date |>
 
 ### binding everything back together, removing index row generated when saving out of R
 ## and arranging the data by date
-dat_ready <- bind_rows(cce, fce, mcr, pisco_central, pisco_south, sbc_beach, sbc_reef,
-                       nga, pie, vcr)
+dat_ready <- bind_rows(fce, mcr, pisco_central, pisco_south, sbc_reef, vcr)
 
 na_count_per_column <- sapply(dat_ready, function(x) sum(is.na(x)))
 print(na_count_per_column) #yay
 
 ### tidy up working environment
-rm(cce, fce, mcr, pisco_central, pisco_south, sbc_beach, sbc_reef, nga, pie, vcr)
+rm(fce, mcr, pisco_central, pisco_south, sbc_reef, vcr)
 
 ###########################################################################
 # clean up dataset names for plotting and analysis ------------------------
@@ -305,19 +308,17 @@ rm(cce, fce, mcr, pisco_central, pisco_south, sbc_beach, sbc_reef, nga, pie, vcr
 unique(dat_ready$projecthabitat)
 label_mapping <- data.frame(
   projecthabitat = unique(dat_ready$projecthabitat),
-  Project = c("CCE", "FCE", "MCR", "PISCO-Central", "PISCO-South", "SBC-Beach",
-              "SBC-Ocean", "NGA", "PIE", "VCR")) 
+  Project = c("FCE", "MCR", "PCCC", "PCCS",
+              "SBCO", "VCR")) 
 print(label_mapping) #looks good
 
 unique(dat_ready$color)
 habitat_mapping <- data.frame(
   color = unique(dat_ready$color),
-  Habitat = c("Nearshore", "Offshore", #CCE
+  Habitat = c(
               "Riverine", "Bay", #FCE
               "Back Reef", "Fore Reef", "Fringing Reef", #MCR
-              "Marine Protected Area", "Reference", 'Reference', #PISCO-Central, PISCO-South, SBC-Beach, & SBC-Ocean
-              "Seward", "Prince William Sound", "Kodiak Island", "Middleton Island", "Prince William Sound", #NGA
-              "Fertilized", "Natural", "Fertilized", "Natural", #PIE
+              "Marine Protected Area", "Reference", #PISCO-Central, PISCO-South, SBC-Beach, & SBC-Ocean
               "Seagrass", "Sand")) #VCR
 print(habitat_mapping) #yayayay
 
@@ -337,33 +338,29 @@ glimpse(dat_ready_2)
 unique(dat_ready_2$habitat)
 
 dat_ready_3 <- dat_ready_2 |> 
-  filter(!habitat %in% c("Kodiak Island", "Middleton Island"))
-
-glimpse(dat_ready_3)
-unique(dat_ready_3$habitat)
+  filter(site != "RB-17")
 
 # write_csv(dat_ready_3, "local_data/model_data_all_final.csv")
 
 # step 2 ------------------------------------------------------------------
 
 # exc <- read_csv("local_data/model_data_all.csv") #all sites, no 10 year cutoff
-sc <- read_csv("local_data/site_characteristics.csv")
+sc <- read_csv("local_data/site_characteristics.csv") |> 
+  rename(program = project)
 comm <- read_csv("local_data/community_data_filtered.csv") |> 
-  select(-date)
+  select(-date) |> 
+  rename(program = project)
 
 ### join data for modeling with site characteristic information
-dt <- left_join(dat_ready_3, sc, join_by(project)) |> 
-  select(project, ecosystem, ocean, climate, latitude, site, year, month, vert, everything()) |> 
-  filter(vert == "vertebrate") |> 
-  ### if species richness is important in models, remove CCE & NGA as they are not taxonomically resolved species, but instead "groups"
-  filter(!project %in% c("CCE", "NGA")) |> 
-  ### recalculated species richness in community dataset prep and wanted to ensure it matched up
-  ### however, can remove now
+dt <- left_join(dat_ready_2, sc, join_by(program)) |> 
+  select(program, site, year, month, everything()) |> 
   select(-n_spp, -date)
 
 glimpse(dt)
+unique(dt$program)
 
 dt1 <- left_join(dt, comm, relationship = "many-to-many")
+unique(dt$program)
 
 na_count_per_column <- sapply(dt1, function(x) sum(is.na(x)))
 print(na_count_per_column) 
@@ -388,7 +385,7 @@ print(na_count_per_column)
 
 ### summarize all sites measured within the dataset annualy
 model_dt <- dt3 |> 
-  group_by(project, ecosystem, climate, latitude, habitat, site) |> 
+  group_by(program, habitat, site) |> 
   summarize(mean_n = mean(total_nitrogen),
             cv_n = (sd(total_nitrogen, na.rm = TRUE) / mean(total_nitrogen, na.rm = TRUE)),
             n_stability = 1/cv_n,
@@ -415,8 +412,8 @@ model_dt <- dt3 |>
             TrophInvSimpDivInd_stability = 1/cv_TrophInvSimpDivInd)|> 
   ### omit three sites with NA here - it appears because there was no replication of the sites (i.e., one-offs in datasets)
   na.omit() |> 
-  ungroup() |> 
-  rename(program = project)
+  ungroup()
+unique(model_dt$program)
 
 glimpse(model_dt)
 

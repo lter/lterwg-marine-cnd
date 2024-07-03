@@ -241,13 +241,13 @@ mcr <- dt_total_strata_date |>
 #   unite(color2, c(site, color), sep = "-", remove = FALSE)
 
 ### PIE-estuary
-pie <- dt_total_strata_date |> 
-  filter(projecthabitat == "PIE-estuary") |> 
-  mutate(group = site,
-         color = strata,
-         units = 'm2')  |> 
-  ### added new resolution group wants considered for examination -> functionally the "site" for each project
-  mutate(color2 = site) # no unite function needed here to generate new 'color2' column
+# pie <- dt_total_strata_date |> 
+#   filter(projecthabitat == "PIE-estuary") |> 
+#   mutate(group = site,
+#          color = strata,
+#          units = 'm2')  |> 
+#   ### added new resolution group wants considered for examination -> functionally the "site" for each project
+#   mutate(color2 = site) # no unite function needed here to generate new 'color2' column
 
 ### SBC-beach
 # sbc_beach <- dt_total_strata_date |> 
@@ -278,14 +278,13 @@ vcr <- dt_total_strata_date |>
 
 ### binding everything back together, removing index row generated when saving out of R
 ## and arranging the data by date
-dat_ready <- bind_rows(fce, mcr, pisco_central, pisco_south, sbc_reef,
-                       pie, vcr)
+dat_ready <- bind_rows(fce, mcr, pisco_central, pisco_south, sbc_reef, vcr)
 
 na_count_per_column <- sapply(dat_ready, function(x) sum(is.na(x)))
 print(na_count_per_column) #yay
 
 ### tidy up working environment
-rm(fce, mcr, pisco_central, pisco_south, sbc_reef, pie, vcr)
+rm(fce, mcr, pisco_central, pisco_south, sbc_reef, vcr)
 
 ###########################################################################
 # clean up dataset names for plotting and analysis ------------------------
@@ -294,8 +293,8 @@ rm(fce, mcr, pisco_central, pisco_south, sbc_reef, pie, vcr)
 unique(dat_ready$projecthabitat)
 label_mapping <- data.frame(
   projecthabitat = unique(dat_ready$projecthabitat),
-  Project = c("FCE", "MCR", "PISCO-Central", "PISCO-South",
-              "SBC-Ocean", "PIE", "VCR")) 
+  Project = c("FCE", "MCR", "PCCC", "PCCS",
+              "SBCO", "VCR")) 
 print(label_mapping) #looks good
 
 unique(dat_ready$color)
@@ -305,7 +304,6 @@ habitat_mapping <- data.frame(
     "Riverine", "Bay", #FCE
     "Fringing Reef", "Back Reef", "Fore Reef", #MCR
     "Marine Protected Area", "Reference", #PISCO-Central, PISCO-South, & SBC-Ocean
-    "Fertilized", "Natural", "Fertilized", "Natural", #PIE
     "Seagrass", "Sand")) #VCR
 print(habitat_mapping) #yayayay
 
@@ -325,13 +323,11 @@ dat_ready_2 <- dat_ready |>
 na_count_per_column <- sapply(dat_ready_2, function(x) sum(is.na(x)))
 print(na_count_per_column) #yay
 
+unique(dat_ready_2$habitat)
+unique(dat_ready_2$site)
+
 dat_ready_3 <- dat_ready_2 |> 
-  mutate(
-    site = ifelse(site == "SW ", "SW", site),
-    site = ifelse(site == "WE ", "WE", site)
-  )
-unique(dat_ready_3$habitat)
-unique(dat_ready_3$site)
+  filter(site != "RB-17")
 # write_csv(dat_ready_2, "local_data/community_data_filtered.csv")
 
 glimpse(dat_ready_3)
@@ -342,7 +338,7 @@ dat_ready_4 <- dat_ready_3 |>
   mutate(year_month = paste(year, month, sep = "-")) |> 
   select(year_month, everything())
 
-step_1_div <- dat_ready_4 |>
+step_1_div <- dat_ready_3 |>
   filter(dmperind_g_ind != 0) |>
   group_by(project, habitat, year_month, site) |> 
   summarize(
@@ -362,7 +358,7 @@ print(na_count_per_column) #yay
 # turnover metrics --------------------------------------------------------
 
 species_presence <- dat_ready_4 |> 
-  filter(site != "RB-17") |> 
+  # filter(site != "RB-17") |> #remove earlier in process
   group_by(project, habitat, year, month, site, subsite_level1, subsite_level2, subsite_level3, scientific_name) |> 
   mutate(total_bm_m = sum(dmperind_g_ind*density_num_m, na.rm = TRUE),
     total_bm_m2 = sum(dmperind_g_ind*density_num_m2, na.rm = TRUE),
