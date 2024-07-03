@@ -152,17 +152,16 @@ print(na_count_per_column) #yay
 strata_list1 <- strata_list %>%
   mutate(subsite_level1 = replace_na(subsite_level1, "Not Available"),
          subsite_level2 = replace_na(subsite_level2, "Not Available"),
-         subsite_level3 = replace_na(subsite_level3, "Not Available"))
+         subsite_level3 = replace_na(subsite_level3, "Not Available")) |> 
+  select(-subsite_level3) |> 
+  distinct()
 
 dt_total_strata <- left_join(dt_total, 
                              strata_list1, 
                              by = c("project", "habitat", "site",
-                                    "subsite_level1", "subsite_level2",
-                                    "subsite_level3")) |> 
+                                    "subsite_level1", "subsite_level2")) |> 
   mutate(strata = if_else(is.na(ecoregion_habitat), site, ecoregion_habitat)) |> 
-  dplyr::select(-ecoregion_habitat) |> 
-  ### remove 172 duplicated rows since dt_total_strata should not be longer than dt_total
-  distinct() 
+  dplyr::select(-ecoregion_habitat)
 
 na_count_per_column <- sapply(dt_total_strata, function(x) sum(is.na(x)))
 print(na_count_per_column) #yayay
@@ -340,7 +339,7 @@ unique(dat_ready_2$habitat)
 dat_ready_3 <- dat_ready_2 |> 
   filter(site != "RB-17")
 
-# write_csv(dat_ready_3, "local_data/model_data_all_final.csv")
+# write_csv(dat_ready_3, "local_data/model_data_all_final_07032024.csv")
 
 # step 2 ------------------------------------------------------------------
 
