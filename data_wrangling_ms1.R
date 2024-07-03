@@ -91,16 +91,7 @@ dt_mutate <- dt_og |>
   mutate(vert = ifelse(is.na(vert2), "invertebrate", vert2)) |> 
   dplyr::select(-vert_1, -vert2) |> 
   mutate(vertebrate_n = if_else(vert == "vertebrate" & dmperind_g_ind != 0, 1, 0),
-         invertebrate_n = if_else(vert == "invertebrate" & dmperind_g_ind != 0, 1, 0)) |> 
-  ## calculate max size of community at this resolution so we can calculate mean max size of species within community
-  group_by(project, habitat, vert, year, month, site, subsite_level1, subsite_level2, subsite_level3, scientific_name) |>
-  mutate(max_size = max(dmperind_g_ind, na.rm = TRUE),
-         min_size = min(dmperind_g_ind, na.rm = TRUE),
-         mean_size = mean(dmperind_g_ind, na.rm = TRUE))
-
-# test <- dt_mutate |>
-#   filter(project == "FCE",
-#          dmperind_g_ind > 0)
+         invertebrate_n = if_else(vert == "invertebrate" & dmperind_g_ind != 0, 1, 0))
 
 ### remove all invertebrate data from FCE & VCR - makes up very small fraction and neither project poised at
 ### to monitor invertebrate populations/communities
@@ -112,7 +103,14 @@ dt_mutate_filter_2 <- dt_mutate_filter |>
   filter(vert == "vertebrate",
          !project %in% c("NGA", "CCE", "PIE"))
 
-dt_total <- dt_mutate_filter_2 |> 
+### calculate max size of community at this resolution so we can calculate mean max size of species within community
+dt_mutate_filter_3 <- dt_mutate_filter_2 |>   
+  group_by(project, habitat, vert, year, month, site, subsite_level1, subsite_level2, subsite_level3, scientific_name) |>
+  mutate(max_size = max(dmperind_g_ind, na.rm = TRUE),
+         min_size = min(dmperind_g_ind, na.rm = TRUE),
+         mean_size = mean(dmperind_g_ind, na.rm = TRUE))
+
+dt_total <- dt_mutate_filter_3 |> 
   group_by(project, habitat, vert, year, month, site, subsite_level1, subsite_level2, subsite_level3) |> 
   summarise(### calculate total phosphorus supply at each sampling unit and then sum to get column with all totals
     total_nitrogen_m = sum(nind_ug_hr * density_num_m, na.rm = TRUE),
@@ -230,9 +228,10 @@ fce <- dt_total_strata_date |>
          color = strata,
          units = 'm') |> #grouped at subsite_level1
   ### added new resolution group wants considered for examination -> functionally the "site" for each project
-  unite(color2, c(site, subsite_level1), sep = "-", remove = FALSE) |> 
+  unite(color2, c(site, subsite_level1), sep = "-", remove = FALSE)
   ### reverts back to hydrologic year to make more sense of dataset - data is collected across calendar years but considered sequential (i.e., November - June)
-  mutate(year = if_else(project == "FCE" & month < 10, year - 1, year))
+  ### this was done in step5
+  # mutate(year = if_else(project == "FCE" & month < 10, year - 1, year))
 
 ### MCR-ocean
 mcr <- dt_total_strata_date |> 
