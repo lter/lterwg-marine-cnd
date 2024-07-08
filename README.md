@@ -49,9 +49,4 @@ NCEAS Scientific Computing Support Team page [link](https://nceas.github.io/scic
 
 ## Folder Structure & Contents
 
-output: folder containing code used to conduct exploratory review of harmonized data, as well as draft figures for first manuscript
-
-scripts-analyses: folder containing code used to conduct exploratory analyses, as well as draft analyses for first manuscript
-
-scripts-harmonization: folder containing code used to wrangle, harmonize, and clean datasets from contributing long term research programs
-
+scripts-harmonization: This folder contains code designed to wrangle, harmonize, and clean datasets from various long-term research programs. The scripts are organized into five sequential steps, executed in order from step 1 to step 5. 
