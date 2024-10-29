@@ -1,7 +1,7 @@
 ## ------------------------------------------ ##
 #       Marine CND -- Data wrangling after the Harmonization is done
 ## ------------------------------------------ ##
-# Script author(s): Li Kui
+# Script author(s): Li Kui (Mack White revisions and clean up)
 
 # Sites: SBC, CCE, Coastal CA, FCE, MCR, NGA, PIE, VCR, 
 
