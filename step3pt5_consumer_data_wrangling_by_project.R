@@ -370,15 +370,18 @@ glimpse(expand_NGA_biomass_new_col) #missing small # of ind_bio estimates
 ###calculate avg species ind_biom
 nga_sp_avg_ind_bio <- expand_NGA_biomass_new_col |> 
   filter(`dmperind_g/ind` != 0) |> 
-  group_by(scientific_name) |> 
-  summarize(avg_bio = mean(`dmperind_g/ind`))
+  group_by(site, subsite_level1, sp_code, scientific_name) |> 
+  summarize(avg_bio1 = mean(`dmperind_g/ind`))
+  # group_by(site, subsite_level1, sp_code) |> 
+  # mutate(avg_bio2 = mean(`dmperind_g/ind`))
 
 ###replace zeros with average and rename similar to mcr dataset
 expand_NGA_biomass_new_col1 <- expand_NGA_biomass_new_col |> 
-  left_join(nga_sp_avg_ind_bio, by = "scientific_name") |> 
-  mutate(`dmperind_g/ind` = ifelse(`dmperind_g/ind` == 0, avg_bio, `dmperind_g/ind`),
+  left_join(nga_sp_avg_ind_bio, by = c("site", "subsite_level1", "sp_code","scientific_name")) |> 
+  ### didn't need more coarse values for zeros
+  mutate(`dmperind_g/ind` = ifelse(`dmperind_g/ind` == 0, avg_bio1, `dmperind_g/ind`),
          `wetmass_g/m3` = `wetmass_mg/m3`*0.001) |> 
-  dplyr::select(-avg_bio, -`wetmass_mg/m3`)
+  dplyr::select(-avg_bio1, -`wetmass_mg/m3`)
 
 #(project,habitat,raw_filename,row_num,year,month,day,date,site,subsite_level1,subsite_level2,subsite_level3,sp_code,scientific_name,species,
 #  count_num,length_mm,`wetmass_g/m2`,`dmperind_g/ind`,`transectarea_m2`,`density_num/m2`,temp_c
@@ -441,7 +444,6 @@ nga_ready <- nga_all_dm1 %>%
                values_to = "measurement_value")%>%
   separate(measurement_type, into = c("measurement_type", "measurement_unit"),sep = "_", remove = FALSE) 
 
-
 # NGA end -----------------------------------------------------------------
 # rm(nga, nga_all_dm, nga_all_dm1, nga_d1, nga_diet, nga_diet_cat, nga_dm,
 #    nga_dm_coeff, nga_sp_avg_ind_bio, nga_zerofill, expand_NGA_biomass_new_col)
@@ -474,32 +476,66 @@ expand_PIE_biomass_new_col <- pie_d2 %>%
   select(-transectarea_m2, -`density_num/m2`) |> 
   ### obtain the individual biomass by creating a new column
   dplyr::mutate(`density_num/m2` = count_num/avg_transect,
-                ind_bio = wetmass_g/`density_num/m2`) 
+                ind_bio = wetmass_g/count_num) 
 glimpse(expand_PIE_biomass_new_col) #missing small # of ind_bio estimates
 
 ###calculate avg species ind_bio
 pie_sp_avg_ind_bio <- expand_PIE_biomass_new_col |> 
   filter(!is.na(ind_bio)) |> 
-  group_by(scientific_name) |> 
-  summarize(avg_bio = mean(ind_bio, na.rm = TRUE),
-            sd_bio = sd(ind_bio, na.rm = TRUE))
+  group_by(year, site, scientific_name) |> 
+  summarize(avg_bio1 = mean(ind_bio, na.rm = TRUE)) |> 
+  ungroup()
 
 ###replace zeros with average and rename similar to mcr dataset
 expand_PIE_biomass_new_col1 <- expand_PIE_biomass_new_col |> 
   mutate(count = count_num) |> 
   dplyr::select(-count_num) |> 
-  left_join(pie_sp_avg_ind_bio, by = "scientific_name") |> 
-  mutate(ind_bio = ifelse(is.na(ind_bio), avg_bio, ind_bio)) |> 
-  dplyr::select(-avg_bio, -sd_bio)
+  left_join(pie_sp_avg_ind_bio, by = c("year","site","scientific_name")) |> 
+  mutate(ind_bio = ifelse(is.na(ind_bio), avg_bio1, ind_bio)) |> 
+  dplyr::select(-avg_bio1)
+glimpse(expand_PIE_biomass_new_col1)
+
+###calculate avg species ind_bio
+pie_sp_avg_ind_bio2 <- expand_PIE_biomass_new_col |> 
+  filter(!is.na(ind_bio)) |> 
+  group_by(year, scientific_name) |> 
+  summarize(avg_bio2 = mean(ind_bio, na.rm = TRUE)) |> 
+  ungroup()
+
+###replace zeros with average and rename similar to mcr dataset
+expand_PIE_biomass_new_col1 <- expand_PIE_biomass_new_col |> 
+  mutate(count = count_num) |> 
+  dplyr::select(-count_num) |> 
+  left_join(pie_sp_avg_ind_bio2, by = c("year","scientific_name")) |> 
+  mutate(ind_bio = ifelse(is.na(ind_bio), avg_bio2, ind_bio)) |> 
+  dplyr::select(-avg_bio2)
+glimpse(expand_PIE_biomass_new_col1)
+
+###calculate avg species ind_bio
+pie_sp_avg_ind_bio3 <- expand_PIE_biomass_new_col |> 
+  filter(!is.na(ind_bio)) |> 
+  group_by(scientific_name) |> 
+  summarize(avg_bio3 = mean(ind_bio, na.rm = TRUE),
+            ### adding sd for outlier removal later in script
+            sd_bio3 = sd(ind_bio, na.rm = TRUE)) |> 
+  ungroup()
+
+###replace zeros with average and rename similar to mcr dataset
+expand_PIE_biomass_new_col1 <- expand_PIE_biomass_new_col |> 
+  mutate(count = count_num) |> 
+  dplyr::select(-count_num) |> 
+  left_join(pie_sp_avg_ind_bio3, by = c("scientific_name")) |> 
+  mutate(ind_bio = ifelse(is.na(ind_bio), avg_bio3, ind_bio)) |> 
+  dplyr::select(-avg_bio3, -sd_bio3)
 glimpse(expand_PIE_biomass_new_col1)
 
 ### start of new code (June 13 2024) to handle major outliers (e.g., 30lb grass shrimp)
 expand_PIE_biomass_new_col2 <- expand_PIE_biomass_new_col1 |> 
-  left_join(pie_sp_avg_ind_bio, by = "scientific_name")
+  left_join(pie_sp_avg_ind_bio3, by = "scientific_name")
 
 expand_PIE_biomass_new_col3 <- expand_PIE_biomass_new_col2 |> 
-  mutate(ind_bio = ifelse(abs(ind_bio - avg_bio) > 3 * sd_bio, avg_bio, ind_bio))  |> 
-  select(-avg_bio, -sd_bio)
+  mutate(ind_bio = ifelse(abs(ind_bio - avg_bio3) > 3 * sd_bio3, avg_bio3, ind_bio))  |> 
+  select(-avg_bio3, -sd_bio3)
 
 test <- expand_PIE_biomass_new_col3 |> 
   filter(!is.na(ind_bio)) |> 
@@ -507,7 +543,6 @@ test <- expand_PIE_biomass_new_col3 |>
   summarize(avg_bio = mean(ind_bio, na.rm = TRUE),
             sd_bio = sd(ind_bio, na.rm = TRUE),
             max_bio = max(ind_bio, na.rm = TRUE))
-
 ### end of new code (June 13 2024) to handle major outliers (e.g., 30lb grass shrimp)
 
 ###zero-fill the data
@@ -570,8 +605,7 @@ glimpse(pie_all_dm1)
 
 pie_all_dm2 <- pie_all_dm1 |> 
   mutate(row_num = paste0(raw_filename, "_", 1:nrow(pie_all_dm1)),
-         count_num = count,
-         `dmperind_g/ind` = ind_bio) |>
+         count_num = count) |>
   dplyr::select(project,habitat,raw_filename,row_num,year,month,
                 day,date,site,subsite_level1,subsite_level2,subsite_level3,
                 sp_code,scientific_name,species,
@@ -719,6 +753,71 @@ cce1 <- cce |>
 na_count_per_column <- sapply(cce1, function(x) sum(is.na(x)))
 print(na_count_per_column)
 
+### new on october 29
+
+###calculate avg species ind_bio
+cce_sp_avg_ind_bio <- cce |> 
+  filter(!is.na(`dmperind_g/ind`) & `density_num/m2` > 0) |> 
+  group_by(year, site, subsite_level1, scientific_name) |> 
+  summarize(avg_bio1 = mean(`dmperind_g/ind`, na.rm = TRUE)) |> 
+  ungroup()
+
+###replace zeros with average and rename similar to mcr dataset
+cce1 <- cce |> 
+  left_join(cce_sp_avg_ind_bio, by = c("year","site", "subsite_level1","scientific_name")) |> 
+  mutate(`dmperind_g/ind` = ifelse(is.na(`dmperind_g/ind`), avg_bio1, `dmperind_g/ind`)) |> 
+  dplyr::select(-avg_bio1)
+glimpse(cce1)
+
+###calculate avg species ind_bio
+cce_sp_avg_ind_bio2 <- cce |> 
+  filter(!is.na(`dmperind_g/ind`) & `density_num/m2` > 0) |> 
+  group_by(year, site, scientific_name) |> 
+  summarize(avg_bio2 = mean(`dmperind_g/ind`, na.rm = TRUE)) |> 
+  ungroup()
+
+###replace zeros with average and rename similar to mcr dataset
+cce2 <- cce1 |> 
+  left_join(cce_sp_avg_ind_bio2, by = c("year","site","scientific_name")) |> 
+  mutate(`dmperind_g/ind` = ifelse(is.na(`dmperind_g/ind`), avg_bio2, `dmperind_g/ind`)) |> 
+  dplyr::select(-avg_bio2)
+glimpse(cce2)
+
+###calculate avg species ind_bio
+cce_sp_avg_ind_bio3 <- cce |> 
+  filter(!is.na(`dmperind_g/ind`) & `density_num/m2` > 0) |> 
+  group_by(year, scientific_name) |> 
+  summarize(avg_bio3 = mean(`dmperind_g/ind`, na.rm = TRUE)) |> 
+  ungroup()
+
+###replace zeros with average and rename similar to mcr dataset
+cce3 <- cce2 |> 
+  left_join(cce_sp_avg_ind_bio3, by = c("year","scientific_name")) |> 
+  mutate(`dmperind_g/ind` = ifelse(is.na(`dmperind_g/ind`), avg_bio3, `dmperind_g/ind`)) |> 
+  dplyr::select(-avg_bio3)
+glimpse(cce3)
+
+###calculate avg species ind_bio
+cce_sp_avg_ind_bio4 <- cce |> 
+  filter(!is.na(`dmperind_g/ind`) & `density_num/m2` > 0) |> 
+  group_by(scientific_name) |> 
+  summarize(avg_bio4 = mean(`dmperind_g/ind`, na.rm = TRUE)) |> 
+  ungroup()
+
+###replace zeros with average and rename similar to mcr dataset
+cce4 <- cce3 |> 
+  left_join(cce_sp_avg_ind_bio4, by = c("scientific_name")) |> 
+  mutate(`dmperind_g/ind` = ifelse(is.na(`dmperind_g/ind`), avg_bio4, `dmperind_g/ind`)) |> 
+  dplyr::select(-avg_bio4)
+glimpse(cce4)
+
+### replace all the missing copepoda values with the average dm per ind
+cce1 <- cce4 |> 
+  mutate(`dmperind_g/ind` = ifelse(`density_num/m2` > 0 & is.na(`dmperind_g/ind`), 2.51332e-10, `dmperind_g/ind`))
+glimpse(cce1)
+
+############################################################################
+
 ### backfill the drymass for those that have values for all other columns
 cce2 <- cce1 |> 
   mutate(`drymass_g/m2` = ifelse(`dmperind_g/ind`>0 & is.na(`drymass_g/m2`),
@@ -744,8 +843,14 @@ cce_ready<- cce3 %>%
   separate(measurement_type, into = c("measurement_type", "measurement_unit"), sep = "_",remove = FALSE) 
 
 #### CCE end
-
-
+rm(cce, cce_sp_avg_ind_bio, cce_sp_avg_ind_bio2, cce_sp_avg_ind_bio3, cce_sp_avg_ind_bio4,
+   cce1,cce2,cce3,cce4,coastalca_dt,coastalca_dt1,coastalca_dt2,coastalca_dt3,coastalca_dt4,
+   coastalca_dt5,dm_coeff,dm_con_sr,dm_conv,dm_conv1,env,expand_NGA_biomass_new_col1,
+   expand_PIE_biomass_new_col1,expand_PIE_biomass_new_col2,expand_PIE_biomass_new_col3,
+   expand_PIE_biomass_new_col4, expand_VCR_biomass_new_col,ng_dm_id,nga_d2,nga_dm_cov,
+   pie_sp_avg_ind_bio2,pie_sp_avg_ind_bio3,pisco_site, pisco_site_choose,pisco_site_id,
+   pisco_site1,sbc_dt,sbc_dt1,sbc_species,species_list,test,test1,vcr,vcr_all_dm,vcr_all_dm1,
+   vcr_d1,vcr_d2,vcr_diet,vcr_diet_cat,vcr_dm_coeff,vcr_zerofill)
 #### Concat all the data together again
 
 # pick out the ones that don't need to be edited
@@ -803,7 +908,7 @@ harmonized_clean$month[is.na(harmonized_clean$month)] <- 12
 
 # write it back to the google drive
 # Export locally
-tidy_filename <- "harmonized_consumer_ready_for_excretion.csv"
+tidy_filename <- "harmonized_consumer_ready_for_excretion_V2.csv"
 
 write.csv(harmonized_clean, file = file.path("tier1", tidy_filename), na = '.', row.names = F)
 
