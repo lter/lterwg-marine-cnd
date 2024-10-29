@@ -128,7 +128,6 @@ spe2 <- species_list %>%
 df4 <- df3 %>%
   left_join(spe2,by=c("project","sp_code","scientific_name","species")) 
 
-
 # fix nas that dont make sense --------------------------------------------
 
 # check to see anything that don't have diet cat column
@@ -227,22 +226,46 @@ cons_np_ratio <- cons %>%
 
 
 ##################### end of bradley's code #####################
-##### Data clean up #######
 
-df_final <- cons_np_ratio %>% 
-  dplyr::select(-c(N_vert_coef,N_diet_coef,Nexc_log10,P_vert_coef,P_diet_coef,Pexc_log10)) %>%
-  pivot_longer(cols = -c(project,habitat,raw_filename,row_num,year,month,day,date,site,subsite_level1,subsite_level2,subsite_level3,sp_code,scientific_name,species,common_name,kingdom,phylum,class,order,family,genus,taxa_group,diet_cat), 
-               names_to = "measurement_type1",
-               values_to = "measurement_value") %>%
-  separate(measurement_type1, into = c("measurement_type", "measurement_unit"),sep = "_", remove = T) 
+### tidy environment (optional but helps with memory)---
+rm(cons,df,df1,df2,df3,df4,df5,df6,peace3,spe2,species_list) 
 
-# check FCE case
-# peace4 <- df_final %>%
-#   filter(project=="FCE")
+### skipping pivot longer below because my machine can't handle it... haha
+exc_df <- cons_np_ratio |> 
+  dplyr::select(-c(N_vert_coef,N_diet_coef,Nexc_log10,P_vert_coef,P_diet_coef,Pexc_log10))
+
+# FCE hydroyear to year fix -----------------------------------------------
+dt_wide <- exc_df |> 
+  mutate(year = if_else(project == "FCE" & month >=7, year + 1, year))
+rm(exc_df,cons_np_ratio)
+
+### check for NAs
+na_count_per_column <- sapply(dt_wide, function(x) sum(is.na(x)))
+print(na_count_per_column) #1002 observations of NAs in dmperind_g/ind fixed in step3
 
 #### export and write to the drive
 # Export locally
-tidy_filename <- "harmonized_consumer_excretion.csv"
+tidy_filename <- "harmonized_consumer_excretion_CLEAN_V2.csv"
+
+write.csv(dt_wide, file = file.path("tier2", tidy_filename), na = '.', row.names = F)
+
+# # Export harmonized clean dataset to Drive
+# googledrive::drive_upload(media= file.path("tier2",tidy_filename), overwrite = T,
+#                           path = googledrive::as_id("https://drive.google.com/drive/u/1/folders/1VakpcnFVckAYNggv_zNyfDRfkcGTjZxX"))
+
+##### left behind this section on october 29 due to system memory lacking
+##### Data clean up #######
+
+# df_final <- cons_np_ratio %>% 
+#   dplyr::select(-c(N_vert_coef,N_diet_coef,Nexc_log10,P_vert_coef,P_diet_coef,Pexc_log10)) %>%
+#   pivot_longer(cols = -c(project,habitat,raw_filename,row_num,year,month,day,date,site,subsite_level1,subsite_level2,subsite_level3,sp_code,scientific_name,species,common_name,kingdom,phylum,class,order,family,genus,taxa_group,diet_cat), 
+#                names_to = "measurement_type1",
+#                values_to = "measurement_value") %>%
+#   separate(measurement_type1, into = c("measurement_type", "measurement_unit"),sep = "_", remove = T) 
+
+#### export and write to the drive
+# Export locally
+tidy_filename <- "harmonized_consumer_excretion_V2.csv"
 
 write.csv(df_final, file = file.path("tier2", tidy_filename), na = '.', row.names = F)
 
