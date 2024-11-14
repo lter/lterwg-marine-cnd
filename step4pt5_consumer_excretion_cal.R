@@ -82,7 +82,7 @@ species_list <- readxl::read_excel(path = file.path("tier1", "CNDWG_harmonized_c
 
 # take out the rows that are needed 
 
-df1 <-df %>%
+df1 <-df |> 
   filter(measurement_type %in% c("dmperind","density","temp")) 
 
 # #check the unit that match with the measurement, good to go
@@ -235,8 +235,22 @@ exc_df <- cons_np_ratio |>
   dplyr::select(-c(N_vert_coef,N_diet_coef,Nexc_log10,P_vert_coef,P_diet_coef,Pexc_log10))
 
 # FCE hydroyear to year fix -----------------------------------------------
+### initially used substring to select the hydroyear, instead of calendar year such that
+### hydroyear 2023-2024 is equal to 2023, so need to reverse by starting with earliest sample
+### on record for a given 'hydroyear' as we tend to think of it in terms of a sampling season
+### in the map database - need to reverse and then fix such it appropriately handles year-month combinations
+### for hydroyear
+
 dt_wide <- exc_df |> 
+  ### reverse what I did to qualify hydroyear in intitial dataset
+  mutate(year = if_else(
+    project == "FCE" & month >= 10,
+    year,
+    year + 1
+  )) |> 
+  ### set so that hydroyear corresponds to correct year-month combination
   mutate(year = if_else(project == "FCE" & month >=7, year + 1, year))
+
 rm(exc_df,cons_np_ratio)
 
 ### check for NAs
@@ -245,7 +259,7 @@ print(na_count_per_column) #1002 observations of NAs in dmperind_g/ind fixed in 
 
 #### export and write to the drive
 # Export locally
-tidy_filename <- "harmonized_consumer_excretion_CLEAN_V2.csv"
+tidy_filename <- "harmonized_consumer_excretion_CLEAN_V3.csv"
 
 write.csv(dt_wide, file = file.path("tier2", tidy_filename), na = '.', row.names = F)
 
