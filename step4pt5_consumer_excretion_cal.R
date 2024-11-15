@@ -241,27 +241,32 @@ exc_df <- cons_np_ratio |>
 ### in the map database - need to reverse and then fix such it appropriately handles year-month combinations
 ### for hydroyear
 
-dt_wide <- exc_df |> 
+fce_wide <- exc_df |>
+  filter(project == "FCE") |> 
   ### reverse what I did to qualify hydroyear in intitial dataset
   mutate(year = if_else(
-    project == "FCE" & month >= 10,
+    month >= 10,
     year,
     year + 1
-  )) |> 
+  )) |>
   ### set so that hydroyear corresponds to correct year-month combination
-  mutate(year = if_else(project == "FCE" & month >=7, year + 1, year))
+  mutate(year = if_else(month >=7, year + 1, year))
 
-rm(exc_df,cons_np_ratio)
+other_wide <- exc_df |> filter(project != "FCE")
+
+df_wide <- rbind(fce_wide, other_wide)
+
+# rm(exc_df,cons_np_ratio)
 
 ### check for NAs
-na_count_per_column <- sapply(dt_wide, function(x) sum(is.na(x)))
+na_count_per_column <- sapply(df_wide, function(x) sum(is.na(x)))
 print(na_count_per_column) #1002 observations of NAs in dmperind_g/ind fixed in step3
 
 #### export and write to the drive
 # Export locally
-tidy_filename <- "harmonized_consumer_excretion_CLEAN_V3.csv"
+tidy_filename <- "harmonized_consumer_excretion_CLEAN_V4.csv"
 
-write.csv(dt_wide, file = file.path("tier2", tidy_filename), na = '.', row.names = F)
+write.csv(df_wide, file = file.path("tier2", tidy_filename), na = '.', row.names = F)
 
 # # Export harmonized clean dataset to Drive
 # googledrive::drive_upload(media= file.path("tier2",tidy_filename), overwrite = T,
