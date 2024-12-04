@@ -16,7 +16,7 @@ dir.create(path = file.path("tier2"), showWarnings = F)
 # Get harmonized consumer excretion data
 googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1VakpcnFVckAYNggv_zNyfDRfkcGTjZxX")) %>% 
   dplyr::filter(name == "harmonized_consumer_excretion.csv") %>% 
-  googledrive::drive_download(file = .id, overwrite = T,
+  googledrive::drive_download(file = .$id, overwrite = T,
                               path = file.path("tier2", .$name))
 
 ## ------------------------------------------ ##
