@@ -10,14 +10,9 @@
 ### install.packages("librarian")
 librarian::shelf(tidyverse, googledrive, readxl, ropensci/taxize, stringr)
 
-### set google drive path
-exc_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1VakpcnFVckAYNggv_zNyfDRfkcGTjZxX")) |>
-  dplyr::filter(name %in% c("harmonized_consumer_excretion.csv"))
-#rm(list = ls()) #cleans env
-# Download file (but silence how chatty this function is)
-googledrive::with_drive_quiet(
-  googledrive::drive_download(file = exc_ids$id, overwrite = T,
-                              path = file.path("tier2", exc_ids$name)) )
+# Raw data are stored in a Shared Google Drive that is only accessible by team members
+# If you need the raw data, run the relevant portion of the following script:
+file.path("scripts-googledrive", "step5_gdrive-interactions.R")
 
 ### read in data from google drive
 dt <- read.csv(file.path("tier2", "harmonized_consumer_excretion.csv"),stringsAsFactors = F,na.strings =".") 
@@ -85,7 +80,10 @@ tidy_filename <- "harmonized_consumer_excretion_CLEAN.csv"
 
 write.csv(dt_wide, file = file.path("tier2", tidy_filename), na = '.', row.names = F)
 
-# Export harmonized clean dataset to Drive
-googledrive::drive_upload(media= file.path("tier2",tidy_filename), overwrite = T,
-                          path = googledrive::as_id("https://drive.google.com/drive/u/1/folders/1VakpcnFVckAYNggv_zNyfDRfkcGTjZxX"))
+# Tidied data are also stored in Google Drive
+# To upload the most current versions (that you just created locally), 
+## run the relevant portion of the following script:
+file.path("scripts-googledrive", "step5_gdrive-interactions.R")
+
+# End ----
 
