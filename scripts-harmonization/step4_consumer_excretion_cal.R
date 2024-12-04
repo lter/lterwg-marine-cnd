@@ -28,34 +28,14 @@ librarian::shelf(tidyverse, googledrive, readxl, ropensci/taxize, stringr)
 # Create necessary sub-folder(s)
 dir.create(path = file.path("tier2"), showWarnings = F)
 dir.create(path = file.path("other"), showWarnings = F)
+
 ## -------------------------------------------- ##
 #             Data Acquisition ----
 ## -------------------------------------------- ##
 
-# pull in the harmonized data
-consumer_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/1/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH")) %>%
-  dplyr::filter(name %in% c("harmonized_consumer_ready_for_excretion.csv"))
-
-species_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/1/folders/1CEgNtAnk4DuPNpR3lJN9IqpjWq0cM8F4")) %>%
-  dplyr::filter(name %in% c("CNDWG_harmonized_consumer_species.xlsx"))
-
-# Combine file IDs
-harmonized_ids <- rbind(consumer_ids, species_ids)
-
-# For each raw data file, download it into the consumer folder
-for(k in 1:nrow(harmonized_ids)){
-  
-  # Download file (but silence how chatty this function is)
-  googledrive::with_drive_quiet(
-    googledrive::drive_download(file = harmonized_ids[k, ]$id, overwrite = T,
-                                path = file.path("tier1", harmonized_ids[k, ]$name)) )
-  
-  # Print success message
-  message("Downloaded file ", k, " of ", nrow(harmonized_ids))
-}
-
-# Clear environment
-rm(list = ls())
+# Raw data are stored in a Shared Google Drive that is only accessible by team members
+# If you need the raw data, run the relevant portion of the following script:
+file.path("scripts-googledrive", "step4_gdrive-interactions.R")
 
 ## ------------------------------------------ ##
 #             data wrangling for each project ----
@@ -246,6 +226,9 @@ tidy_filename <- "harmonized_consumer_excretion.csv"
 
 write.csv(df_final, file = file.path("tier2", tidy_filename), na = '.', row.names = F)
 
-# Export harmonized clean dataset to Drive
-googledrive::drive_upload(media= file.path("tier2",tidy_filename), overwrite = T,
-                          path = googledrive::as_id("https://drive.google.com/drive/u/1/folders/1VakpcnFVckAYNggv_zNyfDRfkcGTjZxX"))
+# Tidied data are also stored in Google Drive
+# To upload the most current versions (that you just created locally), 
+## run the relevant portion of the following script:
+file.path("scripts-googledrive", "step4_gdrive-interactions.R")
+
+# End ----
