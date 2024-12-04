@@ -28,45 +28,9 @@ dir.create(path = file.path("tier0", "raw_data", "environmental"), showWarnings 
 #             Data Acquisition ----
 ## -------------------------------------------- ##
 
-# Identify raw data files
-# For example, here I'm pulling all the environmental data from Google Drive
-raw_SBC_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1ycKkpiURLVclobAdCmZx2s_ewcaFAV9Y")) %>%
-  dplyr::filter(name %in% c("Bottom_temp_all_years_20230724.csv",
-                            "LTER_monthly_bottledata_20220930.txt"))
-
-raw_FCE_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Ei4UmhiU87Mu7mUHdB0ByVW32UWxvVjW")) %>%
-  dplyr::filter(name %in% c("bottle_creek_temperature.csv",
-                            "mo215_elevation_corrected_water_levels.csv",
-                            "fce_water_quality.csv"))
-
-raw_CCE_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/19INhcRd1xBKgDVd1G5W1B3QI4mlBr587")) %>%
-  dplyr::filter(name %in% c("BEUTI_monthly.csv",
-                            "sdsla_monthly.csv",
-                            "mei.csv",
-                            "cce_temperature_raw.csv"))
-
-# Combine file IDs
-raw_ids <- rbind(raw_SBC_ids, raw_FCE_ids, raw_CCE_ids)
-
-# Identify and download the data key
-googledrive::drive_ls(path = googledrive::as_id("https://drive.google.com/drive/u/1/folders/1-FDBq0jtEm3bJOfiyIkyxD0JftJ6qExe")) %>%
-  dplyr::filter(name == "CND_Data_Key_spatial.xlsx") %>%
-  googledrive::drive_download(file = .$id, path = file.path("tier0",.$name), overwrite = T)
-
-# For each raw data file, download it into its own site folder
-for(k in 1:nrow(raw_ids)){
-  
-  # Download file (but silence how chatty this function is)
-  googledrive::with_drive_quiet(
-    googledrive::drive_download(file = raw_ids[k, ]$id, overwrite = T,
-                                path = file.path("tier0", "raw_data", "environmental", raw_ids[k, ]$name)) )
-  
-  # Print success message
-  message("Downloaded file ", k, " of ", nrow(raw_ids))
-}
-
-# Clear environment
-rm(list = ls())
+# Raw data are stored in a Shared Google Drive that is only accessible by team members
+# If you need the raw data, run the relevant portion of the following script:
+file.path("scripts-googledrive", "step2_gdrive-interactions.R")
 
 ## ------------------------------------------ ##
 #             Data Harmonizing ----
@@ -374,19 +338,10 @@ write.csv(x = tidy_final, file = file.path("tier1", tidy_filename), na = '.', ro
 
 write.csv(x = all_temp_ready, file = file.path("tier1", temperature_filename), na = '.', row.names = F)
 
-# Export harmonized dataset to Drive
-googledrive::drive_upload(media = file.path("tier1", tidy_filename), overwrite = T,
-                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
+# Tidied data are also stored in Google Drive
+# To upload the most current versions (that you just created locally), 
+## run the relevant portion of the following script:
+file.path("scripts-googledrive", "step2_gdrive-interactions.R")
 
-googledrive::drive_upload(media = file.path("tier1", tidy_filename), overwrite = T,
-                          name = "harmonized_environment.csv",
-                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
-
-googledrive::drive_upload(media = file.path("tier1", temperature_filename), overwrite = T,
-                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
-
-googledrive::drive_upload(media = file.path("tier1", temperature_filename), overwrite = T,
-                          name = "temperature_allsites.csv",
-                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
 
 # End ----
