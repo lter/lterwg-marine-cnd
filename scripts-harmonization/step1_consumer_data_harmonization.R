@@ -25,7 +25,7 @@ species_update_flag <- 0
 
 # Load necessary libraries
 # install.packages("librarian")
-librarian::shelf(tidyverse, googledrive, readxl, taxize, stringr)
+librarian::shelf(tidyverse, googledrive, readxl, ropensci/taxize, stringr)
 
 # Create necessary sub-folder(s)
 dir.create(path = file.path("tier0"), showWarnings = F)
