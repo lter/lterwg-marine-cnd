@@ -12,12 +12,6 @@
 ## Finishes with a cleaner version of the harmonized data
 
 ## ------------------------------------------ ##
-#            User Settings -----
-## ------------------------------------------ ##
-
-
-
-## ------------------------------------------ ##
 #            Housekeeping -----
 ## ------------------------------------------ ##
 
@@ -28,37 +22,14 @@ librarian::shelf(tidyverse, googledrive, readxl, ropensci/taxize, stringr)
 # Create necessary sub-folder(s)
 dir.create(path = file.path("tier1"), showWarnings = F)
 dir.create(path = file.path("other"), showWarnings = F)
+
 ## -------------------------------------------- ##
 #             Data Acquisition ----
 ## -------------------------------------------- ##
 
-# pull in the harmonized data
-consumer_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/1/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH")) %>%
-  dplyr::filter(name %in% c("harmonized_consumer.csv"))
-
-env_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/1/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH")) %>%
-  dplyr::filter(name %in% c("temperature_allsites.csv"))
-
-species_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/1/folders/1CEgNtAnk4DuPNpR3lJN9IqpjWq0cM8F4")) %>%
-  dplyr::filter(name %in% c("CNDWG_harmonized_consumer_species.xlsx"))
-
-# Combine file IDs
-harmonized_ids <- rbind(consumer_ids, env_ids, species_ids)
-
-# For each raw data file, download it into the consumer folder
-for(k in 1:nrow(harmonized_ids)){
-  
-  # Download file (but silence how chatty this function is)
-  googledrive::with_drive_quiet(
-    googledrive::drive_download(file = harmonized_ids[k, ]$id, overwrite = T,
-                                path = file.path("tier1", harmonized_ids[k, ]$name)) )
-  
-  # Print success message
-  message("Downloaded file ", k, " of ", nrow(harmonized_ids))
-}
-
-# Clear environment
-rm(list = ls())
+# Raw data are stored in a Shared Google Drive that is only accessible by team members
+# If you need the raw data, run the relevant portion of the following script:
+file.path("scripts-googledrive", "step3_gdrive-interactions.R")
 
 ## ------------------------------------------ ##
 #             data wrangling for each project ----
@@ -75,15 +46,6 @@ species_list <- readxl::read_excel(path = file.path("tier1", "CNDWG_harmonized_c
 
 
 #### read data end 
-
-
-#### COASTAL CA
-#read in the site table to filter out the site we need
-pisco_site_id <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/1/folders/1vT-u9EFsssA8t9_y1A163BTr6ENGBelC")) %>%
-  dplyr::filter(name %in% c("master_site_table.xlsx"))
-
-googledrive::with_drive_quiet(
-  googledrive::drive_download(file = pisco_site_id$id, overwrite = T, path = file.path("other", pisco_site_id$name)) )
 
 pisco_site <- readxl::read_excel(path = file.path("other", "master_site_table.xlsx"),na="N/A") 
 
@@ -275,13 +237,6 @@ mcr_diet <- species_list %>%
 
 mcr_diet_cat <- merge(mcr_biomass_final, mcr_diet, by= c("scientific_name", "species", "sp_code", "project"))
 
-# dm conversion download from google drive
-
-dm_con_sr <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/1/folders/1LYffjtQdLcNYkStrf_FukihQ6tPKlw1a")) %>%
-  dplyr::filter(name %in% c("dm_conversions_cndwg.xlsx"))
-
-googledrive::with_drive_quiet(
-  googledrive::drive_download(file = dm_con_sr$id, overwrite = T, path = file.path("other", dm_con_sr$name)) )
 
 dm_conv1 <- readxl::read_excel(path = file.path("other", "dm_conversions_cndwg.xlsx"),na="NA") 
 ##
@@ -328,12 +283,6 @@ mcr_ready <-mcr_all_dm1 %>%
 # NGA start ---------------------------------------------------------------
 
 # dm conversion download from google drive
-
-ng_dm_id <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1j8QGQR6_vD1SQnFwVnaAy0W-1c_owCRv")) %>%
-  dplyr::filter(name %in% c("Group mesh conversion.csv"))
-
-googledrive::with_drive_quiet(
-  googledrive::drive_download(file = ng_dm_id$id, overwrite = T, path = file.path("other", ng_dm_id$name)) )
 
 nga_dm_cov <- read.csv(file.path("other", "Group mesh conversion.csv")) %>%
   dplyr::select(Group, DM_WW) %>%
@@ -810,6 +759,8 @@ tidy_filename <- "harmonized_consumer_ready_for_excretion.csv"
 
 write.csv(harmonized_clean, file = file.path("tier1", tidy_filename), na = '.', row.names = F)
 
-# Export harmonized clean dataset to Drive
-googledrive::drive_upload(media= file.path("tier1",tidy_filename), overwrite = T,
-                          path = googledrive::as_id("https://drive.google.com/drive/u/1/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
+# Tidied data are also stored in Google Drive
+# To upload the most current versions (that you just created locally), 
+## run the relevant portion of the following script:
+file.path("scripts-googledrive", "step3_gdrive-interactions.R")
+
