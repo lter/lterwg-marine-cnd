@@ -1,4 +1,12 @@
-## `version 1.0.0
+## Development Version
+
+Changes from the preceding version will be listed as they are made.
+
+- All interactions with Google Drive separated into dedicated scripts (one for each harmonization script)
+- Streamlined text of README and removed some superseded content
+- Expanded the `.gitignore` with content from the [LTER working group template `gitignore`](https://github.com/lter/lterwg-template/blob/main/.gitignore)
+
+## `version 1.0.0`
 
 Title: "Initial Release of LTER Synthesis Working Group: Consumer-Mediated Nutrient Dynamics Project, v1.0.0"
 
