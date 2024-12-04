@@ -12,14 +12,6 @@
 ## Finishes with a harmonized data file in long format
 
 ## ------------------------------------------ ##
-#            User Settings -----
-## ------------------------------------------ ##
-
-# Does the species table need to be updated? 
-# Put 0 for no, 1 for yes
-species_update_flag <- 0
-
-## ------------------------------------------ ##
 #            Housekeeping -----
 ## ------------------------------------------ ##
 
@@ -33,83 +25,17 @@ dir.create(path = file.path("tier1"), showWarnings = F)
 dir.create(path = file.path("tier0", "raw_data"), showWarnings = F)
 dir.create(path = file.path("tier0", "raw_data", "consumer"), showWarnings = F)
 
-## -------------------------------------------- ##
-#             Data Acquisition ----
-## -------------------------------------------- ##
+## ------------------------------------------ ##
+#            User Settings -----
+## ------------------------------------------ ##
 
-# Identify raw data files
-# For example, here I'm pulling all the SBC consumer data from Google Drive
-raw_SBC_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1ycKkpiURLVclobAdCmZx2s_ewcaFAV9Y")) %>%
-  dplyr::filter(name %in% c("Annual_All_Species_Biomass_at_transect_20240307.csv",
-                            "IV_EC_talitrid_population_v3.csv"))
+# Does the species table need to be updated? 
+# Put 0 for no, 1 for yes
+species_update_flag <- 0
 
-raw_FCE_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1BSQSXEbjgkSBJVN0p9CxhjVmfiv82U1t")) %>%
-  dplyr::filter(name %in% c("map_revised02052024.csv"))
-
-raw_VCR_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1PoVGjZoE_Dlr93dt45LRp4P2Jjuez94l")) %>%
-  dplyr::filter(name %in% c("VCR14232_2.csv"))
-
-raw_coastal_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1vT-u9EFsssA8t9_y1A163BTr6ENGBelC")) %>%
-  dplyr::filter(name %in% c("MLPA_fish_biomass_density_transect_raw_v2.csv",
-                            "MLPA_benthic_site_means.csv"))
-
-raw_MCR_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1bMVr5VSXD2azlwD9DioeMwy4RR94uqF5")) %>%
-  dplyr::filter(name %in% c("MCR_LTER_Annual_Fish_Survey_20230615.csv"))
-
-raw_PIE_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1yAoT0RtkRf2gxtBl3MXpi6cuGji5kuEE")) %>%
-  dplyr::filter(name %in% c("LTE-TIDE-NektonFlumeDensity_v5_1.csv",
-                            "LTE-TIDE-NektonFlumeIndividual_v6_3.csv"))
-
-raw_CCE_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/19INhcRd1xBKgDVd1G5W1B3QI4mlBr587")) %>%
-  dplyr::filter(name %in% c("cce_wdrymass.csv"))
-
-raw_NGA_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1j8QGQR6_vD1SQnFwVnaAy0W-1c_owCRv")) %>%
-  dplyr::filter(name %in% c("Excretion_update_1997-2021.csv"))
-
-# Combine file IDs
-raw_ids <- rbind(raw_SBC_ids, raw_FCE_ids, raw_VCR_ids, raw_coastal_ids, raw_MCR_ids, raw_PIE_ids, raw_CCE_ids, raw_NGA_ids)
-
-# Identify data key file
-data_key_id <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/1/folders/1-FDBq0jtEm3bJOfiyIkyxD0JftJ6qExe")) %>%
-  dplyr::filter(name %in% c("CND_Data_Key_spatial.xlsx"))
-
-# Identify PIE and CoastalCA species code table
-sp_codes_id <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/1LYffjtQdLcNYkStrf_FukihQ6tPKlw1a")) %>%
-  dplyr::filter(name %in% c("PIE_CoastalCA_codes.csv"))
-
-# Identify MCR species fix table
-sp_fix_id <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/1LYffjtQdLcNYkStrf_FukihQ6tPKlw1a")) %>%
-  dplyr::filter(name %in% c("MCR_species_fix"))
-
-# Combine file IDs
-other_ids <- rbind(data_key_id, sp_codes_id, sp_fix_id)
-
-# For each raw data file, download it into the consumer folder
-for(k in 1:nrow(raw_ids)){
-  
-  # Download file (but silence how chatty this function is)
-  googledrive::with_drive_quiet(
-    googledrive::drive_download(file = raw_ids[k, ]$id, overwrite = T,
-                                path = file.path("tier0", "raw_data", "consumer", raw_ids[k, ]$name)) )
-  
-  # Print success message
-  message("Downloaded file ", k, " of ", nrow(raw_ids))
-}
-
-# For the data key and species code tables, download it into the tier0 folder
-for(k in 1:nrow(other_ids)){
-  
-  # Download file (but silence how chatty this function is)
-  googledrive::with_drive_quiet(
-    googledrive::drive_download(file = other_ids[k, ]$id, overwrite = T,
-                                path = file.path("tier0", other_ids[k, ]$name)) )
-  
-  # Print success message
-  message("Downloaded file ", k, " of ", nrow(other_ids))
-}
-
-# Clear environment
-rm(list = setdiff(ls(), c("species_update_flag")))
+# Raw data are stored in a Shared Google Drive that is only accessible by team members
+# If you need the raw data, run the relevant portion of the following script:
+file.path("scripts-googledrive", "step1_gdrive-interactions.R")
 
 ## ------------------------------------------ ##
 #             Data Harmonizing ----
@@ -924,30 +850,9 @@ dir.create(path = file.path("tier1"), showWarnings = F)
 write.csv(x = tidy_final, file = file.path("tier1", tidy_filename), na = '.', row.names = F)
 write.csv(x = tidy_final, file = file.path("tier1", "harmonized_consumer.csv"), na = '.', row.names = F)
 
-# Export harmonized dataset to Drive
-googledrive::drive_upload(media = file.path("tier1", tidy_filename), overwrite = T,
-                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1A-DCrOlyq6IZKvN9d3OHFXj_XFJ5L7HN"))
+# Tidied data are also stored in Google Drive
+# To upload the most current versions (that you just created locally), 
+## run the relevant portion of the following script:
+file.path("scripts-googledrive", "step1_gdrive-interactions.R")
 
-# Export harmonized dataset to Drive under the general dataset name
-googledrive::drive_upload(media = file.path("tier1", tidy_filename), overwrite = T,
-                          name = "harmonized_consumer.csv",
-                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
-
-if (species_update_flag == 1){
-  # Generate a date-stamped file name for the species table
-  ( species_filename <- paste0("harmonized_consumer_species_", date, ".csv") )
-  
-  # Also export species table
-  write.csv(x = species_table, file = file.path("tier1", species_filename), na = '.', row.names = F)
-  
-  # Export species table to Drive
-  googledrive::drive_upload(media = file.path("tier1", species_filename), overwrite = T,
-                            path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1A-DCrOlyq6IZKvN9d3OHFXj_XFJ5L7HN"))
-  
-  # Export species table to Drive under the general dataset name
-  googledrive::drive_upload(media = file.path("tier1", species_filename), overwrite = T,
-                            name = "harmonized_consumer_species.csv",
-                            path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
-
-}
 # End ----
