@@ -86,7 +86,7 @@ purrr::walk2(.x = other_ids$id, .y = other_ids$name,
                                                 path = file.path("tier0", .y)))
 
 # Clear these objects from the environment
-rm(list = setdiff(x = ls(), y = c("datakey_id", "other_ids", "raw_ids", "taxoninfo_ids")))
+rm(list = c("datakey_id", "other_ids", "raw_ids", "taxoninfo_ids"))
 
 ## ------------------------------------------ ##
 # Upload (After Script) ----
