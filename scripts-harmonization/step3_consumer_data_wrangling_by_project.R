@@ -1,7 +1,7 @@
 ## ------------------------------------------ ##
 #       Marine CND -- Data wrangling after the Harmonization is done
 ## ------------------------------------------ ##
-# Script author(s): Li Kui
+# Script author(s): Li Kui (Mack White revisions and clean up)
 
 # Sites: SBC, CCE, Coastal CA, FCE, MCR, NGA, PIE, VCR, 
 
@@ -12,24 +12,53 @@
 ## Finishes with a cleaner version of the harmonized data
 
 ## ------------------------------------------ ##
+#            User Settings -----
+## ------------------------------------------ ##
+
+
+
+## ------------------------------------------ ##
 #            Housekeeping -----
 ## ------------------------------------------ ##
 
 # Load necessary libraries
 # install.packages("librarian")
-librarian::shelf(tidyverse, googledrive, readxl, ropensci/taxize, stringr)
+librarian::shelf(tidyverse, googledrive, readxl, taxize, stringr)
 
 # Create necessary sub-folder(s)
 dir.create(path = file.path("tier1"), showWarnings = F)
 dir.create(path = file.path("other"), showWarnings = F)
-
 ## -------------------------------------------- ##
 #             Data Acquisition ----
 ## -------------------------------------------- ##
 
-# Raw data are stored in a Shared Google Drive that is only accessible by team members
-# If you need the raw data, run the relevant portion of the following script:
-file.path("scripts-googledrive", "step3_gdrive-interactions.R")
+# pull in the harmonized data
+consumer_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/1/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH")) %>%
+  dplyr::filter(name %in% c("harmonized_consumer.csv"))
+
+env_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/1/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH")) %>%
+  dplyr::filter(name %in% c("temperature_allsites.csv"))
+
+species_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/1/folders/1CEgNtAnk4DuPNpR3lJN9IqpjWq0cM8F4")) %>%
+  dplyr::filter(name %in% c("CNDWG_harmonized_consumer_species.xlsx"))
+
+# Combine file IDs
+harmonized_ids <- rbind(consumer_ids, env_ids, species_ids)
+
+# For each raw data file, download it into the consumer folder
+for(k in 1:nrow(harmonized_ids)){
+  
+  # Download file (but silence how chatty this function is)
+  googledrive::with_drive_quiet(
+    googledrive::drive_download(file = harmonized_ids[k, ]$id, overwrite = T,
+                                path = file.path("tier1", harmonized_ids[k, ]$name)) )
+  
+  # Print success message
+  message("Downloaded file ", k, " of ", nrow(harmonized_ids))
+}
+
+# Clear environment
+rm(list = ls())
 
 ## ------------------------------------------ ##
 #             data wrangling for each project ----
@@ -46,6 +75,15 @@ species_list <- readxl::read_excel(path = file.path("tier1", "CNDWG_harmonized_c
 
 
 #### read data end 
+
+
+#### COASTAL CA
+#read in the site table to filter out the site we need
+pisco_site_id <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/1/folders/1vT-u9EFsssA8t9_y1A163BTr6ENGBelC")) %>%
+  dplyr::filter(name %in% c("master_site_table.xlsx"))
+
+googledrive::with_drive_quiet(
+  googledrive::drive_download(file = pisco_site_id$id, overwrite = T, path = file.path("other", pisco_site_id$name)) )
 
 pisco_site <- readxl::read_excel(path = file.path("other", "master_site_table.xlsx"),na="N/A") 
 
@@ -83,9 +121,9 @@ coastalca_dt1 <- coastalca_dt %>%
   #calculate the density
   pivot_wider(names_from = c(measurement_type, measurement_unit),values_from = measurement_value) %>%
   dplyr::select(-row_num) 
-  
+
 coastalca_dt2 <- coastalca_dt1 %>%
-  mutate(`density_num/m2`=count_num/`transectarea_m2`,`wetmass_g/m2`=`wetmass_kg/transect`*1000) %>% #convert to g/m2
+  mutate(`density_num/m2`=count_num/`transectarea_m2`,`wetmass_g/m2`=(`wetmass_kg/transect`/`transectarea_m2`)*1000) %>% #convert to g/m2
   group_by(project,habitat, raw_filename, year, month, day, date, site,subsite_level1,subsite_level2,subsite_level3,mlpa_region,site_status,sp_code,scientific_name,species) %>% #fish with different length
   summarise(`density_num/m2`=sum(`density_num/m2`,na.rm=T),`wetmass_g/m2`=sum(`wetmass_g/m2`,na.rm=T),.groups="drop") %>%
   ungroup() %>%
@@ -97,7 +135,6 @@ coastalca_dt2 <- coastalca_dt1 %>%
          subsite_level1 = site_status,
          site=mlpa_region) %>%
   dplyr::select(- c(mlpa_region, site_status))
-
 
 #zero fill the pisco data, because every year the specie might get added, so we only zero fill in a given year. 
 coastalca_dt3 <- coastalca_dt2 %>%
@@ -111,8 +148,8 @@ coastalca_dt3 <- coastalca_dt2 %>%
   group_by(year,campus) %>%
   complete(nesting(sp_code,scientific_name,species),
            nesting(project,habitat,raw_filename,month,day,date,
-                                                          site, subsite_level1, subsite_level2, subsite_level3),
-         fill = list(`density_num/m2`=0,`wetmass_g/m2` = 0)) %>%
+                   site, subsite_level1, subsite_level2, subsite_level3),
+           fill = list(`density_num/m2`=0,`wetmass_g/m2` = 0)) %>%
   ungroup() %>%
   dplyr::select(-campus) %>% # remove the column after zero filled
   filter(sp_code!="NO_ORG") #REMOVE THE SPECIES THAT ARE NOT ORGANISM
@@ -124,8 +161,8 @@ coastalca_dt4 <- coastalca_dt3 %>%
   mutate(`drymass_g/m2`=`wetmass_g/m2`*0.29, #convert from kg to g
          `dmperind_g/ind` = ifelse(`density_num/m2`>0,`drymass_g/m2`/`density_num/m2`,0), 
          `temp_c` = pisco_temp) %>%
-   mutate(row_num = paste0(raw_filename, "_", 1:nrow(.))) #adding the row_num back
- 
+  mutate(row_num = paste0(raw_filename, "_", 1:nrow(.))) #adding the row_num back
+
 #check for species 
 # peace <- coastalca_dt4 %>%
 #   dplyr::filter(is.na(scientific_name)) %>%
@@ -161,12 +198,11 @@ sbc_dt1 <- sbc_dt %>%
          temp_c = pisco_temp) %>% #pisco uses SBC temp, so we assign the value here again. 
   dplyr::select(-c(`sfdrymass_g/m2`)) #remove the column 
 
-
 sbc_ready<- sbc_dt1 %>%
-    pivot_longer(cols = `density_num/m2`:temp_c, 
-                 names_to = "measurement_type",
-                 values_to = "measurement_value") %>%
-   separate(measurement_type, into = c("measurement_type", "measurement_unit"), sep = "_",remove = FALSE)
+  pivot_longer(cols = `density_num/m2`:temp_c, 
+               names_to = "measurement_type",
+               values_to = "measurement_value") %>%
+  separate(measurement_type, into = c("measurement_type", "measurement_unit"), sep = "_",remove = FALSE)
 
 
 #### SBC ocean end
@@ -207,7 +243,6 @@ MCR_biomass_d3 <- expand_MCR_biomass_new_col %>%
 MCR_biomass_swath1 <- MCR_biomass_d3 %>%
   filter(subsite_level3 == 1)
 
-
 #zero fill 
 MCR_sw1_final <- MCR_biomass_swath1 %>%
   complete(nesting(scientific_name, species, sp_code),
@@ -237,6 +272,13 @@ mcr_diet <- species_list %>%
 
 mcr_diet_cat <- merge(mcr_biomass_final, mcr_diet, by= c("scientific_name", "species", "sp_code", "project"))
 
+# dm conversion download from google drive
+
+dm_con_sr <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/1/folders/1LYffjtQdLcNYkStrf_FukihQ6tPKlw1a")) %>%
+  dplyr::filter(name %in% c("dm_conversions_cndwg.xlsx"))
+
+googledrive::with_drive_quiet(
+  googledrive::drive_download(file = dm_con_sr$id, overwrite = T, path = file.path("other", dm_con_sr$name)) )
 
 dm_conv1 <- readxl::read_excel(path = file.path("other", "dm_conversions_cndwg.xlsx"),na="NA") 
 ##
@@ -260,14 +302,14 @@ mcr_all_dm <- mcr_dm_coeff |>
          subsite_level3 = as.numeric(subsite_level3),
          `transectarea_m2` = subsite_level3*50,
          `density_num/m2` = count_num/transectarea_m2,
-        `wetmass_g/m2` = wetmass_g/`transectarea_m2`,
+         `wetmass_g/m2` = wetmass_g/`transectarea_m2`,
          temp_c = 26.5) # mcr assign temp here
 
 mcr_all_dm1 <- mcr_all_dm |> 
   mutate(row_num = paste0(raw_filename, "_", 1:nrow(mcr_all_dm))) |>
   dplyr::select(project,habitat,raw_filename,row_num,year,month,day,date,site,subsite_level1,subsite_level2,subsite_level3,sp_code,scientific_name,species,
                 count_num,length_mm,`wetmass_g/m2`,`dmperind_g/ind`,`transectarea_m2`,`density_num/m2`,temp_c) 
- 
+
 mcr_ready <-mcr_all_dm1 %>%
   pivot_longer(cols = count_num:temp_c, 
                names_to = "measurement_type",
@@ -283,6 +325,12 @@ mcr_ready <-mcr_all_dm1 %>%
 # NGA start ---------------------------------------------------------------
 
 # dm conversion download from google drive
+
+ng_dm_id <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1j8QGQR6_vD1SQnFwVnaAy0W-1c_owCRv")) %>%
+  dplyr::filter(name %in% c("Group mesh conversion.csv"))
+
+googledrive::with_drive_quiet(
+  googledrive::drive_download(file = ng_dm_id$id, overwrite = T, path = file.path("other", ng_dm_id$name)) )
 
 nga_dm_cov <- read.csv(file.path("other", "Group mesh conversion.csv")) %>%
   dplyr::select(Group, DM_WW) %>%
@@ -312,30 +360,33 @@ nga_d2 <- nga_d1 %>%
 #note the wetmass_mg/m3 is a total biomass for all species of that size class. 
 #you need to divide wetmass_mg/m3 by density_num/m3 to get individual biomass and 
 # multiply by "0.001" to get wetmass/ind in g
- 
+
 expand_NGA_biomass_new_col <- nga_d2 %>%
   ### obtain the individual biomass by creating a new column
   dplyr::mutate(`dmperind_g/ind`=ifelse(`density_num/m3`>0,`drymass_g/m3`/`density_num/m3`,0))
-    
+
 glimpse(expand_NGA_biomass_new_col) #missing small # of ind_bio estimates
 
 ###calculate avg species ind_biom
 nga_sp_avg_ind_bio <- expand_NGA_biomass_new_col |> 
   filter(`dmperind_g/ind` != 0) |> 
-  group_by(scientific_name) |> 
-  summarize(avg_bio = mean(`dmperind_g/ind`))
+  group_by(site, subsite_level1, sp_code, scientific_name) |> 
+  summarize(avg_bio1 = mean(`dmperind_g/ind`))
+  # group_by(site, subsite_level1, sp_code) |> 
+  # mutate(avg_bio2 = mean(`dmperind_g/ind`))
 
 ###replace zeros with average and rename similar to mcr dataset
 expand_NGA_biomass_new_col1 <- expand_NGA_biomass_new_col |> 
-  left_join(nga_sp_avg_ind_bio, by = "scientific_name") |> 
-  mutate(`dmperind_g/ind` = ifelse(`dmperind_g/ind` == 0, avg_bio, `dmperind_g/ind`),
+  left_join(nga_sp_avg_ind_bio, by = c("site", "subsite_level1", "sp_code","scientific_name")) |> 
+  ### didn't need more coarse values for zeros
+  mutate(`dmperind_g/ind` = ifelse(`dmperind_g/ind` == 0, avg_bio1, `dmperind_g/ind`),
          `wetmass_g/m3` = `wetmass_mg/m3`*0.001) |> 
-  dplyr::select(-avg_bio, -`wetmass_mg/m3`)
+  dplyr::select(-avg_bio1, -`wetmass_mg/m3`)
 
 #(project,habitat,raw_filename,row_num,year,month,day,date,site,subsite_level1,subsite_level2,subsite_level3,sp_code,scientific_name,species,
 #  count_num,length_mm,`wetmass_g/m2`,`dmperind_g/ind`,`transectarea_m2`,`density_num/m2`,temp_c
 
-  ###zero-fill the data
+###zero-fill the data
 nga_zerofill <- expand_NGA_biomass_new_col1 |> 
   complete(nesting(scientific_name, species, sp_code),
            nesting(project, habitat, raw_filename, year, month, 
@@ -393,7 +444,6 @@ nga_ready <- nga_all_dm1 %>%
                values_to = "measurement_value")%>%
   separate(measurement_type, into = c("measurement_type", "measurement_unit"),sep = "_", remove = FALSE) 
 
-
 # NGA end -----------------------------------------------------------------
 # rm(nga, nga_all_dm, nga_all_dm1, nga_d1, nga_diet, nga_diet_cat, nga_dm,
 #    nga_dm_coeff, nga_sp_avg_ind_bio, nga_zerofill, expand_NGA_biomass_new_col)
@@ -426,32 +476,66 @@ expand_PIE_biomass_new_col <- pie_d2 %>%
   select(-transectarea_m2, -`density_num/m2`) |> 
   ### obtain the individual biomass by creating a new column
   dplyr::mutate(`density_num/m2` = count_num/avg_transect,
-                ind_bio = wetmass_g/`density_num/m2`) 
+                ind_bio = wetmass_g/count_num) 
 glimpse(expand_PIE_biomass_new_col) #missing small # of ind_bio estimates
 
 ###calculate avg species ind_bio
 pie_sp_avg_ind_bio <- expand_PIE_biomass_new_col |> 
   filter(!is.na(ind_bio)) |> 
-  group_by(scientific_name) |> 
-  summarize(avg_bio = mean(ind_bio, na.rm = TRUE),
-            sd_bio = sd(ind_bio, na.rm = TRUE))
+  group_by(year, site, scientific_name) |> 
+  summarize(avg_bio1 = mean(ind_bio, na.rm = TRUE)) |> 
+  ungroup()
 
 ###replace zeros with average and rename similar to mcr dataset
 expand_PIE_biomass_new_col1 <- expand_PIE_biomass_new_col |> 
   mutate(count = count_num) |> 
   dplyr::select(-count_num) |> 
-  left_join(pie_sp_avg_ind_bio, by = "scientific_name") |> 
-  mutate(ind_bio = ifelse(is.na(ind_bio), avg_bio, ind_bio)) |> 
-  dplyr::select(-avg_bio, -sd_bio)
+  left_join(pie_sp_avg_ind_bio, by = c("year","site","scientific_name")) |> 
+  mutate(ind_bio = ifelse(is.na(ind_bio), avg_bio1, ind_bio)) |> 
+  dplyr::select(-avg_bio1)
+glimpse(expand_PIE_biomass_new_col1)
+
+###calculate avg species ind_bio
+pie_sp_avg_ind_bio2 <- expand_PIE_biomass_new_col |> 
+  filter(!is.na(ind_bio)) |> 
+  group_by(year, scientific_name) |> 
+  summarize(avg_bio2 = mean(ind_bio, na.rm = TRUE)) |> 
+  ungroup()
+
+###replace zeros with average and rename similar to mcr dataset
+expand_PIE_biomass_new_col1 <- expand_PIE_biomass_new_col |> 
+  mutate(count = count_num) |> 
+  dplyr::select(-count_num) |> 
+  left_join(pie_sp_avg_ind_bio2, by = c("year","scientific_name")) |> 
+  mutate(ind_bio = ifelse(is.na(ind_bio), avg_bio2, ind_bio)) |> 
+  dplyr::select(-avg_bio2)
+glimpse(expand_PIE_biomass_new_col1)
+
+###calculate avg species ind_bio
+pie_sp_avg_ind_bio3 <- expand_PIE_biomass_new_col |> 
+  filter(!is.na(ind_bio)) |> 
+  group_by(scientific_name) |> 
+  summarize(avg_bio3 = mean(ind_bio, na.rm = TRUE),
+            ### adding sd for outlier removal later in script
+            sd_bio3 = sd(ind_bio, na.rm = TRUE)) |> 
+  ungroup()
+
+###replace zeros with average and rename similar to mcr dataset
+expand_PIE_biomass_new_col1 <- expand_PIE_biomass_new_col |> 
+  mutate(count = count_num) |> 
+  dplyr::select(-count_num) |> 
+  left_join(pie_sp_avg_ind_bio3, by = c("scientific_name")) |> 
+  mutate(ind_bio = ifelse(is.na(ind_bio), avg_bio3, ind_bio)) |> 
+  dplyr::select(-avg_bio3, -sd_bio3)
 glimpse(expand_PIE_biomass_new_col1)
 
 ### start of new code (June 13 2024) to handle major outliers (e.g., 30lb grass shrimp)
 expand_PIE_biomass_new_col2 <- expand_PIE_biomass_new_col1 |> 
-  left_join(pie_sp_avg_ind_bio, by = "scientific_name")
+  left_join(pie_sp_avg_ind_bio3, by = "scientific_name")
 
 expand_PIE_biomass_new_col3 <- expand_PIE_biomass_new_col2 |> 
-  mutate(ind_bio = ifelse(abs(ind_bio - avg_bio) > 3 * sd_bio, avg_bio, ind_bio))  |> 
-  select(-avg_bio, -sd_bio)
+  mutate(ind_bio = ifelse(abs(ind_bio - avg_bio3) > 3 * sd_bio3, avg_bio3, ind_bio))  |> 
+  select(-avg_bio3, -sd_bio3)
 
 test <- expand_PIE_biomass_new_col3 |> 
   filter(!is.na(ind_bio)) |> 
@@ -459,7 +543,6 @@ test <- expand_PIE_biomass_new_col3 |>
   summarize(avg_bio = mean(ind_bio, na.rm = TRUE),
             sd_bio = sd(ind_bio, na.rm = TRUE),
             max_bio = max(ind_bio, na.rm = TRUE))
-
 ### end of new code (June 13 2024) to handle major outliers (e.g., 30lb grass shrimp)
 
 ###zero-fill the data
@@ -522,8 +605,7 @@ glimpse(pie_all_dm1)
 
 pie_all_dm2 <- pie_all_dm1 |> 
   mutate(row_num = paste0(raw_filename, "_", 1:nrow(pie_all_dm1)),
-         count_num = count,
-         `dmperind_g/ind` = ind_bio) |>
+         count_num = count) |>
   dplyr::select(project,habitat,raw_filename,row_num,year,month,
                 day,date,site,subsite_level1,subsite_level2,subsite_level3,
                 sp_code,scientific_name,species,
@@ -651,7 +733,7 @@ vcr_ready <- vcr_all_dm1 %>%
 
 #extract temp data
 cce_mean_temp <- env$temp[env$project=="CCE"]
-         
+
 # calculate the dmperind dry biomass 
 cce <- dt %>%
   dplyr::filter(project=="CCE") %>%
@@ -671,11 +753,76 @@ cce1 <- cce |>
 na_count_per_column <- sapply(cce1, function(x) sum(is.na(x)))
 print(na_count_per_column)
 
+### new on october 29
+
+###calculate avg species ind_bio
+cce_sp_avg_ind_bio <- cce |> 
+  filter(!is.na(`dmperind_g/ind`) & `density_num/m2` > 0) |> 
+  group_by(year, site, subsite_level1, scientific_name) |> 
+  summarize(avg_bio1 = mean(`dmperind_g/ind`, na.rm = TRUE)) |> 
+  ungroup()
+
+###replace zeros with average and rename similar to mcr dataset
+cce1 <- cce |> 
+  left_join(cce_sp_avg_ind_bio, by = c("year","site", "subsite_level1","scientific_name")) |> 
+  mutate(`dmperind_g/ind` = ifelse(is.na(`dmperind_g/ind`), avg_bio1, `dmperind_g/ind`)) |> 
+  dplyr::select(-avg_bio1)
+glimpse(cce1)
+
+###calculate avg species ind_bio
+cce_sp_avg_ind_bio2 <- cce |> 
+  filter(!is.na(`dmperind_g/ind`) & `density_num/m2` > 0) |> 
+  group_by(year, site, scientific_name) |> 
+  summarize(avg_bio2 = mean(`dmperind_g/ind`, na.rm = TRUE)) |> 
+  ungroup()
+
+###replace zeros with average and rename similar to mcr dataset
+cce2 <- cce1 |> 
+  left_join(cce_sp_avg_ind_bio2, by = c("year","site","scientific_name")) |> 
+  mutate(`dmperind_g/ind` = ifelse(is.na(`dmperind_g/ind`), avg_bio2, `dmperind_g/ind`)) |> 
+  dplyr::select(-avg_bio2)
+glimpse(cce2)
+
+###calculate avg species ind_bio
+cce_sp_avg_ind_bio3 <- cce |> 
+  filter(!is.na(`dmperind_g/ind`) & `density_num/m2` > 0) |> 
+  group_by(year, scientific_name) |> 
+  summarize(avg_bio3 = mean(`dmperind_g/ind`, na.rm = TRUE)) |> 
+  ungroup()
+
+###replace zeros with average and rename similar to mcr dataset
+cce3 <- cce2 |> 
+  left_join(cce_sp_avg_ind_bio3, by = c("year","scientific_name")) |> 
+  mutate(`dmperind_g/ind` = ifelse(is.na(`dmperind_g/ind`), avg_bio3, `dmperind_g/ind`)) |> 
+  dplyr::select(-avg_bio3)
+glimpse(cce3)
+
+###calculate avg species ind_bio
+cce_sp_avg_ind_bio4 <- cce |> 
+  filter(!is.na(`dmperind_g/ind`) & `density_num/m2` > 0) |> 
+  group_by(scientific_name) |> 
+  summarize(avg_bio4 = mean(`dmperind_g/ind`, na.rm = TRUE)) |> 
+  ungroup()
+
+###replace zeros with average and rename similar to mcr dataset
+cce4 <- cce3 |> 
+  left_join(cce_sp_avg_ind_bio4, by = c("scientific_name")) |> 
+  mutate(`dmperind_g/ind` = ifelse(is.na(`dmperind_g/ind`), avg_bio4, `dmperind_g/ind`)) |> 
+  dplyr::select(-avg_bio4)
+glimpse(cce4)
+
+### replace all the missing copepoda values with the average dm per ind
+cce1 <- cce4 |> 
+  mutate(`dmperind_g/ind` = ifelse(`density_num/m2` > 0 & is.na(`dmperind_g/ind`), 2.51332e-10, `dmperind_g/ind`))
+glimpse(cce1)
+
+############################################################################
+
 ### backfill the drymass for those that have values for all other columns
 cce2 <- cce1 |> 
   mutate(`drymass_g/m2` = ifelse(`dmperind_g/ind`>0 & is.na(`drymass_g/m2`),
                                  `dmperind_g/ind`*`density_num/m2`,
-         `drymass_g/m2`))
+                                 `drymass_g/m2`))
 
 na_count_per_column <- sapply(cce2, function(x) sum(is.na(x)))
 print(na_count_per_column)
@@ -696,15 +843,21 @@ cce_ready<- cce3 %>%
   separate(measurement_type, into = c("measurement_type", "measurement_unit"), sep = "_",remove = FALSE) 
 
 #### CCE end
-
-
+rm(cce, cce_sp_avg_ind_bio, cce_sp_avg_ind_bio2, cce_sp_avg_ind_bio3, cce_sp_avg_ind_bio4,
+   cce1,cce2,cce3,cce4,coastalca_dt,coastalca_dt1,coastalca_dt2,coastalca_dt3,coastalca_dt4,
+   coastalca_dt5,dm_coeff,dm_con_sr,dm_conv,dm_conv1,env,expand_NGA_biomass_new_col1,
+   expand_PIE_biomass_new_col1,expand_PIE_biomass_new_col2,expand_PIE_biomass_new_col3,
+   expand_PIE_biomass_new_col4, expand_VCR_biomass_new_col,ng_dm_id,nga_d2,nga_dm_cov,
+   pie_sp_avg_ind_bio2,pie_sp_avg_ind_bio3,pisco_site, pisco_site_choose,pisco_site_id,
+   pisco_site1,sbc_dt,sbc_dt1,sbc_species,species_list,test,test1,vcr,vcr_all_dm,vcr_all_dm1,
+   vcr_d1,vcr_d2,vcr_diet,vcr_diet_cat,vcr_dm_coeff,vcr_zerofill)
 #### Concat all the data together again
 
 # pick out the ones that don't need to be edited
 data_original <- dt %>%
   dplyr::filter((project=="SBC"&habitat=="beach") |
                   project=="FCE")
-  
+
 # concat data together
 harmonized_clean = rbind(data_original,
                          coastalca_ready,sbc_ready,mcr_ready,nga_ready,
@@ -755,12 +908,10 @@ harmonized_clean$month[is.na(harmonized_clean$month)] <- 12
 
 # write it back to the google drive
 # Export locally
-tidy_filename <- "harmonized_consumer_ready_for_excretion.csv"
+tidy_filename <- "harmonized_consumer_ready_for_excretion_V2.csv"
 
 write.csv(harmonized_clean, file = file.path("tier1", tidy_filename), na = '.', row.names = F)
 
-# Tidied data are also stored in Google Drive
-# To upload the most current versions (that you just created locally), 
-## run the relevant portion of the following script:
-file.path("scripts-googledrive", "step3_gdrive-interactions.R")
-
+# Export harmonized clean dataset to Drive
+googledrive::drive_upload(media= file.path("tier1",tidy_filename), overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/1/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH"))
