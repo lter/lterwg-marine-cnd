@@ -8,6 +8,10 @@ Changes from the preceding version will be listed as they are made.
 
 ## `version 1.0.0`
 
+- PISCO wrangling was revised in step 3 to generate estimates of biomass and density, important for nutrient supply calculations. Data was previously being calculated at transect level (i.e., per 60 m2) instead of per m2 (which is resolution of other visual survey data)
+- FCE hyrologic year correction was revised in step 4 to account for fact it was corrected for when initially submitted. Now all FCE data should be corrected for sampling season. This is important since monthly data collected during a hydrologic (i.e., dry) season
+- Outlier and NA handling revised to be more stringent for CCE and PIE (e.g., should no longer be shrimp greater than 1 lb)
+
 Title: "Initial Release of LTER Synthesis Working Group: Consumer-Mediated Nutrient Dynamics Project, v1.0.0"
 
 We are excited to announce the initial official release of the "LTER Synthesis Working Group -- Consumer-Mediated Nutrient Dynamics of Marine Ecosystems Under the Wake of Global Change" project, v1.0.0! This release marks the start of our journey to integrate the projects' datasets.
