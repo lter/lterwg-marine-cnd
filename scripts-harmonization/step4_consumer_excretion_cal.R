@@ -32,30 +32,9 @@ dir.create(path = file.path("other"), showWarnings = F)
 #             Data Acquisition ----
 ## -------------------------------------------- ##
 
-# pull in the harmonized data
-consumer_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/1/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH")) %>%
-  dplyr::filter(name %in% c("harmonized_consumer_ready_for_excretion_V2.csv"))
-
-species_ids <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/1/folders/1CEgNtAnk4DuPNpR3lJN9IqpjWq0cM8F4")) %>%
-  dplyr::filter(name %in% c("CNDWG_harmonized_consumer_species.xlsx"))
-
-# Combine file IDs
-harmonized_ids <- rbind(consumer_ids, species_ids)
-
-# For each raw data file, download it into the consumer folder
-for(k in 1:nrow(harmonized_ids)){
-  
-  # Download file (but silence how chatty this function is)
-  googledrive::with_drive_quiet(
-    googledrive::drive_download(file = harmonized_ids[k, ]$id, overwrite = T,
-                                path = file.path("tier1", harmonized_ids[k, ]$name)) )
-  
-  # Print success message
-  message("Downloaded file ", k, " of ", nrow(harmonized_ids))
-}
-
-# Clear environment
-rm(list = ls())
+# Raw data are stored in a Shared Google Drive that is only accessible by team members
+# If you need the raw data, run the relevant portion of the following script:
+file.path("scripts-googledrive", "step4_gdrive-interactions.R")
 
 ## ------------------------------------------ ##
 #             data wrangling for each project ----
@@ -64,7 +43,7 @@ rm(list = ls())
 #### read data
 # read in the harmonized data and start the wrangling, by project
 df <- read.csv(file.path("tier1", "harmonized_consumer_ready_for_excretion_V2.csv"),stringsAsFactors = F,na.strings =".") 
-#df <- harmonized_clean
+
 species_list <- readxl::read_excel(path = file.path("tier1", "CNDWG_harmonized_consumer_species.xlsx"),na=".")
 
 # peacek<-df6%>%
@@ -231,7 +210,7 @@ cons_np_ratio <- cons %>%
 rm(cons,df,df1,df2,df3,df4,df5,df6,peace3,spe2,species_list) 
 
 ### skipping pivot longer below because my machine can't handle it... haha
-exc_df <- cons_np_ratio |> 
+exc_df <- cons_np_ratio |>
   dplyr::select(-c(N_vert_coef,N_diet_coef,Nexc_log10,P_vert_coef,P_diet_coef,Pexc_log10))
 
 # FCE hydroyear to year fix -----------------------------------------------
@@ -242,7 +221,7 @@ exc_df <- cons_np_ratio |>
 ### for hydroyear
 
 fce_wide <- exc_df |>
-  filter(project == "FCE") |> 
+  filter(project == "FCE") |>
   ### reverse what I did to qualify hydroyear in intitial dataset
   mutate(year = if_else(
     month >= 10,
@@ -259,35 +238,15 @@ df_wide <- rbind(fce_wide, other_wide)
 # rm(exc_df,cons_np_ratio)
 
 ### check for NAs
-na_count_per_column <- sapply(df_wide, function(x) sum(is.na(x)))
-print(na_count_per_column) #1002 observations of NAs in dmperind_g/ind fixed in step3
+# na_count_per_column <- sapply(df_wide, function(x) sum(is.na(x)))
+# print(na_count_per_column) #1002 observations of NAs in dmperind_g/ind fixed in step3
 
 #### export and write to the drive
 # Export locally
-tidy_filename <- "harmonized_consumer_excretion_CLEAN_V4.csv"
-
-write.csv(df_wide, file = file.path("tier2", tidy_filename), na = '.', row.names = F)
-
-# # Export harmonized clean dataset to Drive
-# googledrive::drive_upload(media= file.path("tier2",tidy_filename), overwrite = T,
-#                           path = googledrive::as_id("https://drive.google.com/drive/u/1/folders/1VakpcnFVckAYNggv_zNyfDRfkcGTjZxX"))
-
-##### left behind this section on october 29 due to system memory lacking
-##### Data clean up #######
-
-# df_final <- cons_np_ratio %>% 
-#   dplyr::select(-c(N_vert_coef,N_diet_coef,Nexc_log10,P_vert_coef,P_diet_coef,Pexc_log10)) %>%
-#   pivot_longer(cols = -c(project,habitat,raw_filename,row_num,year,month,day,date,site,subsite_level1,subsite_level2,subsite_level3,sp_code,scientific_name,species,common_name,kingdom,phylum,class,order,family,genus,taxa_group,diet_cat), 
-#                names_to = "measurement_type1",
-#                values_to = "measurement_value") %>%
-#   separate(measurement_type1, into = c("measurement_type", "measurement_unit"),sep = "_", remove = T) 
-
-#### export and write to the drive
-# Export locally
-tidy_filename <- "harmonized_consumer_excretion_V2.csv"
+tidy_filename <- "harmonized_consumer_excretion_CLEAN.csv"
 
 write.csv(df_final, file = file.path("tier2", tidy_filename), na = '.', row.names = F)
 
-# Export harmonized clean dataset to Drive
-googledrive::drive_upload(media= file.path("tier2",tidy_filename), overwrite = T,
-                          path = googledrive::as_id("https://drive.google.com/drive/u/1/folders/1VakpcnFVckAYNggv_zNyfDRfkcGTjZxX"))
+# To upload the most current versions (that you just created locally), 
+## run the relevant portion of the following script:
+file.path("scripts-googledrive", "step4_gdrive-interactions.R")

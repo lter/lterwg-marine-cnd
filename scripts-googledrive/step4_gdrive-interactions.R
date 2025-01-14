@@ -19,7 +19,7 @@ harmonized_ids <- dplyr::bind_rows(
   googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/1/folders/1iw3JIgFN9AuINyJD98LBNeIMeHCBo8jH")),
   googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/1/folders/1CEgNtAnk4DuPNpR3lJN9IqpjWq0cM8F4")) ) %>%
   # Filter to only needed files
-  dplyr::filter(name %in% c("harmonized_consumer_ready_for_excretion.csv",
+  dplyr::filter(name %in% c("harmonized_consumer_ready_for_excretion_V2.csv",
                             "CNDWG_harmonized_consumer_species.xlsx"))
 
 # Download the 'other' files into a different folder
