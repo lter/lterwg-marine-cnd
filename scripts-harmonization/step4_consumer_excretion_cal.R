@@ -62,7 +62,7 @@ species_list <- readxl::read_excel(path = file.path("tier1", "CNDWG_harmonized_c
 # take out the rows that are needed 
 
 df1 <-df |> 
-  filter(measurement_type %in% c("dmperind","density","temp")) 
+  filter(measurement_type %in% c("dmperind","density","temp","count","transectarea")) 
 
 # #check the unit that match with the measurement, good to go
 # peace <- df1 %>%
@@ -185,8 +185,7 @@ cons_np_ratio <- cons %>%
                                                        if_else(diet_cat == "algae_invert", 0,
                                                                NA))))),
          Nexc_log10 = ifelse(`dmperind_g/ind` > 0, 1.461 + 0.6840*(log10(`dmperind_g/ind`)) + 0.0246*temp_c + N_diet_coef + N_vert_coef,NA),
-         `nind_ug/hr` = 10^Nexc_log10,
-         `nind_ug/hr` = ifelse(is.na(`nind_ug/hr`),0,`nind_ug/hr`)) %>%
+         `nind_ug/hr` = 10^Nexc_log10) %>%
   # p
   mutate(P_vert_coef = if_else(phylum == "Chordata", 0.7504, 0),
          P_diet_coef = if_else(diet_cat == "algae_detritus", 0.0173,
@@ -196,8 +195,7 @@ cons_np_ratio <- cons %>%
                                                        if_else(diet_cat == "algae_invert",0,
                                                                NA))))),
          Pexc_log10 = ifelse(`dmperind_g/ind` >0, 0.6757 + 0.5656*(log10(`dmperind_g/ind`)) + 0.0194*temp_c + P_diet_coef + P_vert_coef, NA),
-         `pind_ug/hr` = 10^Pexc_log10,
-         `pind_ug/hr` = ifelse(is.na(`pind_ug/hr`),0,`pind_ug/hr`))  
+         `pind_ug/hr` = 10^Pexc_log10)  
 #N:P ratio we take out the ratio for now
 # mutate(NtoPexc_molar = ifelse(dmperind >0, 58.526 + 13.681*(log10(dmperind)), NA),
 #        NtoPexc_molar = if_else(NtoPexc_molar > 0, NtoPexc_molar, 0),
@@ -243,9 +241,9 @@ df_wide <- rbind(fce_wide, other_wide)
 
 #### export and write to the drive
 # Export locally
-tidy_filename <- "harmonized_consumer_excretion_CLEAN.csv"
+tidy_filename <- "harmonized_consumer_excretion_CLEAN_v3.csv" 
 
-write.csv(df_final, file = file.path("tier2", tidy_filename), na = '.', row.names = F)
+write.csv(df_wide, file = file.path("tier2", tidy_filename), na = '.', row.names = F)
 
 # To upload the most current versions (that you just created locally), 
 ## run the relevant portion of the following script:
